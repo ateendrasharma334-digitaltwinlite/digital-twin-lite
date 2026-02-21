@@ -42,15 +42,6 @@ if uploaded_file is not None:
 # Now other Streamlit code
 
 # -------------------------------
-# Sidebar Controls
-# -------------------------------
-st.sidebar.header("Simulation Settings")
-forecast_days = st.sidebar.slider(
-    "Select number of forecast days",
-    7, 60, 30,
-    key="forecast_days_slider"
-)
-# -------------------------------
 # Generate Forecast
 # -------------------------------
 st.subheader("📈 Energy Forecast")
@@ -330,4 +321,3 @@ st.download_button(
     file_name="Digital_Twin_Report.pdf",
     mime="application/pdf"
 )
-
