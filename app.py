@@ -8,11 +8,22 @@ from simulator import forecast_energy, detect_anomalies
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score
 
-# -------------------------------
-# Page config
-# -------------------------------
-st.set_page_config(page_title="Digital Twin Lite", layout="wide")
-st.title("🏢 Digital Twin Lite - Energy Optimisation Dashboard")
+# -------------------------------------------------
+# App Title
+# -------------------------------------------------
+st.title("🏢 Digital Twin Lite - Energy Dashboard")
+st.markdown("---")
+
+# CSV Upload
+uploaded_file = st.file_uploader("Upload CSV", type=["csv"])
+
+if uploaded_file is not None:
+    df = pd.read_csv(uploaded_file)
+    st.write(df.head())
+else:
+    st.info("Please upload a CSV file.")
+
+# Now other Streamlit code
 
 # -------------------------------
 # Sidebar Controls
@@ -181,4 +192,5 @@ if simulate:
     for i in range(20):  # simulate 20 readings
         live_energy = 100 + np.random.normal(0, 5)
         placeholder.metric("Current Live Energy (kWh)", round(live_energy, 2))
+
         time.sleep(1)
