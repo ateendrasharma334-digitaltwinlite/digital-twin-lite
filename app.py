@@ -8,20 +8,36 @@ from simulator import forecast_energy, detect_anomalies
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score
 
+# -------------------------------
+# Sidebar Controls (Always Visible)
+# -------------------------------
+st.sidebar.header("Simulation Settings")
+forecast_days = st.sidebar.slider("Select number of forecast days", 7, 60, 30)
+building = st.sidebar.selectbox(
+    "Select Building",
+    ["Building A", "Building B", "Building C"]
+)
+role = st.sidebar.radio("Role", ["User", "Admin"])
+
+# Building multipliers (for demo purposes)
+multiplier = {"Building A": 1, "Building B": 1.2, "Building C": 0.8}
+
 # -------------------------------------------------
 # App Title
 # -------------------------------------------------
 st.title("🏢 Digital Twin Lite - Energy Dashboard")
 st.markdown("---")
 
+# -------------------------------
 # CSV Upload
-uploaded_file = st.file_uploader("Upload CSV", type=["csv"])
+# -------------------------------
+uploaded_file = st.file_uploader("Upload Building Energy CSV", type=["csv"])
 
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
-    st.write(df.head())
-else:
-    st.info("Please upload a CSV file.")
+    df = clean_data(df)
+    st.subheader(f"Data Preview - {building}")
+    st.dataframe(df.head())
 
 # Now other Streamlit code
 
@@ -29,14 +45,17 @@ else:
 # Sidebar Controls
 # -------------------------------
 st.sidebar.header("Simulation Settings")
-days = st.sidebar.slider("Select number of forecast days", 7, 60, 30)
-
+forecast_days = st.sidebar.slider(
+    "Select number of forecast days",
+    7, 60, 30,
+    key="forecast_days_slider"
+)
 # -------------------------------
 # Generate Forecast
 # -------------------------------
 st.subheader("📈 Energy Forecast")
 
-forecast_df = forecast_energy(days)
+forecast_df = forecast_energy(forecast_days)
 forecast_df = detect_anomalies(forecast_df)
 
 # -------------------------------
@@ -58,6 +77,24 @@ if len(anomalies) > 0:
     st.dataframe(anomalies)
 else:
     st.success("No anomalies detected")
+
+    # -------------------------------
+# 🔥 Anomaly Heatmap
+# -------------------------------
+st.subheader("🔥 Anomaly Heatmap")
+
+# Convert boolean anomaly to numeric (0/1)
+forecast_df["anomaly_flag"] = forecast_df["anomaly"].astype(int)
+
+heatmap_fig = px.density_heatmap(
+    forecast_df,
+    x="date",
+    y="forecast",
+    z="anomaly_flag",
+    title="Energy Spike Intensity Heatmap"
+)
+
+st.plotly_chart(heatmap_fig)
 
 # -------------------------------
 # System Health Indicator
@@ -125,6 +162,24 @@ total_co2 = total_energy * co2_factor
 
 st.metric("Estimated CO₂ Emissions (kg)", round(total_co2, 2))
 
+# ===============================
+# Executive Summary Calculations
+# ===============================
+
+# Average efficiency proxy (based on health score)
+avg_efficiency = health_score
+
+# Sustainability Score (you already calculated earlier)
+# sustainability_score already exists in your code
+
+# Optimization Status
+if avg_efficiency > 90:
+    optimization_status = "Optimized ✅"
+elif avg_efficiency > 75:
+    optimization_status = "Moderate ⚠️"
+else:
+    optimization_status = "Needs Improvement ❌"
+
 # -------------------------------
 # 💡 Optimization Suggestions
 # -------------------------------
@@ -175,6 +230,28 @@ fig_co2 = px.line(
     title="Projected CO₂ Emissions Over Time"
 )
 
+# -------------------------------
+# 📊 Executive Summary
+# -------------------------------
+st.markdown("## 📊 Executive Summary")
+
+# Optimization Status Logic
+if health_score > 90:
+    optimization_status = "Optimized ✅"
+elif health_score > 75:
+    optimization_status = "Moderate ⚠️"
+else:
+    optimization_status = "Needs Improvement ❌"
+
+col1, col2, col3, col4, col5 = st.columns(5)
+
+col1.metric("⚡ Total Energy (kWh)", round(total_energy, 2))
+col2.metric("💰 Estimated Cost (£)", round(total_cost, 2))
+col3.metric("🌍 CO₂ Emissions (kg)", round(total_co2, 2))
+col4.metric("🌱 Sustainability Score (%)", round(sustainability_score, 2))
+col5.metric("🖥 Optimization Status", optimization_status)
+
+st.markdown("---")
 st.plotly_chart(fig_co2)
 
 # -------------------------------
@@ -192,5 +269,65 @@ if simulate:
     for i in range(20):  # simulate 20 readings
         live_energy = 100 + np.random.normal(0, 5)
         placeholder.metric("Current Live Energy (kWh)", round(live_energy, 2))
-
         time.sleep(1)
+
+# -------------------------------
+# 📥 Download Forecast Report
+# -------------------------------
+st.subheader("📥 Download Energy Report")
+
+csv = forecast_df.to_csv(index=False).encode("utf-8")
+
+st.download_button(
+    label="Download Forecast Report (CSV)",
+    data=csv,
+    file_name="energy_forecast_report.csv",
+    mime="text/csv",
+)
+
+# -------------------------------
+# 📄 Generate PDF Report
+# -------------------------------
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+from reportlab.platypus import Table
+import io
+
+st.subheader("📄 Download Executive PDF Report")
+
+def generate_pdf():
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer)
+    elements = []
+
+    styles = getSampleStyleSheet()
+
+    elements.append(Paragraph("Digital Twin Energy Report", styles["Title"]))
+    elements.append(Spacer(1, 0.3 * inch))
+
+    data = [
+        ["Total Energy (kWh)", round(total_energy,2)],
+        ["Estimated Cost (£)", round(total_cost,2)],
+        ["CO₂ Emissions (kg)", round(total_co2,2)],
+        ["Sustainability Score (%)", round(sustainability_score,2)],
+        ["System Health (%)", round(health_score,2)]
+    ]
+
+    table = Table(data)
+    elements.append(table)
+
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer
+
+pdf = generate_pdf()
+
+st.download_button(
+    label="Download PDF Report",
+    data=pdf,
+    file_name="Digital_Twin_Report.pdf",
+    mime="application/pdf"
+)
+
