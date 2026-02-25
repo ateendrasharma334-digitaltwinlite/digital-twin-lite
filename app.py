@@ -8,6 +8,28 @@ from simulator import forecast_energy, detect_anomalies
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score
 
+# ✅ ADD THIS RIGHT HERE 
+st.set_page_config(
+    page_title="Digital Twin Lite",
+    page_icon="assets/logo.png",   # make sure this file exists
+    layout="wide"
+)
+
+# -------------------------------
+# Cache Data Loading
+# -------------------------------
+@st.cache_data
+def load_data(file):
+    return pd.read_csv(file)
+
+# -------------------------------
+# Data Cleaning Function
+# -------------------------------
+def clean_data(df):
+    # Strip spaces from columns and convert to lowercase
+    df.columns = df.columns.str.strip().str.lower()
+    return df
+
 # -------------------------------
 # Sidebar Controls (Always Visible)
 # -------------------------------
@@ -15,9 +37,12 @@ st.sidebar.header("Simulation Settings")
 forecast_days = st.sidebar.slider("Select number of forecast days", 7, 60, 30)
 building = st.sidebar.selectbox(
     "Select Building",
-    ["Building A", "Building B", "Building C"]
+    ["Building A", "Building B", "Building C", "Building D"]
 )
 role = st.sidebar.radio("Role", ["User", "Admin"])
+if role == "Admin":
+    st.subheader("Admin Controls")
+    st.write("Advanced analytics visible only to admin.")
 
 # Building multipliers (for demo purposes)
 multiplier = {"Building A": 1, "Building B": 1.2, "Building C": 0.8}
@@ -34,10 +59,95 @@ st.markdown("---")
 uploaded_file = st.file_uploader("Upload Building Energy CSV", type=["csv"])
 
 if uploaded_file is not None:
-    df = pd.read_csv(uploaded_file)
-    df = clean_data(df)
+
+    try:
+        df = load_data(uploaded_file)
+        df = clean_data(df)
+    except Exception as e:
+        st.error(f"Error reading file: {e}")
+        st.stop()
+
+    # Required column validation
+    required_columns = ["energy_kwh"]
+
+    if not all(col in df.columns for col in required_columns):
+        st.error("CSV must contain 'energy_kwh' column.")
+        st.stop()
+
+    st.success("CSV uploaded successfully!")
+    st.write(df.head())
+
+    # -------------------------------
+    # Step 18.3 – Advanced Validation
+    # -------------------------------
+
+    if df.isnull().sum().sum() > 0:
+        st.warning("Missing values detected. Filling with forward fill method.")
+        df.fillna(method="ffill", inplace=True)
+
+    df["energy"] = pd.to_numeric(df["energy"], errors="coerce")
+
+    if df["energy"].isnull().sum() > 0:
+        st.error("Energy column contains invalid values.")
+        st.stop()
+
+    if (df["energy"] < 0).any():
+        st.warning("Negative energy values detected. Converting to absolute values.")
+        df["energy"] = df["energy"].abs()
+
+    # -------------------------------
+    # Data Preview
+    # -------------------------------
     st.subheader(f"Data Preview - {building}")
     st.dataframe(df.head())
+
+# -------------------------------
+    # Step 18.4 – Feature Engineering
+    # -------------------------------
+    if "date" in df.columns:
+        df["date"] = pd.to_datetime(df["date"], errors="coerce")
+        df["day"] = df["date"].dt.day
+        df["month"] = df["date"].dt.month
+        df["weekday"] = df["date"].dt.weekday
+    else:
+        st.warning("No date column found. Forecast will use synthetic dates.")
+
+# -------------------------------
+    # Step 19 – Building Comparison
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🏢 Building Comparison")
+
+    if "building" in df.columns:
+
+        selected_buildings = st.multiselect(
+            "Select buildings to compare",
+            options=df["building"].unique()
+        )
+
+        if selected_buildings:
+
+            comparison_df = df[df["building"].isin(selected_buildings)]
+
+            building_kpis = comparison_df.groupby("building").agg(
+                total_energy=("energy", "sum"),
+                avg_energy=("energy", "mean"),
+                max_energy=("energy", "max")
+            ).reset_index()
+
+            st.dataframe(building_kpis)
+
+            fig = px.bar(
+                building_kpis,
+                x="building",
+                y="total_energy",
+                title="Total Energy Comparison"
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
+
+    else:
+        st.info("No 'building' column found in dataset.")
 
 # Now other Streamlit code
 
@@ -152,6 +262,17 @@ total_energy = forecast_df["forecast"].sum()
 total_co2 = total_energy * co2_factor
 
 st.metric("Estimated CO₂ Emissions (kg)", round(total_co2, 2))
+
+# -------------------------------
+# Step 18.5 – Advanced KPI Metrics
+# -------------------------------
+
+peak_energy = forecast_df["forecast"].max()
+average_daily_energy = forecast_df["forecast"].mean()
+
+energy_variance = forecast_df["forecast"].std()
+
+efficiency_index = max(0, 100 - (energy_variance / average_daily_energy * 10))
 
 # ===============================
 # Executive Summary Calculations
@@ -321,3 +442,19 @@ st.download_button(
     file_name="Digital_Twin_Report.pdf",
     mime="application/pdf"
 )
+    table = Table(data)
+    elements.append(table)
+
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer
+
+pdf = generate_pdf()
+
+st.download_button(
+    label="Download PDF Report",
+    data=pdf,
+    file_name="Digital_Twin_Report.pdf",
+    mime="application/pdf"
+)
+
