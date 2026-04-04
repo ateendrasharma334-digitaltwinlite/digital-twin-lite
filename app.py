@@ -15,48 +15,103 @@ from reportlab.lib.units import inch
 import requests
 import sqlite3
 import random
+from database import init_db, get_connection
+
+st.set_page_config(
+        page_title="Digital Twin Lite",
+        page_icon="assets/logo.png",
+        layout="wide"
+    )
+
 
 # -------------------------------
-# Database Connection
+# Sensor Simulator
 # -------------------------------
-conn = sqlite3.connect("digital_twin.db", check_same_thread=False)
-cursor = conn.cursor()
+def generate_sensor_data():
+    data = {
+        "Temperature (°C)": round(random.uniform(20, 35), 2),
+        "Humidity (%)": round(random.uniform(30, 80), 2),
+        "Energy (kWh)": round(random.uniform(100, 500), 2),
+        "Vibration": round(random.uniform(0.1, 2.5), 2)
+    }
+    return data
+
 
 # -------------------------------
-# Create Tables (Run once automatically)
+# Database Utilities
 # -------------------------------
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS sensor_data (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    temperature REAL,
-    vibration REAL,
-    pressure REAL,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-)
-""")
+DB_PATH = "digital_twin.db"
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS maintenance_logs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    health_score REAL,
-    status TEXT,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-)
-""")
+def get_connection():
+    return sqlite3.connect(DB_PATH, check_same_thread=False, timeout=30)
 
-conn.commit()
+def init_db():
+    with get_connection() as conn:
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS sensor_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            temperature REAL,
+            vibration REAL,
+            pressure REAL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS maintenance_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            health_score REAL,
+            status TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+
+def insert_sensor_data(temp, vibration, pressure):
+    with get_connection() as conn:
+        conn.execute("""
+            INSERT INTO sensor_data (temperature, vibration, pressure)
+            VALUES (?, ?, ?)
+        """, (temp, vibration, pressure))
+
+def insert_maintenance_log(health_score, status):
+    with get_connection() as conn:
+        conn.execute("""
+            INSERT INTO maintenance_logs (health_score, status)
+            VALUES (?, ?)
+        """, (health_score, status))
+
+def fetch_maintenance_history(limit=10):
+    with get_connection() as conn:
+        return conn.execute("""
+            SELECT timestamp, health_score, status
+            FROM maintenance_logs
+            ORDER BY timestamp DESC
+            LIMIT ?
+        """, (limit,)).fetchall()
+
+def fetch_sensor_data():
+    with get_connection() as conn:
+        return pd.read_sql_query("SELECT * FROM sensor_data", conn)
+
+# -------------------------------
+# Initialize Database
+# -------------------------------
+init_db()
+
+# -------------------------------
+# App Title
+# -------------------------------
+st.title("🏢 Digital Twin Lite - Energy Dashboard")
+
 
 # -------------------------------
 # Weather Function
 # -------------------------------
 def get_weather(city="London"):
     api_key = "cb3641e75a4ebf00f22d873a0474d7a0"
-
     url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
     response = requests.get(url)
-    data = response.json()
-
     if response.status_code == 200:
+        data = response.json()
         return {
             "temperature": data["main"]["temp"],
             "humidity": data["main"]["humidity"],
@@ -82,7 +137,111 @@ def predictive_maintenance(temp, vibration, pressure):
     return health_score, status
 
 # -------------------------------
-# User Credentials (NEW STYLE)
+# AI Fault Detection
+# -------------------------------
+def detect_faults(temp, vibration, energy):
+
+    alerts = []
+
+    if temp > 70:
+        alerts.append("🔥 Overheating detected")
+
+    if vibration > 4:
+        alerts.append("⚠ High vibration detected")
+
+    if energy > 450:
+        alerts.append("⚡ Energy spike detected")
+
+    return alerts
+
+# -------------------------------
+# Digital Twin AI Copilot Brain
+# -------------------------------
+def ai_copilot(question, df, forecast_df):
+
+    question = question.lower()
+
+    # KPI calculations
+    avg_energy = df["energy_kwh"].mean() if df is not None else 0
+    max_energy = df["energy_kwh"].max() if df is not None else 0
+    total_energy = forecast_df["forecast"].sum() if forecast_df is not None else 0
+
+    # Smart responses
+    if "average" in question:
+        return f"⚡ Average energy consumption is {avg_energy:.2f} kWh"
+
+    elif "peak" in question or "highest" in question:
+        return f"📈 Peak energy usage reached {max_energy:.2f} kWh"
+
+    elif "cost" in question:
+        cost = total_energy * 0.12
+        return f"💰 Estimated total energy cost is £{cost:.2f}"
+
+    elif "co2" in question or "carbon" in question:
+        co2 = total_energy * 0.233
+        return f"🌍 Estimated CO₂ emissions are {co2:.2f} kg"
+
+    elif "optimize" in question:
+        return "⚙️ Recommendation: Reduce peak load hours and improve equipment efficiency to save energy."
+
+    elif "fault" in question:
+        return "🔧 System shows potential faults if vibration > 4 or temperature > 70°C."
+
+    else:
+        return "🤖 I can help with energy, cost, CO₂, faults, and optimization insights!"
+
+# -------------------------------
+# ✨ Typing Effect (AI feel)
+# -------------------------------
+def typewriter_effect(text):
+    placeholder = st.empty()
+    displayed_text = ""
+
+    for char in text:
+        displayed_text += char
+        placeholder.markdown(f"**🤖 AI:** {displayed_text}")
+        time.sleep(0.02)
+
+    return placeholder
+
+# -------------------------------
+# Train Failure Prediction Model
+# -------------------------------
+def train_failure_model():
+
+    # Generate synthetic training data
+    np.random.seed(42)
+
+    temperature = np.random.uniform(20, 90, 500)
+    vibration = np.random.uniform(0.1, 6, 500)
+    energy = np.random.uniform(100, 500, 500)
+
+    # Create labels (0 = healthy, 1 = failure risk)
+    failure = (temperature > 70) | (vibration > 4) | (energy > 450)
+    failure = failure.astype(int)
+
+    df_train = pd.DataFrame({
+        "temperature": temperature,
+        "vibration": vibration,
+        "energy": energy,
+        "failure": failure
+    })
+
+    X = df_train[["temperature", "vibration", "energy"]]
+    y = df_train["failure"]
+
+    model = RandomForestRegressor(n_estimators=100, random_state=42)
+    model.fit(X, y)
+
+    return model
+
+# -------------------------------
+# Train AI Failure Model
+# -------------------------------
+failure_model = train_failure_model()
+
+# -------------------------------
+# User Credentials 
 # -------------------------------
 credentials = {
     "usernames": {
@@ -107,37 +266,29 @@ authenticator = stauth.Authenticate(
     cookie_expiry_days=1
 )
 
-# -------------------------------
-# Login
-# -------------------------------
 authenticator.login(location="main")
 
-if st.session_state.get("authentication_status"):
-    st.success(f"Welcome {st.session_state.get('name')} 👋")
-
-elif st.session_state.get("authentication_status") is False:
+if st.session_state.get("authentication_status") is False:
     st.error("Username/password is incorrect")
-
-else:
+    st.stop()
+elif st.session_state.get("authentication_status") is None:
     st.warning("Please enter your username and password")
+    st.stop()
+else:
+    st.success(f"Welcome {st.session_state.get('name')} 👋")
 
 # -------------------------------
 # Wrap entire dashboard
 # -------------------------------
 if st.session_state.get("authentication_status"):
 
-    # -------------------------------
-    # Page config
-    # -------------------------------
-    st.set_page_config(
-        page_title="Digital Twin Lite",
-        page_icon="assets/logo.png",
-        layout="wide"
-    )
-    # -------------------------------
-    # Logout Button
-    # -------------------------------
     authenticator.logout("Logout", "sidebar")
+
+    # -------------------------------
+    # AI Copilot Memory
+    # -------------------------------
+    if "copilot_history" not in st.session_state:
+        st.session_state.copilot_history = []
 
     # -------------------------------
     # Generate Sensor Data
@@ -147,14 +298,18 @@ if st.session_state.get("authentication_status"):
     pressure_value = random.uniform(10, 50)
 
     # -------------------------------
-    # Insert Sensor Data into DB
+    # 🔧 Turbine Sensor Dashboard
     # -------------------------------
-    cursor.execute("""
-    INSERT INTO sensor_data (temperature, vibration, pressure)
-    VALUES (?, ?, ?)
-    """, (temp_value, vibration_value, pressure_value))
+    st.subheader("🔧 Turbine Sensor Data")
 
-    conn.commit()
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric("Temperature", f"{temp_value:.2f} °C")
+    col2.metric("Vibration", f"{vibration_value:.2f} mm/s")
+    col3.metric("Pressure", f"{pressure_value:.2f} bar")
+
+    # Insert into DB safely
+    insert_sensor_data(temp_value, vibration_value, pressure_value)
 
     # -------------------------------
     # Predictive Maintenance Call
@@ -165,6 +320,28 @@ if st.session_state.get("authentication_status"):
 
     st.metric("Machine Health Score", f"{health_score:.2f}")
 
+    # -------------------------------
+    # Turbine Health Gauge
+    # -------------------------------
+    import plotly.graph_objects as go
+
+    gauge = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=health_score,
+        title={"text": "Turbine Health Score"},
+        gauge={
+            "axis": {"range": [0, 100]},
+            "bar": {"color": "green"},
+            "steps": [
+                {"range": [0, 40], "color": "red"},
+                {"range": [40, 70], "color": "yellow"},
+                {"range": [70, 100], "color": "lightgreen"}
+            ]
+        }
+    ))
+
+    st.plotly_chart(gauge, use_container_width=True)
+
     if status == "Healthy":
         st.success("✅ Equipment Healthy")
     elif status == "Warning":
@@ -173,17 +350,64 @@ if st.session_state.get("authentication_status"):
         st.error("🚨 Immediate Maintenance Required")
 
     # -------------------------------
-    # Store Maintenance Result
+    # AI Predictive Maintenance Timeline
     # -------------------------------
-    cursor.execute("""
-    INSERT INTO maintenance_logs (health_score, status)
-    VALUES (?, ?)
-    """, (health_score, status))
 
-    conn.commit()
+    import random
+    from datetime import datetime, timedelta
+
+    # Simple failure estimation logic
+    if health_score > 80:
+        days_to_failure = random.randint(25, 40)
+    elif health_score > 60:
+        days_to_failure = random.randint(15, 25)
+    elif health_score > 40:
+        days_to_failure = random.randint(7, 15)
+    else:
+        days_to_failure = random.randint(1, 7)
+
+    predicted_failure_date = datetime.now() + timedelta(days=days_to_failure)
+
+    st.subheader("🧠 AI Predictive Maintenance Timeline")
+
+    col1, col2 = st.columns(2)
+
+    col1.metric("Estimated Days to Failure", f"{days_to_failure} Days")
+
+    col2.metric(
+        "Predicted Failure Date",
+        predicted_failure_date.strftime("%Y-%m-%d")
+    )
+
+    # Maintenance recommendation
+    if days_to_failure < 7:
+        st.error("🚨 Immediate Maintenance Required")
+    elif days_to_failure < 15:
+        st.warning("⚠ Maintenance Recommended Soon")
+    else:
+        st.success("✅ Equipment Operating Normally")
 
     # -------------------------------
-    # 🌦 Weather Section (ADD HERE)
+    # Maintenance History
+    # -------------------------------
+    st.subheader("🛠 Maintenance History")
+    history = fetch_maintenance_history()
+    for row in history:
+        st.write(f"{row[0]} | Health Score: {row[1]:.2f} | Status: {row[2]}")
+
+    # -------------------------------
+    # Historical Dashboard
+    # -------------------------------
+    # Sensor Data History
+    st.subheader("📊 Sensor Data History")
+    df = fetch_sensor_data()
+    st.dataframe(df)
+    fig = px.line(df, x="timestamp", y="temperature", title="Temperature Trend")
+    st.plotly_chart(fig, use_container_width=True)
+
+
+    # -------------------------------
+    # Weather Section
     # -------------------------------
     st.sidebar.markdown("## 🌦 Live Weather")
 
@@ -230,11 +454,6 @@ if st.session_state.get("authentication_status"):
 
     multiplier = {"Building A": 1, "Building B": 1.2, "Building C": 0.8}
 
-    # -------------------------------
-    # App Title
-    # -------------------------------
-    st.title("🏢 Digital Twin Lite - Energy Dashboard")
-    st.markdown("---")
 
     # -------------------------------
     # CSV Upload
@@ -270,6 +489,180 @@ if st.session_state.get("authentication_status"):
 
         st.subheader(f"Data Preview - {building}")
         st.dataframe(df.head())
+
+        # -------------------------------
+        # 🏢 Building Energy Ranking System
+        # -------------------------------
+        st.subheader("🏆 Building Energy Efficiency Ranking")
+
+        # Check if building column exists
+        if "building" in df.columns:
+
+            # Calculate total energy per building
+            building_energy = df.groupby("building")["energy_kwh"].sum().reset_index()
+
+            # Sort from lowest to highest energy consumption
+            ranking = building_energy.sort_values(by="energy_kwh")
+
+            st.dataframe(ranking)
+
+            # Bar chart ranking
+            st.bar_chart(ranking.set_index("building"))
+
+            # Efficiency labels
+            for index, row in ranking.iterrows():
+
+                building_name = row["building"]
+                energy_value = row["energy_kwh"]
+
+                if energy_value < 5000:
+                    st.success(f"✅ {building_name} — Efficient Energy Usage")
+                elif energy_value < 8000:
+                    st.warning(f"⚠ {building_name} — Moderate Energy Usage")
+                else:
+                    st.error(f"🚨 {building_name} — High Energy Consumption")
+
+        else:
+            st.info("Add a 'building' column in the CSV to enable building ranking.")
+
+    # -------------------------------
+    # 🧠 AI Energy Optimization Advisor
+    # -------------------------------
+    st.subheader("🧠 AI Energy Optimization Advisor")
+
+    if "building" in df.columns:
+
+        # Calculate average energy per building
+        building_avg = df.groupby("building")["energy_kwh"].mean().reset_index()
+
+        for index, row in building_avg.iterrows():
+
+            building_name = row["building"]
+            avg_energy = row["energy_kwh"]
+
+            # AI Logic for recommendations
+            if avg_energy > 400:
+
+                reduction = round((avg_energy - 300) / avg_energy * 100, 1)
+
+                st.error(f"🚨 {building_name}")
+                st.write(f"High energy usage detected: {round(avg_energy,2)} kWh")
+
+                st.write(f"💡 Recommendation: Reduce consumption by approx **{reduction}%**")
+
+                st.info("""
+                Suggested Actions:
+                - Optimize HVAC scheduling
+                - Reduce peak-hour load
+                - Upgrade inefficient equipment
+                """)
+
+            elif avg_energy > 250:
+
+                st.warning(f"⚠ {building_name}")
+                st.write(f"Moderate energy usage: {round(avg_energy,2)} kWh")
+
+                st.info("""
+                Suggested Actions:
+                - Monitor peak usage times
+                - Improve insulation efficiency
+                """)
+
+            else:
+
+                st.success(f"✅ {building_name}")
+                st.write(f"Efficient energy usage: {round(avg_energy,2)} kWh")
+
+                st.info("No major optimization needed")
+
+    else:
+        st.info("Add a 'building' column in CSV to enable AI optimization insights.")
+    
+    # -------------------------------
+    # 💰 AI Cost Savings Predictor
+    # -------------------------------
+    st.subheader("💰 AI Cost Savings Predictor")
+
+    cost_per_kwh = 0.12  # £ per kWh
+
+    if "building" in df.columns:
+
+        building_stats = df.groupby("building")["energy_kwh"].mean().reset_index()
+
+        for _, row in building_stats.iterrows():
+
+            building_name = row["building"]
+            avg_energy = row["energy_kwh"]
+
+            # Assume optimal energy baseline
+            optimal_energy = 250  
+
+            if avg_energy > optimal_energy:
+
+                excess_energy = avg_energy - optimal_energy
+
+                # Monthly savings estimation (30 days)
+                monthly_savings = excess_energy * cost_per_kwh * 30
+
+                st.error(f"💸 {building_name}")
+                st.write(f"Potential Monthly Savings: £{round(monthly_savings,2)}")
+
+                st.info("💡 Reduce HVAC load, optimize schedules, and eliminate idle consumption")
+
+            else:
+
+                st.success(f"✅ {building_name}")
+                st.write("No major cost savings needed — already optimized")
+
+    else:
+        st.info("Add 'building' column to enable cost predictions")
+
+
+    # -------------------------------
+    # 🌍 Carbon Reduction Advisor
+    # -------------------------------
+    st.subheader("🌍 Carbon Reduction Advisor")
+
+    co2_factor = 0.233  # kg CO2 per kWh
+
+    if "building" in df.columns:
+
+        building_stats = df.groupby("building")["energy_kwh"].mean().reset_index()
+
+        for _, row in building_stats.iterrows():
+
+            building_name = row["building"]
+            avg_energy = row["energy_kwh"]
+
+            optimal_energy = 250
+
+            if avg_energy > optimal_energy:
+
+                excess_energy = avg_energy - optimal_energy
+
+                # Monthly CO2 reduction potential
+                co2_savings = excess_energy * co2_factor * 30
+
+                reduction_percent = round((excess_energy / avg_energy) * 100, 1)
+
+                st.warning(f"🌿 {building_name}")
+                st.write(f"Potential CO₂ Reduction: {round(co2_savings,2)} kg/month")
+                st.write(f"Reduction Opportunity: {reduction_percent}%")
+
+                st.info("""
+                Suggested Actions:
+                - Shift to renewable energy sources
+                - Improve equipment efficiency
+                - Reduce peak-hour usage
+                """)
+
+            else:
+
+                st.success(f"🌱 {building_name}")
+                st.write("Low carbon footprint — operating efficiently")
+
+    else:
+        st.info("Add 'building' column to enable carbon insights")
 
         # -------------------------------
         # Feature Engineering
@@ -386,16 +779,197 @@ if st.session_state.get("authentication_status"):
         st.metric("Overall Sustainability Score (%)", round(sustainability_score, 2))
 
         # -------------------------------
-        # Live Simulation
+        # 🧠 Initialize Copilot Memory
+        # -------------------------------
+        if "copilot_history" not in st.session_state:
+            st.session_state.copilot_history = []
+
+        # -------------------------------
+        # 🤖 Digital Twin AI Copilot
+        # -------------------------------
+        st.markdown("---")
+
+        # 🧠 Initialize memory
+        if "copilot_history" not in st.session_state:
+            st.session_state.copilot_history = []
+
+        st.subheader("🤖 Digital Twin AI Copilot")
+
+        user_input = st.text_input("Ask your building anything...")
+
+        if user_input:
+            response = ai_copilot(user_input, df, forecast_df)
+
+            # Save chat history
+            st.session_state.copilot_history.append(("You", user_input))
+            st.session_state.copilot_history.append(("AI", response))
+
+        # Display chat history
+        for role, msg in st.session_state.copilot_history:
+            if role == "You":
+                st.markdown(f"**🧑 You:** {msg}")
+            else:
+                st.markdown(f"**🤖 AI:** {msg}")
+
+        # -------------------------------
+        # Live IoT Sensor Simulation + AI Failure Detection
         # -------------------------------
         st.subheader("⚡ Live IoT Sensor Simulation")
+
+        # Button to start simulation
+        start = st.button("Start Real-Time Simulation")
+
+        # Placeholder container for dynamic updates
         placeholder = st.empty()
-        simulate = st.button("Start Live Simulation")
-        if simulate:
+
+        # Store live sensor history
+        live_data_records = []
+
+        if start:
             for i in range(20):
-                live_energy = 100 + np.random.normal(0, 5)
-                placeholder.metric("Current Live Energy (kWh)", round(live_energy, 2))
+
+                # -------------------------------
+                # Generate Sensor Data
+                # -------------------------------
+                sensor_data = generate_sensor_data()
+                live_data_records.append(sensor_data)
+
+                # -------------------------------
+                # Fault Detection (RULE-BASED)
+                # -------------------------------
+                alerts = detect_faults(
+                    sensor_data["Temperature (°C)"],
+                    sensor_data["Vibration"],
+                    sensor_data["Energy (kWh)"]
+                )
+
+                # -------------------------------
+                # AI Failure Prediction
+                # -------------------------------
+                failure_probability = failure_model.predict([[
+                    sensor_data["Temperature (°C)"],
+                    sensor_data["Vibration"],
+                    sensor_data["Energy (kWh)"]
+                ]])[0]
+
+                failure_percent = round(failure_probability * 100, 2)
+
+                # -------------------------------
+                # Dashboard Display
+                # -------------------------------
+                df_live = pd.DataFrame(live_data_records)
+
+                with placeholder.container():
+
+                    col1, col2, col3, col4, col5 = st.columns(5)
+
+                    col1.metric("Temperature (°C)", sensor_data["Temperature (°C)"])
+                    col2.metric("Humidity (%)", sensor_data["Humidity (%)"])
+                    col3.metric("Energy (kWh)", sensor_data["Energy (kWh)"])
+                    col4.metric("Vibration", sensor_data["Vibration"])
+                    col5.metric("Failure Risk", f"{failure_percent}%")
+
+                    st.progress(int(failure_percent))
+
+                    # Show alerts
+                    for alert in alerts:
+                        st.warning(alert)
+                
+                    st.line_chart(df_live)
+
+                    # -------------------------------
+                    # ⚡ Energy Control Panel
+                    # -------------------------------
+                    st.subheader("⚡ Energy Control Panel")
+
+                    avg_energy = df_live["Energy (kWh)"].mean()
+                    max_energy = df_live["Energy (kWh)"].max()
+                    min_energy = df_live["Energy (kWh)"].min()
+
+                    col1, col2, col3 = st.columns(3)
+
+                    col1.metric("Average Energy", f"{avg_energy:.2f} kWh")
+                    col2.metric("Peak Energy", f"{max_energy:.2f} kWh")
+                    col3.metric("Minimum Energy", f"{min_energy:.2f} kWh")
+                
                 time.sleep(1)
+
+        # -------------------------------
+        # 🤖 AI Chatbot - Ask Your Building (Advanced)
+        # -------------------------------
+        st.markdown("---")
+        st.subheader("🤖 Ask Your Building AI Assistant")
+
+        # Initialize chat history
+        if "chat_history" not in st.session_state:
+            st.session_state.chat_history = []
+
+        # User input
+        user_query = st.text_input("Ask something about your building performance:")
+
+        # Function to generate smart response
+        def generate_ai_response(query, df, forecast_df):
+
+            query = query.lower()
+
+            avg_energy = df["energy_kwh"].mean()
+            max_energy = df["energy_kwh"].max()
+            total_energy = df["energy_kwh"].sum()
+
+            forecast_avg = forecast_df["forecast"].mean()
+
+            # Smart responses
+            if "average" in query:
+                return f"📊 Average energy consumption is {avg_energy:.2f} kWh."
+
+            elif "maximum" in query or "peak" in query:
+                return f"⚡ Peak energy usage reached {max_energy:.2f} kWh."
+
+            elif "total" in query:
+                return f"🔢 Total energy consumption is {total_energy:.2f} kWh."
+
+            elif "forecast" in query:
+                return f"🔮 Future average energy is predicted around {forecast_avg:.2f} kWh."
+
+            elif "cost" in query:
+                cost = total_energy * 0.12
+                return f"💰 Estimated cost is £{cost:.2f}."
+
+            elif "co2" in query or "carbon" in query:
+                co2 = total_energy * 0.233
+                return f"🌍 Estimated CO₂ emissions are {co2:.2f} kg."
+
+            elif "optimize" in query or "reduce" in query:
+                return "💡 Suggestion: Reduce peak loads during high usage hours and improve HVAC efficiency."
+
+            elif "fault" in query or "failure" in query:
+                return "⚠️ System monitoring shows potential anomalies. Check vibration and temperature trends."
+
+            elif "ranking" in query:
+                if "building" in df.columns:
+                    ranking = df.groupby("building")["energy_kwh"].sum().sort_values()
+                    best = ranking.index[0]
+                    return f"🏆 Most efficient building is {best}."
+                else:
+                    return "ℹ️ No building-wise data available."
+
+            else:
+                return "🤖 I can help with energy, cost, CO₂, forecast, faults, and optimization insights."
+
+        # Process user query
+        if user_query:
+            response = generate_ai_response(user_query, df, forecast_df)
+
+            # Save chat
+            st.session_state.chat_history.append(("You", user_query))
+            st.session_state.chat_history.append(("AI", response))
+
+        # Display chat history
+        for sender, message in st.session_state.chat_history:
+            if sender == "You":
+                st.markdown(f"🧑‍💻 **You:** {message}")
+            else:
+                st.markdown(f"🤖 **AI:** {message}")
 
         # -------------------------------
         # Download CSV & PDF
@@ -443,5 +1017,3 @@ elif st.session_state.get("authentication_status") is False:
 
 else:
     st.warning("Please enter your username and password")
-
-
