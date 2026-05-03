@@ -1,7 +1,8 @@
 streamlit
 pandas
 numpy
-scikit-learn
 plotly
-matplotlib
+scikit-learn
+streamlit-authenticator
+openai
 reportlab
