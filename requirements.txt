@@ -1,8 +1,11 @@
 streamlit
 pandas
 numpy
+matplotlib
 plotly
 scikit-learn
 streamlit-authenticator
-openai
 reportlab
+requests
+openai
+streamlit-autorefresh
