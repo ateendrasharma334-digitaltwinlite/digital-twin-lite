@@ -684,18 +684,6 @@ if st.session_state.get("authentication_status"):
         st.sidebar.error("City not found")
 
     # -------------------------------
-    # ⚡ Live Carbon Intensity
-    # -------------------------------
-    carbon_intensity = get_live_energy_price()
-
-    if carbon_intensity:
-        st.sidebar.metric(
-            "⚡ Live Carbon Intensity",
-            f"{carbon_intensity} gCO₂/kWh"
-        )
-
-
-    # -------------------------------
     # Cache Data Loading
     # -------------------------------
     @st.cache_data
