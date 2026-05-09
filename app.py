@@ -683,6 +683,7 @@ if st.session_state.get("authentication_status"):
     else:
         st.sidebar.error("City not found")
 
+
     # -------------------------------
     # Cache Data Loading
     # -------------------------------
@@ -1539,6 +1540,38 @@ if st.session_state.get("authentication_status"):
                     col5.metric("Failure Risk", f"{failure_percent}%")
 
                     st.progress(int(failure_percent))
+
+                    # -------------------------------
+                    # 🖥 SCADA-STYLE CONTROL ROOM UI
+                    # -------------------------------
+                    st.markdown("## 🖥 Control Room Dashboard")
+
+                    # Create live figure
+                    fig = px.line(
+                        df_live,
+                        y="Energy (kWh)",
+                        title="Live Energy Monitoring"
+                    )
+
+                    scada_col1, scada_col2 = st.columns([2,1])
+
+                    with scada_col1:
+                        st.plotly_chart(fig, use_container_width=True)
+
+                    with scada_col2:
+
+                        st.metric("Health Score", f"{health_score:.2f}%")
+                        st.metric("Failure Risk", f"{failure_percent}%")
+
+                    # Status Indicators
+                    if failure_percent > 70:
+                        st.markdown("## 🔴 SYSTEM CRITICAL")
+
+                    elif failure_percent > 40:
+                        st.markdown("## 🟠 WARNING")
+
+                    else:
+                        st.markdown("## 🟢 NORMAL")
 
                     # Show alerts
                     for alert, level in alerts:
