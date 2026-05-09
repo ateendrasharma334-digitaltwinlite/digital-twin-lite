@@ -19,6 +19,22 @@ from database import init_db, get_connection
 from openai import OpenAI
 import os
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+import paho.mqtt.client as mqtt
+import json
+
+mqtt_data = {}
+
+def on_message(client, userdata, msg):
+    global mqtt_data
+    mqtt_data = json.loads(msg.payload.decode())
+
+client_mqtt = mqtt.Client()
+client_mqtt.on_message = on_message
+
+client_mqtt.connect("broker.hivemq.com", 1883, 60)
+client_mqtt.subscribe("digital_twin/sensors")
+
+client_mqtt.loop_start()
 
 # -------------------------------
 # 🔄 Auto Refresh 
@@ -137,6 +153,20 @@ def get_weather(city="London"):
         }
     else:
         return None
+
+# -------------------------------
+# ⚡ Live Carbon Intensity API
+# -------------------------------
+def get_live_energy_price():
+    url = "https://api.carbonintensity.org.uk/intensity"
+
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        data = response.json()
+        return data["data"][0]["intensity"]["actual"]
+
+    return None
 
 # -------------------------------
 # Predictive Maintenance Function
@@ -621,8 +651,48 @@ if st.session_state.get("authentication_status"):
         st.sidebar.write(f"💧 Humidity: {weather['humidity']}%")
         st.sidebar.write(f"🌬 Wind: {weather['wind_speed']} m/s")
         st.sidebar.write(f"🌤 {weather['description']}")
+
+    # -------------------------------
+    # ⚡ Live Carbon Intensity API
+    # -------------------------------
+    def get_live_energy_price():
+        url = "https://api.carbonintensity.org.uk/intensity"
+
+        try:
+            response = requests.get(url)
+
+            if response.status_code == 200:
+                data = response.json()
+                return data["data"][0]["intensity"]["actual"]
+
+        except:
+            return None
+
+        return None
+
+    # Fetch API data
+    price = get_live_energy_price()
+
+    # Display metric
+    if price:
+        st.sidebar.metric(
+            "⚡ Live Carbon Intensity",
+            f"{price} gCO₂/kWh"
+        )
+
     else:
         st.sidebar.error("City not found")
+
+    # -------------------------------
+    # ⚡ Live Carbon Intensity
+    # -------------------------------
+    carbon_intensity = get_live_energy_price()
+
+    if carbon_intensity:
+        st.sidebar.metric(
+            "⚡ Live Carbon Intensity",
+            f"{carbon_intensity} gCO₂/kWh"
+        )
 
 
     # -------------------------------
@@ -1284,7 +1354,7 @@ if st.session_state.get("authentication_status"):
                 # -------------------------------
                 # Generate Sensor Data
                 # -------------------------------
-                sensor_data = generate_sensor_data()
+                sensor_data = mqtt_data if mqtt_data else generate_sensor_data()
                 st.session_state.live_data_records.append(sensor_data)
 
                 # -------------------------------
