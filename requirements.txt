@@ -9,3 +9,4 @@ reportlab
 requests
 openai
 streamlit-autorefresh
+paho-mqtt
