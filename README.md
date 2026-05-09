@@ -20,6 +20,20 @@
 - Role-based dashboard (Admin/User).
 - Generate downloadable PDF and Excel reports.
 - CO₂ trend and sustainability visualizations.
+- # Digital Twin AI Energy Platform
+
+## Features
+- Real-time IoT simulation
+- AI failure prediction
+- Autonomous decision engine
+- Smart maintenance scheduling
+- Self-learning AI (drift detection)
+
+## Tech Stack
+- Python, Streamlit
+- Machine Learning (Random Forest)
+- MQTT (IoT)
+- Cloud Deployment
 
 ---
 
