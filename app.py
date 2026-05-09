@@ -135,6 +135,24 @@ init_db()
 # -------------------------------
 st.title("🏢 Digital Twin Lite - Energy Dashboard")
 
+# =========================================================
+# 🌍 LEVEL 37 — ENERGY INTELLIGENCE PLATFORM
+# =========================================================
+
+import requests
+
+def get_live_carbon_intensity():
+    ...
+
+def get_live_grid_demand():
+    ...
+
+def estimate_solar_generation(weather_temp):
+    ...
+
+def calculate_renewable_percentage(generation_mix):
+    ...
+
 
 # -------------------------------
 # Weather Function
@@ -651,6 +669,42 @@ if st.session_state.get("authentication_status"):
         st.sidebar.write(f"💧 Humidity: {weather['humidity']}%")
         st.sidebar.write(f"🌬 Wind: {weather['wind_speed']} m/s")
         st.sidebar.write(f"🌤 {weather['description']}")
+
+    # =========================================================
+    # 🌍 LIVE ENERGY INTELLIGENCE
+    # =========================================================
+
+    st.sidebar.markdown("## ⚡ Live Energy Intelligence")
+
+    carbon_intensity = get_live_carbon_intensity()
+
+    if carbon_intensity:
+
+        st.sidebar.metric(
+            "⚡ Carbon Intensity",
+            f"{carbon_intensity} gCO₂/kWh"
+        )
+
+    generation_mix = get_live_grid_demand()
+
+    if generation_mix:
+
+        renewable_percent = calculate_renewable_percentage(generation_mix)
+
+        st.sidebar.metric(
+            "🌱 Renewable %",
+            f"{renewable_percent}%"
+        )
+
+    solar_generation = estimate_solar_generation(
+        weather["temperature"]
+    )
+
+    st.sidebar.metric(
+        "☀ Solar Generation",
+        f"{solar_generation} kW"
+    )
+
 
     # -------------------------------
     # ⚡ Live Carbon Intensity API
