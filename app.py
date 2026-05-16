@@ -1862,17 +1862,24 @@ if st.session_state.get("authentication_status"):
         # -------------------------------
         # 🤖 AI Executive Summary (Level 33)
         # -------------------------------
-        st.subheader("📄 AI Executive Summary")
+        st.subheader("📄 Executive AI Summary")
 
         summary = f"""
-        System Health Score: {round(health_score,2)}%
+        Enterprise Overview:
 
-        Total Energy Consumption: {round(total_energy,2)} kWh
+        • Total Forecast Energy: {safe_energy} kWh
+        • Estimated Cost: £{safe_cost}
+        • Estimated CO₂: {safe_co2} kg
+        • System Health: {safe_health}%
 
-        Estimated Cost: £{round(total_cost,2)}
-
-        CO₂ Emissions: {round(total_co2,2)} kg
+        AI Recommendations:
+        • Improve HVAC optimization
+        • Reduce peak-hour loads
+        • Schedule preventive maintenance
+        • Increase renewable integration
         """
+
+        st.text_area("Executive Summary", summary, height=250)
 
         # Risk Analysis
         if health_score < 50:
@@ -1884,88 +1891,25 @@ if st.session_state.get("authentication_status"):
 
         st.text_area("Executive Summary Report", summary, height=200)
 
-        # =========================================================
-        # 📄 Executive AI Summary (LEVEL 38)
-        # =========================================================
-        st.subheader("📄 Enterprise Executive AI Summary")
+        # -------------------------------
+        # Download CSV & PDF
+        # -------------------------------
+        st.subheader("📥 Download Energy Report")
 
-        # Safe values
-        safe_energy = 0
-        safe_cost = 0
-        safe_co2 = 0
-        safe_health = 0
+        if forecast_df is not None:
+            csv = forecast_df.to_csv(index=False).encode("utf-8")
 
-        if forecast_df is not None and "forecast" in forecast_df.columns:
-
-            safe_energy = round(forecast_df["forecast"].sum(), 2)
-
-            safe_cost = round(safe_energy * 0.12, 2)
-
-            safe_co2 = round(safe_energy * 0.233, 2)
-
-        try:
-            safe_health = round(health_score, 2)
-
-        except:
-            safe_health = 0
-
-
-        # =========================================================
-        # 🧠 AI Executive Report
-        # =========================================================
-        summary = f"""
-        🌍 ENTERPRISE ENERGY REPORT
-
-       ⚡ Total Forecast Energy:
-        {safe_energy} kWh
-
-        💰 Estimated Operating Cost:
-        £{safe_cost}
-
-        🌍 Estimated CO₂ Emissions:
-        {safe_co2} kg
-
-        🛠 System Health Score:
-        {safe_health}%
-
-        ==================================================
-
-        🧠 AI RECOMMENDATIONS
-
-        • Optimize HVAC scheduling
-        • Reduce peak-hour energy loads
-        • Increase renewable integration
-        • Schedule preventive maintenance
-        • Monitor vibration trends closely
-
-        ==================================================
-        """
-
-
-       # =========================================================
-       # 🚨 Risk Intelligence
-       # =========================================================
-       if safe_health < 50:
-
-           summary += "\n🚨 CRITICAL RISK DETECTED"
-
-       elif safe_health < 75:
-
-           summary += "\n⚠ MODERATE RISK PRESENT"
-
-       else:
-
-           summary += "\n✅ SYSTEM OPERATING NORMALLY"
-
-
-        # =========================================================
-        # 📄 Display Summary
-        # =========================================================
-        st.text_area(
-            "Enterprise Executive Summary",
-            summary,
-            height=350
+            st.download_button(
+                label="Download Forecast Report (CSV)",
+                data=csv,
+                file_name="energy_forecast_report.csv",
+                mime="text/csv",
             )
+        else:
+            st.warning("⚠ No forecast data available to download.")
+
+        st.subheader("📄 Download Executive PDF Report")
+        def generate_pdf():
 
             # -------------------------------
             # SAFE VALUES (IMPORTANT FIX)
