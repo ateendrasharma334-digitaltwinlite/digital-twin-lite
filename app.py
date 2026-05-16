@@ -136,7 +136,15 @@ init_db()
 st.title("🏢 Digital Twin Lite - Energy Dashboard")
 
 # =========================================================
-# 🌍 LEVEL 37 — ENERGY INTELLIGENCE PLATFORM
+# 🏭 ENTERPRISE CONTROL CENTER
+# =========================================================
+st.markdown("""
+### 🌍 Enterprise Energy Intelligence Platform
+Real-Time Monitoring • AI Forecasting • Predictive Maintenance • Sustainability Analytics
+""")
+
+# =========================================================
+# 🌍 ENERGY INTELLIGENCE PLATFORM
 # =========================================================
 
 import requests
@@ -669,6 +677,35 @@ if st.session_state.get("authentication_status"):
         st.sidebar.write(f"💧 Humidity: {weather['humidity']}%")
         st.sidebar.write(f"🌬 Wind: {weather['wind_speed']} m/s")
         st.sidebar.write(f"🌤 {weather['description']}")
+    
+    # =========================================================
+    # 🌍 GLOBAL KPI CENTER
+    # =========================================================
+    st.subheader("🌍 Enterprise KPI Center")
+
+    kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+
+    # Safe values
+    safe_energy = 0
+    safe_cost = 0
+    safe_co2 = 0
+    safe_health = 0
+
+    if forecast_df is not None and "forecast" in forecast_df.columns:
+
+        safe_energy = round(forecast_df["forecast"].sum(), 2)
+        safe_cost = round(safe_energy * 0.12, 2)
+        safe_co2 = round(safe_energy * 0.233, 2)
+
+    try:
+        safe_health = round(health_score, 2)
+    except:
+        safe_health = 0
+
+    kpi1.metric("⚡ Total Energy", f"{safe_energy} kWh")
+    kpi2.metric("💰 Energy Cost", f"£{safe_cost}")
+    kpi3.metric("🌍 CO₂ Output", f"{safe_co2} kg")
+    kpi4.metric("🛠 Health Score", f"{safe_health}%")
 
     # =========================================================
     # 🌍 LIVE ENERGY INTELLIGENCE
@@ -1049,7 +1086,35 @@ if st.session_state.get("authentication_status"):
             st.plotly_chart(fig, use_container_width=True)
     else:
         st.info("No 'building' column found in dataset.")
+    # =========================================================
+    # 🏢 Multi-Site Monitoring
+    # =========================================================
+    st.subheader("🏢 Multi-Site Digital Twin")
 
+    sites = {
+        "London Plant": random.randint(70, 100),
+        "Manchester Plant": random.randint(60, 100),
+        "Birmingham Plant": random.randint(50, 100),
+        "Leeds Plant": random.randint(65, 100)
+    }
+
+    site_df = pd.DataFrame({
+        "Site": list(sites.keys()),
+        "Health Score": list(sites.values())
+    })
+
+    st.dataframe(site_df)
+
+    fig_sites = px.bar(
+        site_df,
+        x="Site",
+        y="Health Score",
+        title="Enterprise Site Health"
+    )
+
+    st.plotly_chart(fig_sites, use_container_width=True)
+
+    
         # -------------------------------
         # Energy Forecast & Anomalies
         # -------------------------------
@@ -1378,6 +1443,7 @@ if st.session_state.get("authentication_status"):
         # Live IoT Sensor Simulation + AI Failure Detection
         # -------------------------------
         st.subheader("⚡ Live IoT Sensor Simulation")
+        st.subheader("🚨 Enterprise Alarm Center")
 
         # Button to start simulation
         start = st.button("Start Real-Time Simulation")
@@ -1437,6 +1503,23 @@ if st.session_state.get("authentication_status"):
                 else:
                     st.success("✅ System Stable")
                 
+                # =========================================================
+                # 🚨 Alarm Engine
+                # =========================================================
+                alarm_messages = []
+
+                if sensor_data["Temperature (°C)"] > 60:
+                    alarm_messages.append("🔥 Critical Temperature")
+
+                if sensor_data["Vibration"] > 3:
+                    alarm_messages.append("⚠ Excessive Vibration")
+
+                if sensor_data["Energy (kWh)"] > 450:
+                    alarm_messages.append("⚡ Energy Surge")
+
+                for alarm in alarm_messages:
+                    st.error(alarm)
+                
                 # -------------------------------
                 # 🧠 Root Cause Analysis (Level 33)
                 # -------------------------------
@@ -1460,7 +1543,7 @@ if st.session_state.get("authentication_status"):
                     st.success("✅ No critical root cause detected")
                 
                 # -------------------------------
-                # 🤖 Autonomous Decision Engine (Level 34)
+                # 🤖 Autonomous Decision Engine
                 # -------------------------------
                 st.subheader("🤖 AI Decision Engine")
 
@@ -1481,6 +1564,24 @@ if st.session_state.get("authentication_status"):
 
                 st.error(f"Decision: {decision}") if failure_percent > 70 else st.warning(f"Decision: {decision}") if failure_percent > 40 else st.success(f"Decision: {decision}")
                 st.info(f"Recommended Action: {action}")
+
+                # =========================================================
+                # 🧠 AI Decision Center
+                # =========================================================
+                st.subheader("🧠 AI Decision Center")
+
+                decision = "System Stable"
+
+                if failure_percent > 70:
+                    decision = "Shutdown equipment immediately"
+
+                elif failure_percent > 40:
+                    decision = "Schedule urgent maintenance"
+
+                elif avg_energy > 400:
+                    decision = "Optimize energy consumption"
+
+                st.info(f"🤖 AI Recommendation: {decision}")
 
                 # -------------------------------
                 # 🛠 Smart Maintenance Scheduler
