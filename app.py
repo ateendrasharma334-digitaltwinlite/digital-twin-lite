@@ -1086,35 +1086,35 @@ if st.session_state.get("authentication_status"):
             st.plotly_chart(fig, use_container_width=True)
     else:
         st.info("No 'building' column found in dataset.")
-    # =========================================================
-    # 🏢 Multi-Site Monitoring
-    # =========================================================
-    st.subheader("🏢 Multi-Site Digital Twin")
+        # =========================================================
+        # 🏢 Multi-Site Monitoring
+        # =========================================================
+        st.subheader("🏢 Multi-Site Digital Twin")
 
-    sites = {
-        "London Plant": random.randint(70, 100),
-        "Manchester Plant": random.randint(60, 100),
-        "Birmingham Plant": random.randint(50, 100),
-        "Leeds Plant": random.randint(65, 100)
-    }
+        sites = {
+            "London Plant": random.randint(70, 100),
+            "Manchester Plant": random.randint(60, 100),
+            "Birmingham Plant": random.randint(50, 100),
+            "Leeds Plant": random.randint(65, 100)
+        }
 
-    site_df = pd.DataFrame({
-        "Site": list(sites.keys()),
-        "Health Score": list(sites.values())
-    })
+        site_df = pd.DataFrame({
+            "Site": list(sites.keys()),
+            "Health Score": list(sites.values())
+        })
 
-    st.dataframe(site_df)
+        st.dataframe(site_df)
 
-    fig_sites = px.bar(
-        site_df,
-        x="Site",
-        y="Health Score",
-        title="Enterprise Site Health"
-    )
+        fig_sites = px.bar(
+            site_df,
+            x="Site",
+            y="Health Score",
+            title="Enterprise Site Health"
+        )
 
-    st.plotly_chart(fig_sites, use_container_width=True)
+        st.plotly_chart(fig_sites, use_container_width=True)
 
-    
+
         # -------------------------------
         # Energy Forecast & Anomalies
         # -------------------------------
