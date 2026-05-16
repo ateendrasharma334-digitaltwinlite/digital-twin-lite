@@ -774,6 +774,27 @@ if st.session_state.get("authentication_status"):
         f"{solar_generation} kW"
     )
 
+    # =========================================================
+    # ⚡ LIVE POWER DEMAND CENTER
+    # =========================================================
+    st.subheader("⚡ Live Power Demand")
+
+    power_demand = random.randint(200, 1200)
+
+    st.metric(
+        "National Grid Demand",
+        f"{power_demand} MW"
+    )
+
+    if power_demand > 1000:
+        st.error("🚨 Grid Under Heavy Demand")
+
+    elif power_demand > 700:
+        st.warning("⚠ Elevated Grid Demand")
+
+    else:
+        st.success("✅ Grid Operating Normally")
+
 
     # -------------------------------
     # ⚡ Live Carbon Intensity API
