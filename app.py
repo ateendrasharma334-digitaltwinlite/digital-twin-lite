@@ -708,6 +708,38 @@ if st.session_state.get("authentication_status"):
     kpi4.metric("🛠 Health Score", f"{safe_health}%")
 
     # =========================================================
+    # 🚨 AI Risk Matrix
+    # =========================================================
+    st.subheader("🚨 AI Risk Matrix")
+
+    risk_data = pd.DataFrame({
+        "System": [
+            "HVAC",
+            "Turbine",
+            "Cooling System",
+            "Grid Connection",
+            "Battery Storage"
+        ],
+        "Risk Level": [
+            random.randint(10, 90),
+            random.randint(10, 90),
+            random.randint(10, 90),
+            random.randint(10, 90),
+            random.randint(10, 90)
+        ]
+    })
+
+    fig_risk = px.bar(
+        risk_data,
+        x="System",
+        y="Risk Level",
+        color="Risk Level",
+        title="Enterprise Risk Assessment"
+    )
+
+    st.plotly_chart(fig_risk, use_container_width=True)
+
+    # =========================================================
     # 🌍 LIVE ENERGY INTELLIGENCE
     # =========================================================
 
