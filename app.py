@@ -1636,6 +1636,27 @@ if st.session_state.get("authentication_status"):
 
                 st.info(f"🤖 AI Recommendation: {decision}")
 
+                # =========================================================
+                # 🤖 Autonomous AI Actions
+                # =========================================================
+                st.subheader("🤖 Autonomous AI Actions")
+
+                ai_action = "No action required"
+
+                if failure_percent > 70:
+
+                    ai_action = "Emergency shutdown initiated"
+
+                elif failure_percent > 40:
+
+                    ai_action = "Maintenance team notified"
+
+                elif avg_energy > 400:
+
+                    ai_action = "HVAC optimization activated"
+
+                st.success(f"⚡ AI Action: {ai_action}")
+
                 # -------------------------------
                 # 🛠 Smart Maintenance Scheduler
                 # -------------------------------
