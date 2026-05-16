@@ -1884,25 +1884,88 @@ if st.session_state.get("authentication_status"):
 
         st.text_area("Executive Summary Report", summary, height=200)
 
-        # -------------------------------
-        # Download CSV & PDF
-        # -------------------------------
-        st.subheader("📥 Download Energy Report")
+        # =========================================================
+        # 📄 Executive AI Summary (LEVEL 38)
+        # =========================================================
+        st.subheader("📄 Enterprise Executive AI Summary")
 
-        if forecast_df is not None:
-            csv = forecast_df.to_csv(index=False).encode("utf-8")
+        # Safe values
+        safe_energy = 0
+        safe_cost = 0
+        safe_co2 = 0
+        safe_health = 0
 
-            st.download_button(
-                label="Download Forecast Report (CSV)",
-                data=csv,
-                file_name="energy_forecast_report.csv",
-                mime="text/csv",
+        if forecast_df is not None and "forecast" in forecast_df.columns:
+
+            safe_energy = round(forecast_df["forecast"].sum(), 2)
+
+            safe_cost = round(safe_energy * 0.12, 2)
+
+            safe_co2 = round(safe_energy * 0.233, 2)
+
+        try:
+            safe_health = round(health_score, 2)
+
+        except:
+            safe_health = 0
+
+
+        # =========================================================
+        # 🧠 AI Executive Report
+        # =========================================================
+        summary = f"""
+        🌍 ENTERPRISE ENERGY REPORT
+
+       ⚡ Total Forecast Energy:
+        {safe_energy} kWh
+
+        💰 Estimated Operating Cost:
+        £{safe_cost}
+
+        🌍 Estimated CO₂ Emissions:
+        {safe_co2} kg
+
+        🛠 System Health Score:
+        {safe_health}%
+
+        ==================================================
+
+        🧠 AI RECOMMENDATIONS
+
+        • Optimize HVAC scheduling
+        • Reduce peak-hour energy loads
+        • Increase renewable integration
+        • Schedule preventive maintenance
+        • Monitor vibration trends closely
+
+        ==================================================
+        """
+
+
+       # =========================================================
+       # 🚨 Risk Intelligence
+       # =========================================================
+       if safe_health < 50:
+
+           summary += "\n🚨 CRITICAL RISK DETECTED"
+
+       elif safe_health < 75:
+
+           summary += "\n⚠ MODERATE RISK PRESENT"
+
+       else:
+
+           summary += "\n✅ SYSTEM OPERATING NORMALLY"
+
+
+        # =========================================================
+        # 📄 Display Summary
+        # =========================================================
+        st.text_area(
+            "Enterprise Executive Summary",
+            summary,
+            height=350
             )
-        else:
-            st.warning("⚠ No forecast data available to download.")
-
-        st.subheader("📄 Download Executive PDF Report")
-        def generate_pdf():
 
             # -------------------------------
             # SAFE VALUES (IMPORTANT FIX)
