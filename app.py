@@ -1674,6 +1674,18 @@ if st.session_state.get("authentication_status"):
                 failure_percent = round(failure_probability * 100, 2)
 
                 # -------------------------------
+                # 🧠 Equipment Criticality Score
+                # -------------------------------
+
+                criticality_score = (
+                    sensor_data["Temperature (°C)"] * 0.4 +
+                    sensor_data["Vibration"] * 20 +
+                    failure_percent * 0.4
+                )
+
+                criticality_score = round(min(100, criticality_score), 2)
+
+                # -------------------------------
                 # 🎯 AI Confidence Score
                 # -------------------------------
                 confidence_score = round(100 - abs(50 - failure_percent), 2)
