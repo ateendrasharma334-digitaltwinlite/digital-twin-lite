@@ -1686,6 +1686,19 @@ if st.session_state.get("authentication_status"):
                 criticality_score = round(min(100, criticality_score), 2)
 
                 # -------------------------------
+                # 🚨 AI Priority Classification
+                # -------------------------------
+
+                if criticality_score > 80:
+                   priority = "CRITICAL"
+                elif criticality_score > 60:
+                   priority = "HIGH"
+                elif criticality_score > 40:
+                   priority = "MEDIUM"
+                else:
+                   priority = "LOW"
+
+                # -------------------------------
                 # 🎯 AI Confidence Score
                 # -------------------------------
                 confidence_score = round(100 - abs(50 - failure_percent), 2)
