@@ -1322,22 +1322,22 @@ if st.session_state.get("authentication_status"):
 
         enterprise_col1.metric(
             "⚡ Total Energy",
-            f"{round(total_energy,2)} kWh"
+            f"{round(safe_total_energy,2)} kWh"
         )
 
         enterprise_col2.metric(
             "💰 Operational Cost",
-            f"£{round(total_cost,2)}"
+            f"£{round(safe_total_cost,2)}"
         )
 
         enterprise_col3.metric(
            "🌍 CO₂ Emissions",
-           f"{round(total_co2,2)} kg"
+           f"{round(safe_total_co2,2)} kg"
         )
 
         enterprise_col4.metric(
            "🖥 Fleet Health",
-           f"{round(health_score,2)}%"
+           f"{round(safe_health_score,2)}%"
         )
         
         # -------------------------------
