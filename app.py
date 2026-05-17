@@ -42,7 +42,7 @@ client_mqtt.loop_start()
 from streamlit_autorefresh import st_autorefresh
 
 # Refresh every 5 seconds
-st_autorefresh(interval=5000, key="datarefresh")
+st_autorefresh(interval=30000, key="datarefresh")
 
 # -------------------------------
 # Global Safe Variables (FIX)
