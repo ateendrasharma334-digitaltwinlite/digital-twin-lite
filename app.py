@@ -1314,6 +1314,48 @@ if st.session_state.get("authentication_status"):
             st.metric("System Health (%)", 100)
         
         # -------------------------------
+        # 🌍 Enterprise KPI Panel
+        # -------------------------------
+        st.subheader("🌍 Enterprise KPI Overview")
+
+        enterprise_col1, enterprise_col2, enterprise_col3, enterprise_col4 = st.columns(4)
+
+        enterprise_col1.metric(
+            "⚡ Total Energy",
+            f"{round(total_energy,2)} kWh"
+        )
+
+        enterprise_col2.metric(
+            "💰 Operational Cost",
+            f"£{round(total_cost,2)}"
+        )
+
+        enterprise_col3.metric(
+           "🌍 CO₂ Emissions",
+           f"{round(total_co2,2)} kg"
+        )
+
+        enterprise_col4.metric(
+           "🖥 Fleet Health",
+           f"{round(health_score,2)}%"
+        )
+        
+        # -------------------------------
+        # 🚨 Enterprise AI Risk Index
+        # -------------------------------
+        st.subheader("🚨 Enterprise AI Risk Index")
+
+        risk_score = 100 - health_score
+
+        if risk_score > 60:
+            st.error(f"🔴 CRITICAL RISK LEVEL: {round(risk_score,2)}%")
+        elif risk_score > 30:
+            st.warning(f"🟠 MODERATE RISK LEVEL: {round(risk_score,2)}%")
+        else:
+            st.success(f"🟢 LOW RISK LEVEL: {round(risk_score,2)}%")
+
+        st.progress(int(risk_score))
+        # -------------------------------
         # 📊 Multi KPI Health Index (FIXED)
         # -------------------------------
         st.subheader("📊 System Health Breakdown")
