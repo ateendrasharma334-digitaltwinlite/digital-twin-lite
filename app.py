@@ -1995,6 +1995,16 @@ if st.session_state.get("authentication_status"):
                     st.progress(int(failure_percent))
 
                     # -------------------------------
+                    # 🖥 AI Command Center Status
+                    # -------------------------------
+
+                    colA, colB, colC = st.columns(3)
+
+                    colA.metric("Criticality Score", f"{criticality_score}%")
+                    colB.metric("Priority Level", priority)
+                    colC.metric("Failure Risk", f"{failure_percent}%")
+
+                    # -------------------------------
                     # 🖥 SCADA-STYLE CONTROL ROOM UI
                     # -------------------------------
                     st.markdown("## 🖥 Control Room Dashboard")
@@ -2039,6 +2049,47 @@ if st.session_state.get("authentication_status"):
                             st.info(alert)
                 
                     st.line_chart(df_live)
+
+                    # -------------------------------
+                    # 🧠 AI Operator Recommendations
+                    # -------------------------------
+
+                    st.subheader("🧠 AI Operator Recommendations")
+
+                    if priority == "CRITICAL":
+
+                        st.error("""
+                        Immediate Actions Required:
+                        - Shutdown turbine safely
+                        - Inspect vibration bearings
+                        - Check cooling system
+                        - Notify maintenance supervisor
+                        """)
+
+                    elif priority == "HIGH":
+
+                        st.warning("""
+                        Recommended Actions:
+                        - Schedule maintenance within 24h
+                        - Monitor temperature continuously
+                        - Reduce operational load
+                        """)
+
+                    elif priority == "MEDIUM":
+
+                        st.info("""
+                        Monitoring Recommended:
+                        - Continue observation
+                        - Review system efficiency
+                        - Check sensor calibration
+                        """)
+
+                    else:
+
+                        st.success("""
+                        System operating normally.
+                        No immediate intervention required.
+                        """)
 
                     # -------------------------------
                     # ⚡ Energy Control Panel
