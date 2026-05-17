@@ -1625,6 +1625,11 @@ if st.session_state.get("authentication_status"):
         # -------------------------------
         if st.button("🗑 Clear Chat"):
             st.session_state.copilot_history = []
+        
+            st.markdown("""
+            # 🖥 AI ENERGY COMMAND CENTER
+            ### Real-Time Industrial Monitoring Platform
+            """)
 
         # -------------------------------
         # Live IoT Sensor Simulation + AI Failure Detection
@@ -1686,6 +1691,14 @@ if st.session_state.get("authentication_status"):
                 criticality_score = round(min(100, criticality_score), 2)
 
                 # -------------------------------
+                # ⏳ Remaining Equipment Life
+                # -------------------------------
+
+                remaining_life = max(0, 100 - criticality_score)
+
+                remaining_life_days = int(remaining_life * 3.65)
+
+                # -------------------------------
                 # 🚨 AI Priority Classification
                 # -------------------------------
 
@@ -1697,6 +1710,29 @@ if st.session_state.get("authentication_status"):
                    priority = "MEDIUM"
                 else:
                    priority = "LOW"
+                
+                # -------------------------------
+                # ⚡ Autonomous Load Balancer
+                # -------------------------------
+
+                load_action = "NORMAL"
+
+                if sensor_data["Energy (kWh)"] > 450:
+                    load_action = "REDUCE LOAD"
+
+                elif sensor_data["Energy (kWh)"] < 180:
+                    load_action = "INCREASE UTILIZATION"
+                
+                # -------------------------------
+                # 🚀 AI Efficiency Score
+                # -------------------------------
+
+                efficiency_score = 100 - (
+                    sensor_data["Vibration"] * 10 +
+                    failure_percent * 0.5
+                )
+
+                efficiency_score = round(max(0, efficiency_score), 2)
 
                 # -------------------------------
                 # 🎯 AI Confidence Score
@@ -1999,6 +2035,10 @@ if st.session_state.get("authentication_status"):
                     # -------------------------------
 
                     colA, colB, colC = st.columns(3)
+                    colD, colE = st.columns(2)
+
+                    colD.metric("Efficiency Score", f"{efficiency_score}%")
+                    colE.metric("Remaining Life", f"{remaining_life_days} Days")
 
                     colA.metric("Criticality Score", f"{criticality_score}%")
                     colB.metric("Priority Level", priority)
@@ -2089,6 +2129,68 @@ if st.session_state.get("authentication_status"):
                         st.success("""
                         System operating normally.
                         No immediate intervention required.
+                        """)
+                    
+                    # -------------------------------
+                    # ⚡ Smart Energy Dispatch Engine
+                    # -------------------------------
+
+                    st.subheader("⚡ Smart Dispatch Decision")
+
+                    if load_action == "REDUCE LOAD":
+
+                        st.error("""
+                        AI Dispatch Action:
+                        - Reduce non-critical systems
+                        - Shift peak operations
+                        - Activate energy-saving mode
+                        """)
+
+                    elif load_action == "INCREASE UTILIZATION":
+
+                        st.info("""
+                        AI Dispatch Action:
+                        - Capacity available
+                        - Increase productive load
+                        - Utilize off-peak efficiency
+                        """)
+
+                    else:
+
+                        st.success("""
+                        Energy dispatch optimized.
+                        System balanced normally.
+                        """)
+
+                    # -------------------------------
+                    # 🚨 AI Escalation Matrix
+                    # -------------------------------
+
+                    st.subheader("🚨 Alarm Escalation Matrix")
+
+                    if priority == "CRITICAL":
+
+                        st.error("""
+                        LEVEL 3 ESCALATION:
+                        - Notify plant manager
+                        - Notify operations head
+                        - Emergency maintenance activation
+                        """)
+
+                    elif priority == "HIGH":
+
+                        st.warning("""
+                        LEVEL 2 ESCALATION:
+                        - Notify maintenance team
+                        - Increase monitoring frequency
+                        """)
+
+                    elif priority == "MEDIUM":
+
+                        st.info("""
+                        LEVEL 1 ESCALATION:
+                        - Log operational advisory
+                        - Continue observation
                         """)
 
                     # -------------------------------
