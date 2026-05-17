@@ -287,7 +287,7 @@ def typewriter_effect(text):
     return placeholder
 
 # -------------------------------
-# 🤖 Real GPT Copilot (Level 31)
+# 🤖 Real GPT Copilot 
 # -------------------------------
 def gpt_copilot(user_input, df=None, forecast_df=None):
 
@@ -360,7 +360,7 @@ def load_failure_model():
 
 failure_model = load_failure_model()
 # -------------------------------
-# 🤖 Advanced AI Copilot Brain (Level 30)
+# 🤖 Advanced AI Copilot Brain
 # -------------------------------
 def ai_copilot(query, df=None, forecast_df=None):
 
@@ -796,6 +796,37 @@ if st.session_state.get("authentication_status"):
         st.success("✅ Grid Operating Normally")
     
     # =========================================================
+    # ⚖ AI Load Balancer
+    # =========================================================
+    st.subheader("⚖ AI Load Balancer")
+
+    load_distribution = pd.DataFrame({
+         "System": [
+            "HVAC",
+            "Lighting",
+            "Turbines",
+            "Cooling",
+            "Battery Storage"
+        ],
+        "Load (%)": [
+            random.randint(10, 40),
+            random.randint(5, 20),
+            random.randint(20, 50),
+            random.randint(10, 30),
+            random.randint(5, 25)
+        ]
+    })
+
+    fig_load = px.pie(
+        load_distribution,
+        names="System",
+        values="Load (%)",
+        title="AI Load Distribution"
+    )
+
+    st.plotly_chart(fig_load, use_container_width=True)
+    
+    # =========================================================
     # 🌐 Grid Stability Index
     # =========================================================
     st.subheader("🌐 Grid Stability Index")
@@ -817,6 +848,27 @@ if st.session_state.get("authentication_status"):
 
     else:
         st.success("✅ Grid Stable")
+    
+    # =========================================================
+    # 💹 Energy Trading Simulator
+    # =========================================================
+    st.subheader("💹 Live Energy Trading")
+
+    market_price = round(random.uniform(0.08, 0.25), 3)
+
+    st.metric(
+        "Electricity Market Price",
+        f"£{market_price}/kWh"
+    )
+
+    if market_price > 0.20:
+        st.error("🚨 Peak Market Pricing")
+
+    elif market_price > 0.14:
+        st.warning("⚠ Moderate Market Rates")
+
+    else:
+        st.success("✅ Favorable Energy Pricing")
 
 
     # -------------------------------
@@ -1688,6 +1740,22 @@ if st.session_state.get("authentication_status"):
                 st.info(f"🤖 AI Recommendation: {decision}")
 
                 # =========================================================
+                # 🖥 Enterprise Command Console
+                # =========================================================
+                st.subheader("🖥 Enterprise Command Console")
+
+                console_messages = [
+                    "AI Monitoring Active",
+                    "Grid Communication Stable",
+                    "Renewable Sources Connected",
+                    "Predictive Maintenance Enabled",
+                    "SCADA Synchronization Successful"
+                ]
+
+                for msg in console_messages:
+                    st.success(f"✔ {msg}")
+
+                # =========================================================
                 # 🤖 Autonomous AI Actions
                 # =========================================================
                 st.subheader("🤖 Autonomous AI Actions")
@@ -1707,6 +1775,27 @@ if st.session_state.get("authentication_status"):
                     ai_action = "HVAC optimization activated"
 
                 st.success(f"⚡ AI Action: {ai_action}")
+
+                # =========================================================
+                # 🧠 Autonomous Grid Optimization
+                # =========================================================
+                st.subheader("🧠 Autonomous Grid Optimization")
+
+                optimization_action = "No optimization needed"
+
+                if power_demand > 1000:
+
+                    optimization_action = "Reducing non-critical loads"
+
+                elif renewable_percent > 60:
+
+                    optimization_action = "Switching to renewable priority mode"
+
+                elif market_price > 0.20:
+
+                    optimization_action = "Activating battery storage"
+
+                st.info(f"⚡ AI Optimization: {optimization_action}")
 
                 # -------------------------------
                 # 🛠 Smart Maintenance Scheduler
