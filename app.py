@@ -1322,22 +1322,22 @@ if st.session_state.get("authentication_status"):
 
         enterprise_col1.metric(
             "⚡ Total Energy",
-            f"{round(safe_total_energy,2)} kWh"
+            f"{round(total_energy,2)} kWh"
         )
 
         enterprise_col2.metric(
             "💰 Operational Cost",
-            f"£{round(safe_total_cost,2)}"
+            f"£{round(total_cost,2)}"
         )
 
         enterprise_col3.metric(
            "🌍 CO₂ Emissions",
-           f"{round(safe_total_co2,2)} kg"
+           f"{round(total_co2,2)} kg"
         )
 
         enterprise_col4.metric(
            "🖥 Fleet Health",
-           f"{round(safe_health_score,2)}%"
+           f"{round(health_score,2)}%"
         )
         
         # -------------------------------
@@ -1354,7 +1354,7 @@ if st.session_state.get("authentication_status"):
         else:
             st.success(f"🟢 LOW RISK LEVEL: {round(risk_score,2)}%")
 
-        st.progress(int(risk_score))
+            st.progress(int(risk_score))
         # -------------------------------
         # 📊 Multi KPI Health Index (FIXED)
         # -------------------------------
@@ -2352,6 +2352,21 @@ if st.session_state.get("authentication_status"):
                 st.markdown(f"🧑‍💻 **You:** {message}")
             else:
                 st.markdown(f"🤖 **AI:** {message}")
+        
+        # -------------------------------
+        # SAFE KPI VARIABLES
+        # -------------------------------
+        total_energy = 0
+        total_cost = 0
+        total_co2 = 0
+
+        if forecast_df is not None and "forecast" in forecast_df.columns:
+
+            total_energy = forecast_df["forecast"].sum()
+
+            total_cost = total_energy * 0.12
+
+            total_co2 = total_energy * 0.233
         # -------------------------------
         # 🤖 AI Executive Summary 
         # -------------------------------
