@@ -794,6 +794,29 @@ if st.session_state.get("authentication_status"):
 
     else:
         st.success("✅ Grid Operating Normally")
+    
+    # =========================================================
+    # 🌐 Grid Stability Index
+    # =========================================================
+    st.subheader("🌐 Grid Stability Index")
+
+    grid_score = random.randint(70, 100)
+
+    st.progress(grid_score)
+
+    st.metric(
+        "Grid Stability",
+        f"{grid_score}%"
+    )
+
+    if grid_score < 75:
+        st.error("🚨 Grid Instability Detected")
+
+    elif grid_score < 90:
+        st.warning("⚠ Minor Grid Fluctuations")
+
+    else:
+        st.success("✅ Grid Stable")
 
 
     # -------------------------------
@@ -1572,6 +1595,34 @@ if st.session_state.get("authentication_status"):
 
                 for alarm in alarm_messages:
                     st.error(alarm)
+                
+                # =========================================================
+                # 📋 Incident Tracking System
+                # =========================================================
+                st.subheader("📋 Incident Tracking")
+
+                incident_df = pd.DataFrame({
+                    "Incident": [
+                       "Temperature Spike",
+                       "Voltage Fluctuation",
+                       "High Vibration",
+                       "Cooling Delay"
+                    ],
+                    "Priority": [
+                       "High",
+                       "Medium",
+                       "Critical",
+                       "Low"
+                    ],
+                    "Status": [
+                       "Open",
+                       "Investigating",
+                       "Resolved",
+                       "Monitoring"
+                    ]
+                })
+
+                st.dataframe(incident_df)
                 
                 # -------------------------------
                 # 🧠 Root Cause Analysis (Level 33)
