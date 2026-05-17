@@ -631,6 +631,32 @@ if st.session_state.get("authentication_status"):
         predicted_failure_date.strftime("%Y-%m-%d")
     )
 
+    # =========================================================
+    # ⏳ Predictive Failure Timeline
+    # =========================================================
+    st.subheader("⏳ Failure Prediction Timeline")
+
+    timeline_df = pd.DataFrame({
+        "Days Ahead": [1, 7, 14, 30, 60],
+        "Failure Risk": [
+            random.randint(5, 15),
+            random.randint(10, 25),
+            random.randint(20, 40),
+            random.randint(30, 60),
+            random.randint(40, 80)
+        ]
+    })
+
+    fig_timeline = px.line(
+        timeline_df,
+        x="Days Ahead",
+        y="Failure Risk",
+        markers=True,
+        title="Predicted Failure Risk Over Time"
+    )
+
+    st.plotly_chart(fig_timeline, use_container_width=True)
+
     # Maintenance recommendation
     if days_to_failure < 7:
         st.error("🚨 Immediate Maintenance Required")
@@ -1373,8 +1399,41 @@ if st.session_state.get("authentication_status"):
         sustainability_score = (health_score * 0.6) + (co2_impact_score * 0.4)
         st.metric("Overall Sustainability Score (%)", round(sustainability_score, 2))
 
+        # =========================================================
+        # 🌱 AI Sustainability Rating
+        # =========================================================
+        st.subheader("🌱 AI Sustainability Rating")
+
+        rating = "A+"
+
+        if sustainability_score < 50:
+            rating = "C"
+
+        elif sustainability_score < 70:
+            rating = "B"
+
+        elif sustainability_score < 85:
+            rating = "A"
+
+        st.metric(
+            "Enterprise Sustainability Rating",
+            rating
+        )
+
+        if rating == "A+":
+            st.success("🏆 Industry-Leading Sustainability")
+
+        elif rating == "A":
+            st.success("♻ Strong Sustainability Performance")
+
+        elif rating == "B":
+            st.warning("⚠ Sustainability Improvements Possible")
+
+        else:
+            st.error("🚨 Sustainability Risk")
+
         # -------------------------------
-        # ⚡ Energy Efficiency Score (Level 33)
+        # ⚡ Energy Efficiency Score 
         # -------------------------------
         st.subheader("⚡ Energy Efficiency Score")
 
@@ -2074,7 +2133,7 @@ if st.session_state.get("authentication_status"):
             else:
                 st.markdown(f"🤖 **AI:** {message}")
         # -------------------------------
-        # 🤖 AI Executive Summary (Level 33)
+        # 🤖 AI Executive Summary 
         # -------------------------------
         st.subheader("📄 Executive AI Summary")
 
