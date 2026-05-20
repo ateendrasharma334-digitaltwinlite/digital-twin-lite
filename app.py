@@ -49,6 +49,7 @@ st_autorefresh(interval=30000, key="datarefresh")
 # -------------------------------
 df = None
 forecast_df = None
+failure_percent = 0
 
 st.set_page_config(
         page_title="Digital Twin Lite",
@@ -1745,6 +1746,7 @@ if st.session_state.get("authentication_status"):
                 ]])[0]
 
                 failure_percent = round(failure_probability * 100, 2)
+                st.session_state.failure_percent = failure_percent
 
                 # -------------------------------
                 # 🧠 Equipment Criticality Score
