@@ -598,14 +598,7 @@ if st.session_state.get("authentication_status"):
     temp_value = random.uniform(20, 80)
     vibration_value = random.uniform(0.1, 5.0)
     pressure_value = random.uniform(10, 50)
-
-    # -------------------------------
-    # Extract Sensor Values
-    # -------------------------------
-    temperature = sensor_data["Temperature (°C)"]
-    vibration = sensor_data["Vibration (mm/s)"]
-    pressure = sensor_data["Pressure (bar)"]
-
+    
     # -------------------------------
     # 🔧 Turbine Sensor Dashboard
     # -------------------------------
