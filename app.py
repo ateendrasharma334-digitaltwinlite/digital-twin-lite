@@ -108,6 +108,18 @@ def init_db():
         )
         """)
 
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS assets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            asset_name TEXT,
+            asset_type TEXT,
+            health_score REAL,
+            criticality TEXT,
+            status TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+
 def insert_sensor_data(temp, vibration, pressure):
     with get_connection() as conn:
         conn.execute("""
@@ -129,6 +141,26 @@ def log_security_event(username, action):
             INSERT INTO security_logs (username, action)
             VALUES (?, ?)
         """, (username, action))
+
+def insert_asset(asset_name, asset_type, health_score, criticality, status):
+
+    with get_connection() as conn:
+        conn.execute("""
+            INSERT INTO assets (
+                asset_name,
+                asset_type,
+                health_score,
+                criticality,
+                status
+            )
+            VALUES (?, ?, ?, ?, ?)
+        """, (
+            asset_name,
+            asset_type,
+            health_score,
+            criticality,
+            status
+        ))
 
 def fetch_maintenance_history(limit=10):
     with get_connection() as conn:
@@ -580,6 +612,24 @@ if st.session_state.get("authentication_status"):
 
     # Insert into DB safely
     insert_sensor_data(temp_value, vibration_value, pressure_value)
+
+    # -------------------------------
+    # 🏭 Asset Registry
+    # -------------------------------
+    st.subheader("🏭 Industrial Asset Registry")
+
+    asset_name = st.selectbox(
+        "Select Asset",
+        [
+            "Gas Turbine GT-01",
+            "Steam Turbine ST-02",
+            "Transformer TX-01",
+            "Boiler BLR-01",
+            "Wind Turbine WT-01"
+        ]
+    )
+
+    asset_type = asset_name.split()[0]
 
     # -------------------------------
     # Predictive Maintenance Call
