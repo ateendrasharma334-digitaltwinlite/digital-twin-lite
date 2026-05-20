@@ -693,6 +693,19 @@ if st.session_state.get("authentication_status"):
     history = fetch_maintenance_history()
     for row in history:
         st.write(f"{row[0]} | Health Score: {row[1]:.2f} | Status: {row[2]}")
+    
+    # -------------------------------
+    # 📜 Security Audit Trail
+    # -------------------------------
+    st.subheader("📜 User Activity Logs")
+
+    with get_connection() as conn:
+        audit_df = pd.read_sql_query(
+            "SELECT * FROM security_logs ORDER BY timestamp DESC LIMIT 20",
+            conn
+        )
+
+    st.dataframe(audit_df)
 
     # -------------------------------
     # Historical Dashboard
@@ -973,7 +986,10 @@ if st.session_state.get("authentication_status"):
         "Select Building",
         ["Building A", "Building B", "Building C"]
     )
-    role = st.sidebar.radio("Role", ["User", "Admin"])
+    if st.session_state.get("username") == "admin":
+        role = st.sidebar.radio("Role", ["User", "Admin"])
+    else:
+        role = "User"
     if role == "Admin":
         st.subheader("Admin Controls")
         st.write("Advanced analytics visible only to admin.")
@@ -1468,6 +1484,21 @@ if st.session_state.get("authentication_status"):
 
         else:
             st.error("🚨 Sustainability Risk")
+        
+        # -------------------------------
+        # 🧠 AI Security Score
+        # -------------------------------
+        security_score = 100
+
+        if failure_percent > 70:
+            security_score -= 30
+
+        if health_score < 50:
+            security_score -= 20
+
+        security_score = max(0, security_score)
+
+        st.metric("🛡 AI Security Score", f"{security_score}%")
 
         # -------------------------------
         # ⚡ Energy Efficiency Score 
@@ -1805,6 +1836,20 @@ if st.session_state.get("authentication_status"):
                 for alarm in alarm_messages:
                     st.error(alarm)
                 
+                # -------------------------------
+                # 🚨 Security Monitoring
+                # -------------------------------
+                st.subheader("🚨 Security Monitoring")
+
+                if failure_percent > 80:
+                    st.error("🔴 Critical infrastructure risk detected")
+
+                if len(alerts) > 2:
+                    st.warning("⚠ Multiple simultaneous anomalies detected")
+
+                if health_score < 40:
+                    st.error("🚨 Equipment health critically low")
+
                 # =========================================================
                 # 📋 Incident Tracking System
                 # =========================================================
