@@ -121,6 +121,14 @@ def insert_maintenance_log(health_score, status):
             VALUES (?, ?)
         """, (health_score, status))
 
+def log_security_event(username, action):
+
+    with get_connection() as conn:
+        conn.execute("""
+            INSERT INTO security_logs (username, action)
+            VALUES (?, ?)
+        """, (username, action))
+
 def fetch_maintenance_history(limit=10):
     with get_connection() as conn:
         return conn.execute("""
@@ -528,6 +536,10 @@ elif st.session_state.get("authentication_status") is None:
     st.stop()
 else:
     st.success(f"Welcome {st.session_state.get('name')} 👋")
+log_security_event(
+    st.session_state.get("name"),
+    "User Logged In"
+)
 
 # -------------------------------
 # Wrap entire dashboard
