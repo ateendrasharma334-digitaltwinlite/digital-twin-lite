@@ -678,7 +678,25 @@ if st.session_state.get("authentication_status"):
         "Estimated Remaining Life",
         f"{rul_days} Days"
     )
+    
+    # -------------------------------
+    # 📉 Asset Degradation Analysis
+    # -------------------------------
+    st.subheader("📉 Asset Degradation")
 
+    degradation_rate = round((100 - health_score) / 100, 2)
+
+    st.metric(
+        "Degradation Rate",
+        f"{degradation_rate * 100}%"
+    )
+
+    if degradation_rate > 0.6:
+        st.error("🚨 Severe degradation detected")
+    elif degradation_rate > 0.3:
+        st.warning("⚠ Moderate degradation detected")
+    else:
+        st.success("✅ Asset operating normally")
 
     # -------------------------------
     # Turbine Health Gauge
