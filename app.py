@@ -660,6 +660,25 @@ if st.session_state.get("authentication_status"):
 
     st.metric("Asset Criticality", criticality)
 
+    # -------------------------------
+    # 🔮 Remaining Useful Life (RUL)
+    # -------------------------------
+    st.subheader("🔮 Remaining Useful Life")
+
+    if health_score > 80:
+        rul_days = 365
+    elif health_score > 60:
+        rul_days = 180
+    elif health_score > 40:
+        rul_days = 90
+    else:
+        rul_days = 30
+
+    st.metric(
+        "Estimated Remaining Life",
+        f"{rul_days} Days"
+    )
+
 
     # -------------------------------
     # Turbine Health Gauge
