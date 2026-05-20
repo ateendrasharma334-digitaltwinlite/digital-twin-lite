@@ -1136,7 +1136,46 @@ if st.session_state.get("authentication_status"):
         ["Building A", "Building B", "Building C"]
     )
     if st.session_state.get("username") == "admin":
-        role = st.sidebar.radio("Role", ["User", "Admin"])
+        # -------------------------------
+        # 👥 Enterprise Role Access
+        # -------------------------------
+        st.sidebar.header("👥 User Access Control")
+
+        role = st.sidebar.selectbox(
+            "Select Role",
+            [
+                "Admin",
+                "Operator",
+                "Engineer",
+                "Client"
+            ]
+        )
+
+        # Display active role
+        st.sidebar.success(f"Logged in as: {role}")
+
+        # -------------------------------
+        # Role Permissions
+        # -------------------------------
+        if role == "Admin":
+
+            st.subheader("🛠 Admin Controls")
+            st.write("Full system analytics and AI controls enabled.")
+
+        elif role == "Operator":
+
+            st.subheader("⚙ Operator Dashboard")
+            st.write("Operational monitoring access enabled.")
+
+        elif role == "Engineer":
+
+            st.subheader("🔧 Engineer Workspace")
+            st.write("Maintenance and diagnostics tools enabled.")
+
+        elif role == "Client":
+
+            st.subheader("📊 Client Dashboard")
+            st.write("Read-only energy performance view enabled.")
     else:
         role = "User"
     if role == "Admin":
