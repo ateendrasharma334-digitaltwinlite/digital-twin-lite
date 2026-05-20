@@ -260,6 +260,26 @@ def predictive_maintenance(temp, vibration, pressure):
     return health_score, status
 
 # -------------------------------
+# 🚨 Asset Criticality Engine
+# -------------------------------
+if health_score < 40:
+    criticality = "Critical"
+elif health_score < 70:
+    criticality = "Warning"
+else:
+    criticality = "Healthy"
+
+insert_asset(
+    asset_name,
+    asset_type,
+    health_score,
+    criticality,
+    status
+)
+
+st.metric("Asset Criticality", criticality)
+
+# -------------------------------
 # AI Fault Detection
 # -------------------------------
 def detect_faults(temp, vibration, energy):
@@ -2444,6 +2464,7 @@ if st.session_state.get("authentication_status"):
                 st.markdown(f"🧑‍💻 **You:** {message}")
             else:
                 st.markdown(f"🤖 **AI:** {message}")
+        
         # -------------------------------
         # 🤖 AI Executive Summary 
         # -------------------------------
