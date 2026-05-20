@@ -600,6 +600,13 @@ if st.session_state.get("authentication_status"):
     pressure_value = random.uniform(10, 50)
 
     # -------------------------------
+    # Extract Sensor Values
+    # -------------------------------
+    temperature = sensor_data["Temperature (°C)"]
+    vibration = sensor_data["Vibration (mm/s)"]
+    pressure = sensor_data["Pressure (bar)"]
+
+    # -------------------------------
     # 🔧 Turbine Sensor Dashboard
     # -------------------------------
     st.subheader("🔧 Turbine Sensor Data")
@@ -639,6 +646,49 @@ if st.session_state.get("authentication_status"):
     )
 
     st.metric("Machine Health Score", f"{health_score:.2f}")
+
+    # =========================================
+    # LEVEL 45 — ASSET CRITICALITY ENGINE
+    # =========================================
+
+    st.subheader("🏭 Asset Criticality Engine")
+
+    criticality_score = 0
+
+    # Temperature impact
+    if temperature > 80:
+        criticality_score += 30
+    elif temperature > 60:
+        criticality_score += 15
+
+    # Vibration impact
+    if vibration > 7:
+        criticality_score += 30
+    elif vibration > 4:
+        criticality_score += 15
+
+    # Failure risk impact
+    if failure_percent > 70:
+        criticality_score += 40
+    elif failure_percent > 40:
+        criticality_score += 20
+
+    # Asset Classification
+    if criticality_score >= 70:
+        criticality_status = "🔴 CRITICAL ASSET"
+    elif criticality_score >= 40:
+        criticality_status = "🟠 HIGH RISK ASSET"
+    else:
+        criticality_status = "🟢 STABLE ASSET"
+
+    # Display
+    st.metric(
+        "Asset Criticality Score",
+        f"{criticality_score}/100"
+    )
+
+    st.markdown(f"### {criticality_status}")
+
 
     # -------------------------------
     # Turbine Health Gauge
@@ -2444,49 +2494,7 @@ if st.session_state.get("authentication_status"):
                 st.markdown(f"🧑‍💻 **You:** {message}")
             else:
                 st.markdown(f"🤖 **AI:** {message}")
-        
-        # =========================================
-        # LEVEL 45 — ASSET CRITICALITY ENGINE
-        # =========================================
 
-        st.subheader("🏭 Asset Criticality Engine")
-
-        criticality_score = 0
-
-        # Temperature impact
-        if temperature > 80:
-            criticality_score += 30
-        elif temperature > 60:
-            criticality_score += 15
-
-        # Vibration impact
-        if vibration > 7:
-            criticality_score += 30
-        elif vibration > 4:
-            criticality_score += 15
-
-        # Failure risk impact
-        if failure_percent > 70:
-            criticality_score += 40
-        elif failure_percent > 40:
-            criticality_score += 20
-
-        # Asset Classification
-        if criticality_score >= 70:
-            criticality_status = "🔴 CRITICAL ASSET"
-        elif criticality_score >= 40:
-            criticality_status = "🟠 HIGH RISK ASSET"
-        else:
-            criticality_status = "🟢 STABLE ASSET"
-
-        # Display
-        st.metric(
-            "Asset Criticality Score",
-            f"{criticality_score}/100"
-        )
-
-        st.markdown(f"### {criticality_status}")
-        
         # -------------------------------
         # 🤖 AI Executive Summary 
         # -------------------------------
