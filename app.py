@@ -802,6 +802,29 @@ if st.session_state.get("authentication_status"):
     history = fetch_maintenance_history()
     for row in history:
         st.write(f"{row[0]} | Health Score: {row[1]:.2f} | Status: {row[2]}")
+
+    # -------------------------------
+    # 📊 Fleet Asset Monitoring
+    # -------------------------------
+    st.subheader("📊 Fleet Asset Overview")
+
+    with get_connection() as conn:
+
+        fleet_df = pd.read_sql_query(
+            """
+            SELECT asset_name,
+                   health_score,
+                   criticality,
+                   status,
+                   timestamp
+            FROM assets
+            ORDER BY timestamp DESC
+            LIMIT 20
+            """,
+            conn
+        )
+
+    st.dataframe(fleet_df)
     
     # -------------------------------
     # 📜 Security Audit Trail
