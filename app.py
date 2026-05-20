@@ -661,6 +661,23 @@ if st.session_state.get("authentication_status"):
     st.metric("Asset Criticality", criticality)
 
     # -------------------------------
+    # 🧠 AI Asset Risk Score
+    # -------------------------------
+    asset_risk = 100 - health_score
+
+    st.metric(
+        "⚠ Asset Risk Score",
+        f"{round(asset_risk,2)}%"
+    )
+
+    if asset_risk > 70:
+        st.error("🚨 High Asset Failure Risk")
+    elif asset_risk > 40:
+        st.warning("⚠ Moderate Asset Risk")
+    else:
+        st.success("✅ Asset Risk Low")
+
+    # -------------------------------
     # 🔮 Remaining Useful Life (RUL)
     # -------------------------------
     st.subheader("🔮 Remaining Useful Life")
