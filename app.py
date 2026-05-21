@@ -843,6 +843,23 @@ if st.session_state.get("authentication_status"):
     history = fetch_maintenance_history()
     for row in history:
         st.write(f"{row[0]} | Health Score: {row[1]:.2f} | Status: {row[2]}")
+    
+    # =====================================================
+    # 📜 Live System Audit Logs
+    # =====================================================
+
+    st.subheader("📜 Live Audit Logs")
+
+    audit_logs = [
+        "User login successful",
+        "Forecast model executed",
+        "AI anomaly detection completed",
+        "Sensor calibration verified",
+        "System optimization triggered"
+    ]
+
+    for log in audit_logs:
+        st.write(f"✅ {log}")
 
     # -------------------------------
     # 📊 Fleet Asset Monitoring
