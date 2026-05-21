@@ -660,6 +660,30 @@ if st.session_state.get("authentication_status"):
 
     st.metric("Asset Criticality", criticality)
 
+    # =====================================================
+    # 🔐 Cybersecurity Threat Monitor
+    # =====================================================
+
+    st.subheader("🔐 Cybersecurity Threat Monitor")
+
+    cyber_risk = random.randint(1, 100)
+
+    if cyber_risk > 75:
+        st.error("🚨 HIGH Cybersecurity Threat Detected")
+
+    elif cyber_risk > 40:
+        st.warning("⚠ Medium Security Risk")
+
+    else:
+        st.success("✅ Network Secure")
+
+    st.progress(cyber_risk)
+
+    st.metric(
+        "Cyber Risk Score",
+        f"{cyber_risk}/100"
+    )
+
     # -------------------------------
     # 🧠 AI Asset Risk Score
     # -------------------------------
