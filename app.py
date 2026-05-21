@@ -185,6 +185,16 @@ init_db()
 # -------------------------------
 st.title("🏢 Digital Twin Lite - Energy Dashboard")
 
+# =====================================================
+# 🖥 Enterprise Command Center
+# =====================================================
+
+st.markdown("""
+# 🖥 Enterprise Energy Command Center
+
+Real-Time AI Monitoring • Predictive Intelligence • Grid Analytics
+""")
+
 # =========================================================
 # 🏭 ENTERPRISE CONTROL CENTER
 # =========================================================
