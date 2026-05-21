@@ -908,6 +908,40 @@ if st.session_state.get("authentication_status"):
         st.warning("No sensor data available.")
     else:
         st.dataframe(df)
+    
+    # =====================================================
+    # 🏭 Multi-Asset Fleet Monitor
+    # =====================================================
+
+    st.subheader("🏭 Multi-Asset Fleet Monitor")
+
+    fleet_data = pd.DataFrame({
+        "Asset": [
+            "Turbine A",
+            "Turbine B",
+            "HV Transformer",
+            "Cooling Pump",
+            "Solar Inverter"
+        ],
+        "Health Score": [
+            random.randint(60, 98),
+            random.randint(40, 90),
+            random.randint(55, 95),
+            random.randint(35, 88),
+            random.randint(70, 99)
+        ]
+    })
+
+    st.dataframe(fleet_data)
+
+    fleet_fig = px.bar(
+        fleet_data,
+        x="Asset",
+        y="Health Score",
+        title="Fleet Health Monitoring"
+    )
+
+    st.plotly_chart(fleet_fig, use_container_width=True)
 
 
     # -------------------------------
