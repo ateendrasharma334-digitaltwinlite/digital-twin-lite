@@ -1503,6 +1503,29 @@ if st.session_state.get("authentication_status"):
 
     else:
         st.info("Add 'building' column to enable carbon insights")
+    
+    # =====================================================
+    # ⚡ Grid Stability Engine
+    # =====================================================
+
+    st.subheader("⚡ Grid Stability Engine")
+
+    grid_load = random.randint(40, 100)
+
+    renewable_share = random.randint(20, 80)
+
+    frequency = round(random.uniform(49.5, 50.5), 2)
+
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric("Grid Load", f"{grid_load}%")
+    col2.metric("Renewable Share", f"{renewable_share}%")
+    col3.metric("Grid Frequency", f"{frequency} Hz")
+
+    if frequency < 49.8 or frequency > 50.2:
+        st.error("🚨 Grid instability risk detected")
+    else:
+        st.success("✅ Grid operating normally")
 
     # -------------------------------
     # Feature Engineering
