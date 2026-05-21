@@ -908,9 +908,6 @@ if st.session_state.get("authentication_status"):
         st.warning("No sensor data available.")
     else:
         st.dataframe(df)
-        
-    fig = px.line(df, x="timestamp", y="temperature", title="Temperature Trend")
-    st.plotly_chart(fig, use_container_width=True)
 
 
     # -------------------------------
