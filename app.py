@@ -1456,6 +1456,35 @@ if st.session_state.get("authentication_status"):
 
     else:
         st.info("Add 'building' column to enable cost predictions")
+    
+    # =====================================================
+    # 💹 AI Energy Trading Signals
+    # =====================================================
+
+    st.subheader("💹 AI Energy Trading Signals")
+
+    market_price = round(random.uniform(60, 180), 2)
+
+    if market_price > 140:
+        signal = "SELL ENERGY"
+        color = "🚀"
+
+    elif market_price > 90:
+        signal = "HOLD"
+
+        color = "⚖"
+
+    else:
+        signal = "BUY ENERGY"
+
+        color = "📈"
+
+    st.metric(
+        "Electricity Market Price",
+        f"£{market_price}/MWh"
+    )
+
+    st.markdown(f"## {color} {signal}")
 
 
     # -------------------------------
