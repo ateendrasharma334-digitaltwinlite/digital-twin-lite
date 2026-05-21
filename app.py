@@ -1666,6 +1666,34 @@ if st.session_state.get("authentication_status"):
             st.metric("System Health (%)", 100)
         
         # =====================================================
+        # 📊 Live KPI Wall
+        # =====================================================
+
+        st.subheader("📊 Live KPI Wall")
+
+        kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+
+        kpi1.metric(
+            "Total Assets",
+            random.randint(10, 50)
+        )
+
+        kpi2.metric(
+            "Active Alarms",
+            random.randint(0, 8)
+        )
+
+        kpi3.metric(
+            "Efficiency",
+            f"{random.randint(80, 99)}%"
+        )
+
+        kpi4.metric(
+            "AI Accuracy",
+            f"{random.randint(90, 99)}%"
+        )
+        
+        # =====================================================
         # 📈 SLA Performance Monitor
         # =====================================================
 
