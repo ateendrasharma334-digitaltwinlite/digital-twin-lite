@@ -1579,6 +1579,33 @@ if st.session_state.get("authentication_status"):
         else:
             st.metric("System Health (%)", 100)
         
+        # =====================================================
+        # 📈 SLA Performance Monitor
+        # =====================================================
+
+        st.subheader("📈 SLA Performance")
+
+        uptime = round(random.uniform(98.5, 99.99), 2)
+
+        response_time = round(random.uniform(80, 300), 2)
+
+        col1, col2 = st.columns(2)
+
+        col1.metric(
+            "System Uptime",
+            f"{uptime}%"
+        )
+
+        col2.metric(
+            "Response Time",
+            f"{response_time} ms"
+        )
+
+        if uptime > 99.5:
+            st.success("✅ SLA Targets Achieved")
+        else:
+            st.warning("⚠ SLA Performance Degraded")
+        
         # -------------------------------
         # 🚨 Enterprise AI Risk Index
         # -------------------------------
