@@ -192,16 +192,9 @@ st.title("🏢 Digital Twin Lite - Energy Dashboard")
 st.markdown("""
 # 🖥 Enterprise Energy Command Center
 
-Real-Time AI Monitoring • Predictive Intelligence • Grid Analytics
-""")
-
-# =========================================================
-# 🏭 ENTERPRISE CONTROL CENTER
-# =========================================================
-st.markdown("""
-### 🌍 Enterprise Energy Intelligence Platform
 Real-Time Monitoring • AI Forecasting • Predictive Maintenance • Sustainability Analytics
 """)
+
 
 # =========================================================
 # 🌍 ENERGY INTELLIGENCE PLATFORM
