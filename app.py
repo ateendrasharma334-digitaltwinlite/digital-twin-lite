@@ -1558,6 +1558,38 @@ if st.session_state.get("authentication_status"):
         st.error("🚨 Grid instability risk detected")
     else:
         st.success("✅ Grid operating normally")
+    
+    # =====================================================
+    # ⚖ AI Load Balancer
+    # =====================================================
+
+    st.subheader("⚖ AI Load Balancer")
+
+    zone_a = random.randint(100, 400)
+    zone_b = random.randint(100, 400)
+    zone_c = random.randint(100, 400)
+
+    load_df = pd.DataFrame({
+        "Zone": ["Zone A", "Zone B", "Zone C"],
+        "Load": [zone_a, zone_b, zone_c]
+    })
+
+    st.dataframe(load_df)
+
+    balance_fig = px.pie(
+        load_df,
+        names="Zone",
+        values="Load",
+        title="Grid Load Distribution"
+    )
+
+    st.plotly_chart(balance_fig, use_container_width=True)
+
+    max_zone = load_df.loc[load_df["Load"].idxmax()]
+
+    st.warning(
+        f"⚠ Highest load detected in {max_zone['Zone']}"
+    )
 
     # -------------------------------
     # Feature Engineering
