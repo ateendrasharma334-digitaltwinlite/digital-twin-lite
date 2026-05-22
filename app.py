@@ -1304,6 +1304,28 @@ if st.session_state.get("authentication_status"):
             st.success("✅ Executive systems operational")
         
         # -------------------------------
+        # 🖥 SCADA Control Panel
+        # -------------------------------
+        if page == "SCADA Control":
+
+            st.header("🖥 SCADA Control Panel")
+
+            turbine_toggle = st.toggle("Gas Turbine")
+            boiler_toggle = st.toggle("Boiler")
+            hvac_toggle = st.toggle("HVAC")
+
+            if turbine_toggle:
+                st.success("✅ Gas Turbine Online")
+            else:
+                st.error("❌ Gas Turbine Offline")
+
+            if boiler_toggle:
+                st.success("✅ Boiler Operational")
+
+            if hvac_toggle:
+                st.success("✅ HVAC Running")
+        
+        # -------------------------------
         # 🖥 Enterprise KPI Command Center
         # -------------------------------
         st.markdown("## 🖥 Enterprise KPI Command Center")
