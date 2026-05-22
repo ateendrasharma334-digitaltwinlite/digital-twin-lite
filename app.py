@@ -919,6 +919,38 @@ if st.session_state.get("authentication_status"):
     st.subheader("📊 Sensor Data History")
     df = fetch_sensor_data()
 
+    # -------------------------------
+    # 🏭 Multi-Asset Digital Twin Engine
+    # -------------------------------
+    st.subheader("🏭 Multi-Asset Monitoring")
+
+    assets = [
+        {"name": "Gas Turbine", "health": random.randint(60, 100)},
+        {"name": "Boiler", "health": random.randint(40, 95)},
+        {"name": "Transformer", "health": random.randint(50, 100)},
+        {"name": "HVAC System", "health": random.randint(70, 100)}
+    ]
+
+    asset_df = pd.DataFrame(assets)
+
+    st.dataframe(asset_df)
+
+    fig_assets = px.bar(
+        asset_df,
+        x="name",
+        y="health",
+        color="health",
+        title="Asset Health Comparison"
+    )
+
+    st.plotly_chart(fig_assets, use_container_width=True)
+
+    # Continue existing code
+    if df is None or df.empty:
+        st.warning("No sensor data available.")
+    else:
+        st.dataframe(df)
+
     if df is None or df.empty:
         st.warning("No sensor data available.")
     else:
