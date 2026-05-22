@@ -1670,6 +1670,24 @@ if st.session_state.get("authentication_status"):
     else:
         st.success("✅ Grid operating normally")
     
+    # -------------------------------
+    # ⚡ AI Load Balancing Engine
+    # -------------------------------
+    st.subheader("⚡ AI Load Balancing")
+
+    load_now = random.randint(50, 100)
+
+    st.progress(load_now)
+
+    st.metric("Current Grid Load", f"{load_now}%")
+
+    if load_now > 85:
+        st.error("🚨 Grid load critical")
+    elif load_now > 65:
+        st.warning("⚠ High load detected")
+    else:
+        st.success("✅ Load balanced")
+    
     # =====================================================
     # ⚖ AI Load Balancer
     # =====================================================
