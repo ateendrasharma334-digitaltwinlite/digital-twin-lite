@@ -207,32 +207,6 @@ kpi2.metric("AI Alerts", random.randint(0, 10))
 kpi3.metric("Grid Stability", "99.98%")
 kpi4.metric("Energy Efficiency", "92%")
 
-# -------------------------------
-# 👔 Executive Control Center
-# -------------------------------
-if page == "Executive Center":
-
-    st.header("👔 Executive Control Center")
-
-    exec_col1, exec_col2, exec_col3 = st.columns(3)
-
-    exec_col1.metric(
-        "Enterprise Efficiency",
-        f"{random.randint(85,99)}%"
-    )
-
-    exec_col2.metric(
-        "Annual Savings",
-        f"£{random.randint(100000,500000):,}"
-    )
-
-    exec_col3.metric(
-        "Carbon Reduction",
-        f"{random.randint(10,40)}%"
-    )
-
-    st.success("✅ Executive systems operational")
-
 
 # =========================================================
 # 🌍 ENERGY INTELLIGENCE PLATFORM
