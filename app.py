@@ -1205,6 +1205,25 @@ if st.session_state.get("authentication_status"):
     # Sidebar Controls
     # -------------------------------
     st.sidebar.header("Simulation Settings")
+    
+    # -------------------------------
+    # 🧭 Enterprise Navigation
+    # -------------------------------
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("🧭 Navigation")
+
+    page = st.sidebar.radio(
+        "Select Module",
+        [
+            "Overview",
+            "AI Monitoring",
+            "SCADA Control",
+            "Asset Management",
+            "Energy Intelligence",
+            "Executive Center"
+        ]
+    )
+
     forecast_days = st.sidebar.slider("Select number of forecast days", 7, 60, 30)
     building = st.sidebar.selectbox(
         "Select Building",
