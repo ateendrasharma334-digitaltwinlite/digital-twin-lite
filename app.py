@@ -2891,6 +2891,22 @@ if st.session_state.get("authentication_status"):
 
         st.text_area("Executive Summary Report", summary, height=200)
 
+        # -------------------------------
+        # 🧠 AI Operator Recommendation Engine
+        # -------------------------------
+        st.subheader("🧠 AI Operator Recommendations")
+
+        recommendations = [
+            "Reduce HVAC peak-hour load",
+            "Inspect turbine vibration trend",
+            "Optimize boiler efficiency",
+            "Shift operations to off-peak tariff periods",
+            "Schedule predictive maintenance"
+        ]
+
+        for rec in recommendations:
+            st.info(f"💡 {rec}")
+
         # =====================================================
         # 🧠 AI Operational Confidence Engine
         # =====================================================
