@@ -1349,6 +1349,38 @@ if st.session_state.get("authentication_status"):
     else:
 
         st.success("✅ Carbon optimization stable")
+    
+    # -------------------------------
+    # 🚨 AI Fault Isolation Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🚨 AI Fault Isolation")
+
+    fault_probability = random.randint(1, 100)
+
+    st.metric(
+        "Fault Probability",
+        f"{fault_probability}%"
+    )
+
+    if fault_probability > 80:
+
+        st.error("🚨 Critical fault risk")
+
+        st.info("""
+        AI Isolation Actions:
+        • Disconnect affected feeder
+        • Notify SCADA operator
+        • Start autonomous rerouting
+        """)
+
+    elif fault_probability > 50:
+
+        st.warning("⚠ Potential fault developing")
+
+    else:
+
+        st.success("✅ Grid operating normally")
 
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
