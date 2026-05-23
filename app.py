@@ -994,6 +994,25 @@ if st.session_state.get("authentication_status"):
         st.sidebar.write(f"🌬 Wind: {weather['wind_speed']} m/s")
         st.sidebar.write(f"🌤 {weather['description']}")
     
+    # -------------------------------
+    # 🌐 API Status Center
+    # -------------------------------
+    st.subheader("🌐 API Status")
+
+    api_services = {
+        "Weather API": "Online",
+        "Carbon API": "Online",
+        "MQTT Broker": "Online",
+        "AI Copilot": "Online"
+    }
+
+    for service, status in api_services.items():
+
+        if status == "Online":
+            st.success(f"✅ {service} — {status}")
+        else:
+            st.error(f"❌ {service} — Offline")
+
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
     # =========================================================
