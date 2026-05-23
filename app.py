@@ -1760,6 +1760,46 @@ if st.session_state.get("authentication_status"):
 
         st.success("✅ SLA targets achieved")
 
+    # -------------------------------
+    # 📡 Live AI Event Stream
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("📡 Live AI Event Stream")
+
+    event_logs = pd.DataFrame({
+        "Timestamp": pd.date_range(
+            start=pd.Timestamp.now(),
+            periods=10,
+            freq="min"
+        ),
+        "Event": [
+            "AI Dispatch Updated",
+            "SCADA Sync Complete",
+            "Battery Optimization",
+            "Carbon Reduction Triggered",
+            "Load Balancing Active",
+            "HVAC Optimization",
+            "MQTT Data Received",
+            "Predictive Alert Generated",
+            "AI Risk Calculation",
+            "Grid Stability Check"
+        ],
+        "Severity": [
+            "Info",
+            "Info",
+            "Medium",
+            "High",
+            "Medium",
+            "Low",
+            "Info",
+            "High",
+            "Medium",
+            "Info"
+        ]
+    })
+
+    st.dataframe(event_logs)
+
     
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
