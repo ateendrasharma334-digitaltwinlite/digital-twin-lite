@@ -1012,6 +1012,38 @@ if st.session_state.get("authentication_status"):
             st.success(f"✅ {service} — {status}")
         else:
             st.error(f"❌ {service} — Offline")
+    
+    # -------------------------------
+    # 💰 AI Energy Market Center
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("💰 AI Energy Market Center")
+
+    market_price = round(random.uniform(50, 180), 2)
+
+    market_col1, market_col2, market_col3 = st.columns(3)
+
+    market_col1.metric(
+        "Electricity Price",
+        f"£{market_price}/MWh"
+    )
+
+    market_col2.metric(
+        "Grid Frequency",
+        f"{round(random.uniform(49.7, 50.3),2)} Hz"
+    )
+
+    market_col3.metric(
+        "Renewable Penetration",
+        f"{random.randint(30,80)}%"
+    )
+
+    if market_price > 140:
+        st.error("🚨 Energy market price spike detected")
+    elif market_price > 90:
+        st.warning("⚠ Market volatility increasing")
+    else:
+        st.success("✅ Market operating normally")
 
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
