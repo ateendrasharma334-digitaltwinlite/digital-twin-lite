@@ -1176,6 +1176,29 @@ if st.session_state.get("authentication_status"):
         st.warning("⚠ Battery reserve low")
     else:
         st.success("✅ Battery operating normally")
+    
+    # -------------------------------
+    # 🌍 Renewable Forecast AI
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌍 Renewable Energy Forecast")
+
+    renewable_data = pd.DataFrame({
+        "Hour": list(range(1, 13)),
+        "Solar MW": np.random.randint(20, 100, 12),
+        "Wind MW": np.random.randint(10, 80, 12)
+    })
+
+    st.dataframe(renewable_data)
+
+    fig_renew = px.line(
+        renewable_data,
+        x="Hour",
+        y=["Solar MW", "Wind MW"],
+        title="Renewable Generation Forecast"
+    )
+
+    st.plotly_chart(fig_renew, use_container_width=True)
 
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
