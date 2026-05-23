@@ -1200,6 +1200,38 @@ if st.session_state.get("authentication_status"):
 
     st.plotly_chart(fig_renew, use_container_width=True)
 
+    # -------------------------------
+    # ⚡ AI Peak Shaving Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("⚡ AI Peak Shaving")
+
+    peak_load = random.randint(50, 100)
+
+    st.metric(
+        "Peak Grid Load",
+        f"{peak_load}%"
+    )
+
+    if peak_load > 85:
+
+        st.error("🚨 Peak demand critical")
+
+        st.info("""
+        AI Peak Shaving Actions:
+        • Activate battery storage
+        • Reduce HVAC load
+        • Shift industrial demand
+        """)
+
+    elif peak_load > 65:
+
+        st.warning("⚠ High demand period")
+
+    else:
+
+        st.success("✅ Peak load under control")
+
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
     # =========================================================
