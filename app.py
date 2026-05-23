@@ -1381,6 +1381,45 @@ if st.session_state.get("authentication_status"):
     else:
 
         st.success("✅ Grid operating normally")
+    
+    # -------------------------------
+    # ⚡ Smart Energy Routing Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("⚡ Smart Energy Routing")
+
+    routing_data = pd.DataFrame({
+        "Source": [
+            "Solar Farm",
+            "Wind Farm",
+            "Battery Storage",
+            "Gas Turbine"
+        ],
+        "Destination": [
+            "Industrial Zone",
+            "Residential Zone",
+            "Grid Support",
+            "Critical Infrastructure"
+        ],
+        "Power MW": [
+            random.randint(20,100),
+            random.randint(30,120),
+            random.randint(10,60),
+            random.randint(50,150)
+        ]
+    })
+
+    st.dataframe(routing_data)
+
+    fig_route = px.bar(
+        routing_data,
+        x="Source",
+        y="Power MW",
+        color="Destination",
+        title="AI Smart Energy Routing"
+    )
+
+    st.plotly_chart(fig_route, use_container_width=True)
 
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
