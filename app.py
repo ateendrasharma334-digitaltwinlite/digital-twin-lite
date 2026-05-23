@@ -1326,6 +1326,53 @@ if st.session_state.get("authentication_status"):
                 st.success("✅ HVAC Running")
         
         # -------------------------------
+        # 🔐 Security & Compliance Center
+        # -------------------------------
+        if page == "Security Center":
+
+            st.header("🔐 Security & Compliance Center")
+
+            sec_col1, sec_col2, sec_col3 = st.columns(3)
+
+            sec_col1.metric(
+                "Firewall Status",
+                "ACTIVE"
+            )
+
+            sec_col2.metric(
+                "Threat Level",
+                "LOW"
+            )
+
+            sec_col3.metric(
+                "Compliance Score",
+                f"{random.randint(85,100)}%"
+            )
+
+            st.success("✅ ISO 27001 Security Controls Active")
+
+            st.markdown("### 🛡 Compliance Monitoring")
+
+            compliance_data = pd.DataFrame({
+                "System": [
+                    "SCADA",
+                    "IoT Gateway",
+                    "Database",
+                    "Cloud API",
+                    "MQTT Broker"
+                ],
+                "Status": [
+                    "Secure",
+                    "Secure",
+                    "Secure",
+                    "Monitoring",
+                    "Secure"
+                ]
+            })
+
+            st.dataframe(compliance_data)
+        
+        # -------------------------------
         # 🖥 Enterprise KPI Command Center
         # -------------------------------
         st.markdown("## 🖥 Enterprise KPI Command Center")
