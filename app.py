@@ -1044,6 +1044,40 @@ if st.session_state.get("authentication_status"):
         st.warning("⚠ Market volatility increasing")
     else:
         st.success("✅ Market operating normally")
+    
+    # -------------------------------
+    # ⚡ AI Demand Response Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("⚡ AI Demand Response")
+
+    demand_level = random.randint(40, 100)
+
+    st.progress(demand_level)
+
+    st.metric(
+        "Current Demand Response",
+        f"{demand_level}%"
+    )
+
+    if demand_level > 85:
+
+        st.error("🚨 Peak demand event")
+
+        st.info("""
+        AI Recommendations:
+        • Reduce HVAC usage
+        • Shift non-critical loads
+        • Enable battery discharge
+        """)
+
+    elif demand_level > 65:
+
+        st.warning("⚠ High demand period detected")
+
+    else:
+
+        st.success("✅ Grid demand stable")
 
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
