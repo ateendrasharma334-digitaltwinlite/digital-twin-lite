@@ -1447,6 +1447,156 @@ if st.session_state.get("authentication_status"):
     else:
 
         st.success("✅ Grid resilience strong")
+    
+    # -------------------------------
+    # 🤖 Autonomous Operations Center
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🤖 Autonomous Operations Center")
+
+    auto_mode = st.toggle("Enable Autonomous AI Control")
+
+    if auto_mode:
+
+        st.success("✅ Autonomous control active")
+
+        st.info("""
+        AI Autonomous Actions:
+        • Grid balancing enabled
+        • Load optimization active
+        • Predictive maintenance running
+        • Smart dispatch operational
+        """)
+
+    else:
+
+        st.warning("⚠ Manual operator mode enabled")
+    
+    # -------------------------------
+    # 🖥 Digital Twin Command Center
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🖥 Digital Twin Command Center")
+
+    command_col1, command_col2, command_col3, command_col4 = st.columns(4)
+
+    command_col1.metric(
+        "Connected Assets",
+        random.randint(20, 150)
+    )
+
+    command_col2.metric(
+        "Active AI Agents",
+        random.randint(5, 40)
+    )
+
+    command_col3.metric(
+        "Live IoT Devices",
+        random.randint(100, 1000)
+    )
+
+    command_col4.metric(
+        "SCADA Signals/sec",
+        random.randint(500, 5000)
+    )
+
+    st.success("✅ Enterprise command center operational")
+
+    # -------------------------------
+    # ⚡ AI Operational Optimization
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("⚡ AI Operational Optimization")
+
+    optimization_score = random.randint(60, 100)
+
+    st.metric(
+        "Optimization Efficiency",
+        f"{optimization_score}%"
+    )
+
+    st.progress(optimization_score)
+
+    if optimization_score < 70:
+
+        st.warning("⚠ Optimization opportunities detected")
+
+        st.info("""
+        AI Recommendations:
+        • Reduce idle equipment
+        • Optimize HVAC schedules
+        • Shift flexible demand
+        • Improve dispatch routing
+        """)
+
+    else:
+
+        st.success("✅ Operations optimized")
+    
+    # -------------------------------
+    # 🚚 Enterprise Fleet Monitoring
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🚚 Enterprise Fleet Monitoring")
+
+    fleet_data = pd.DataFrame({
+        "Asset": [
+            "Turbine-01",
+            "Boiler-02",
+            "HVAC-03",
+            "Transformer-04",
+            "Battery-05"
+        ],
+        "Health": [
+            random.randint(60,100),
+            random.randint(50,100),
+            random.randint(70,100),
+            random.randint(40,100),
+            random.randint(80,100)
+        ],
+        "Status": [
+            "Running",
+            "Monitoring",
+            "Operational",
+            "Warning",
+            "Optimal"
+        ]
+    })
+
+    st.dataframe(fleet_data)
+
+    fig_fleet = px.bar(
+        fleet_data,
+        x="Asset",
+        y="Health",
+        color="Health",
+        title="Enterprise Fleet Health"
+    )
+
+    st.plotly_chart(fig_fleet, use_container_width=True)
+
+    # -------------------------------
+    # 🧠 AI Confidence Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🧠 AI Confidence Engine")
+
+    confidence_score = random.randint(75, 99)
+
+    st.metric(
+        "AI Decision Confidence",
+        f"{confidence_score}%"
+    )
+
+    st.progress(confidence_score)
+
+    if confidence_score < 80:
+
+        st.warning("⚠ AI confidence slightly reduced")
+
+    else:
+
+        st.success("✅ AI operating with high confidence")
 
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
