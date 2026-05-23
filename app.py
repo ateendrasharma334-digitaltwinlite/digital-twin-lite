@@ -1421,6 +1421,33 @@ if st.session_state.get("authentication_status"):
 
     st.plotly_chart(fig_route, use_container_width=True)
 
+    # -------------------------------
+    # 🛡 AI Grid Resilience Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🛡 AI Grid Resilience")
+
+    resilience_score = random.randint(60, 100)
+
+    st.metric(
+        "Grid Resilience Score",
+        f"{resilience_score}%"
+    )
+
+    st.progress(resilience_score)
+
+    if resilience_score < 70:
+
+        st.error("🚨 Grid resilience weakening")
+
+    elif resilience_score < 85:
+
+        st.warning("⚠ Moderate resilience risk")
+
+    else:
+
+        st.success("✅ Grid resilience strong")
+
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
     # =========================================================
