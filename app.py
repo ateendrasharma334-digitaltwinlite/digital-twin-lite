@@ -1625,6 +1625,140 @@ if st.session_state.get("authentication_status"):
 
         for rec in recommendations:
             st.write(f"• {rec}")
+    # -------------------------------
+    # 🌍 Global Operations Center
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌍 Global Operations Center")
+
+    global_sites = pd.DataFrame({
+        "Site": [
+            "London Grid",
+            "Manchester Plant",
+            "Birmingham Hub",
+            "Leeds Station",
+            "Glasgow Energy Center"
+        ],
+        "Status": [
+            "Operational",
+            "Stable",
+            "Monitoring",
+            "Warning",
+            "Operational"
+        ],
+        "Efficiency": [
+            random.randint(70,100),
+            random.randint(60,100),
+            random.randint(75,100),
+            random.randint(50,90),
+            random.randint(80,100)
+        ]
+    })
+
+    st.dataframe(global_sites)
+
+    fig_global = px.scatter(
+        global_sites,
+        x="Site",
+        y="Efficiency",
+        color="Status",
+        size="Efficiency",
+        title="Global Operations Monitoring"
+    )
+
+    st.plotly_chart(fig_global, use_container_width=True)
+
+    # -------------------------------
+    # 🚨 Autonomous Alarm Priority Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🚨 Autonomous Alarm Prioritization")
+
+    alarm_score = random.randint(1, 100)
+
+    st.metric(
+        "Alarm Severity Index",
+        f"{alarm_score}%"
+    )
+
+    if alarm_score > 80:
+
+        st.error("🚨 Critical alarm escalation")
+
+        st.info("""
+        AI Actions:
+        • Notify executive operators
+        • Trigger emergency workflow
+        • Start asset isolation
+        """)
+
+    elif alarm_score > 50:
+
+        st.warning("⚠ Medium priority alarm")
+
+    else:
+
+        st.success("✅ Alarm levels stable")
+
+    # -------------------------------
+    # 🧠 AI Decision Recommendation Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🧠 AI Decision Recommendations")
+
+    decision_data = pd.DataFrame({
+        "AI Recommendation": [
+            "Increase battery dispatch",
+            "Reduce HVAC demand",
+            "Shift industrial load",
+            "Optimize turbine output",
+            "Activate reserve systems"
+        ],
+        "Priority": [
+            "High",
+            "Medium",
+            "Medium",
+            "High",
+            "Critical"
+        ]
+    })
+
+    st.dataframe(decision_data)
+
+    st.success("✅ AI strategic recommendations generated")
+
+    # -------------------------------
+    # 📊 Enterprise SLA Monitoring
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("📊 Enterprise SLA Monitoring")
+
+    sla_score = random.randint(85, 100)
+
+    sla_col1, sla_col2, sla_col3 = st.columns(3)
+
+    sla_col1.metric(
+        "System Availability",
+        f"{sla_score}%"
+    )
+
+    sla_col2.metric(
+        "Incident Response",
+        f"{random.randint(90,100)}%"
+    )
+
+    sla_col3.metric(
+        "Operational Compliance",
+        f"{random.randint(88,100)}%"
+    )
+
+    if sla_score < 90:
+
+        st.warning("⚠ SLA performance slightly reduced")
+
+    else:
+
+        st.success("✅ SLA targets achieved")
 
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
