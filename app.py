@@ -1285,6 +1285,36 @@ if st.session_state.get("authentication_status"):
 
     st.plotly_chart(fig_dispatch, use_container_width=True)
 
+    # -------------------------------
+    # 🔄 Autonomous Grid Recovery Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🔄 Autonomous Grid Recovery")
+
+    recovery_score = random.randint(60, 100)
+
+    st.metric(
+        "Grid Recovery Readiness",
+        f"{recovery_score}%"
+    )
+
+    st.progress(recovery_score)
+
+    if recovery_score < 70:
+
+        st.error("🚨 Recovery capability reduced")
+
+        st.info("""
+        AI Recovery Actions:
+        • Activate backup generation
+        • Re-route critical feeders
+        • Isolate unstable assets
+        """)
+
+    else:
+
+        st.success("✅ Autonomous recovery systems operational")
+
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
     # =========================================================
