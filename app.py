@@ -1253,6 +1253,38 @@ if st.session_state.get("authentication_status"):
     else:
         st.success("✅ Power quality stable")
 
+    # -------------------------------
+    # 🤖 AI Dispatch Optimizer
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🤖 AI Dispatch Optimizer")
+
+    dispatch_data = pd.DataFrame({
+        "Asset": [
+            "Gas Turbine",
+            "Battery Storage",
+            "Solar Farm",
+            "Wind Farm"
+        ],
+        "Dispatch MW": [
+            random.randint(50,150),
+            random.randint(20,80),
+            random.randint(10,100),
+            random.randint(20,120)
+        ]
+    })
+
+    st.dataframe(dispatch_data)
+
+    fig_dispatch = px.pie(
+        dispatch_data,
+        names="Asset",
+        values="Dispatch MW",
+        title="AI Power Dispatch Allocation"
+    )
+
+    st.plotly_chart(fig_dispatch, use_container_width=True)
+
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
     # =========================================================
