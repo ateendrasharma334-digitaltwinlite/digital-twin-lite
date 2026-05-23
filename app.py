@@ -1112,6 +1112,39 @@ if st.session_state.get("authentication_status"):
 
     st.plotly_chart(fig_grid, use_container_width=True)
 
+    # -------------------------------
+    # 🤖 AI Energy Trading Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🤖 AI Energy Trading Engine")
+
+    buy_price = round(random.uniform(40, 90), 2)
+    sell_price = round(random.uniform(100, 180), 2)
+
+    trade_col1, trade_col2 = st.columns(2)
+
+    trade_col1.metric(
+        "Buy Price",
+        f"£{buy_price}/MWh"
+    )
+
+    trade_col2.metric(
+        "Sell Price",
+        f"£{sell_price}/MWh"
+    )
+
+    profit_margin = sell_price - buy_price
+
+    st.metric(
+        "Potential Trading Margin",
+        f"£{round(profit_margin,2)}/MWh"
+    )
+
+    if profit_margin > 60:
+        st.success("✅ High-value trading opportunity")
+    else:
+        st.warning("⚠ Limited trading margin")
+
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
     # =========================================================
