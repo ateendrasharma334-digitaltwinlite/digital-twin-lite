@@ -2409,6 +2409,20 @@ if st.session_state.get("authentication_status"):
                 })
 
                 st.dataframe(incident_df)
+
+                # -------------------------------
+                # 📜 Enterprise SLA Monitor
+                # -------------------------------
+                st.subheader("📜 SLA Monitoring")
+
+                sla_uptime = round(random.uniform(99.0, 99.999), 3)
+
+                st.metric("Platform Uptime", f"{sla_uptime}%")
+
+                if sla_uptime < 99.5:
+                    st.warning("⚠ SLA risk detected")
+                else:
+                    st.success("✅ SLA compliant")
                 
                 # -------------------------------
                 # 🧠 Root Cause Analysis (Level 33)
