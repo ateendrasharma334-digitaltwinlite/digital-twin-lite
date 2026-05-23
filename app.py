@@ -1078,6 +1078,39 @@ if st.session_state.get("authentication_status"):
     else:
 
         st.success("✅ Grid demand stable")
+    
+    # -------------------------------
+    # 🗺 AI Grid Stability Map
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🗺 AI Grid Stability Zones")
+
+    grid_data = pd.DataFrame({
+        "Zone": [
+            "North Grid",
+            "South Grid",
+            "East Grid",
+            "West Grid"
+        ],
+        "Stability": [
+            random.randint(80,100),
+            random.randint(60,100),
+            random.randint(70,100),
+            random.randint(50,100)
+        ]
+    })
+
+    st.dataframe(grid_data)
+
+    fig_grid = px.bar(
+        grid_data,
+        x="Zone",
+        y="Stability",
+        color="Stability",
+        title="Regional Grid Stability"
+    )
+
+    st.plotly_chart(fig_grid, use_container_width=True)
 
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
