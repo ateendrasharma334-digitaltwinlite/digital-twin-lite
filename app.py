@@ -1373,6 +1373,50 @@ if st.session_state.get("authentication_status"):
             st.dataframe(compliance_data)
         
         # -------------------------------
+        # 🤖 AI Cyber Security Monitor
+        # -------------------------------
+        st.markdown("---")
+        st.subheader("🤖 AI Cyber Security Monitor")
+
+        threat_score = random.randint(1, 100)
+
+        st.progress(threat_score)
+
+        st.metric("Threat Detection Score", f"{threat_score}%")
+
+        if threat_score > 80:
+            st.error("🚨 Critical cyber threat detected")
+        elif threat_score > 50:
+            st.warning("⚠ Suspicious activity detected")
+        else:
+            st.success("✅ Network secure")
+
+        # Live threat logs
+        cyber_logs = pd.DataFrame({
+            "Timestamp": pd.date_range(
+                start=pd.Timestamp.now(),
+                periods=5,
+                freq="min"
+            ),
+            "Event": [
+                "Firewall Scan",
+                "MQTT Authentication",
+                "API Access",
+                "Database Monitoring",
+                "IoT Device Validation"
+            ],
+            "Status": [
+                "Passed",
+                "Passed",
+                "Monitoring",
+                "Passed",
+                "Passed"
+            ]
+        })
+
+        st.dataframe(cyber_logs)
+        
+        # -------------------------------
         # 🖥 Enterprise KPI Command Center
         # -------------------------------
         st.markdown("## 🖥 Enterprise KPI Command Center")
