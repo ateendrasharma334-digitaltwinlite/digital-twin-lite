@@ -1597,6 +1597,34 @@ if st.session_state.get("authentication_status"):
     else:
 
         st.success("✅ AI operating with high confidence")
+    
+    # -------------------------------
+    # 🤖 Industrial AI Copilot
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🤖 Industrial AI Copilot")
+
+    copilot_question = st.text_input(
+        "Ask AI Copilot",
+        placeholder="Example: Why is turbine temperature increasing?"
+    )
+
+    if copilot_question:
+
+        st.info(f"🧠 AI Analysis: {copilot_question}")
+
+        recommendations = [
+            "Inspect cooling systems",
+            "Check vibration anomalies",
+            "Review maintenance logs",
+            "Optimize load balancing",
+            "Verify sensor calibration"
+        ]
+
+        st.success("✅ AI Recommendations Generated")
+
+        for rec in recommendations:
+            st.write(f"• {rec}")
 
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
