@@ -1144,6 +1144,38 @@ if st.session_state.get("authentication_status"):
         st.success("✅ High-value trading opportunity")
     else:
         st.warning("⚠ Limited trading margin")
+    
+    # -------------------------------
+    # 🔋 Battery Energy Storage System
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🔋 Battery Energy Storage System")
+
+    battery_charge = random.randint(20, 100)
+
+    bess_col1, bess_col2, bess_col3 = st.columns(3)
+
+    bess_col1.metric(
+        "Battery Charge",
+        f"{battery_charge}%"
+    )
+
+    bess_col2.metric(
+        "Charge Rate",
+        f"{random.randint(5,40)} MW"
+    )
+
+    bess_col3.metric(
+        "Discharge Rate",
+        f"{random.randint(5,40)} MW"
+    )
+
+    st.progress(battery_charge)
+
+    if battery_charge < 25:
+        st.warning("⚠ Battery reserve low")
+    else:
+        st.success("✅ Battery operating normally")
 
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
