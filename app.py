@@ -1231,6 +1231,27 @@ if st.session_state.get("authentication_status"):
     else:
 
         st.success("✅ Peak load under control")
+    
+    # -------------------------------
+    # 📡 Power Quality Monitor
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("📡 Power Quality Monitor")
+
+    voltage = round(random.uniform(390, 420), 2)
+    frequency = round(random.uniform(49.7, 50.3), 2)
+    harmonics = round(random.uniform(1, 8), 2)
+
+    pq_col1, pq_col2, pq_col3 = st.columns(3)
+
+    pq_col1.metric("Voltage", f"{voltage} V")
+    pq_col2.metric("Frequency", f"{frequency} Hz")
+    pq_col3.metric("THD", f"{harmonics}%")
+
+    if harmonics > 5:
+        st.warning("⚠ Harmonic distortion detected")
+    else:
+        st.success("✅ Power quality stable")
 
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
