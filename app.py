@@ -1314,6 +1314,41 @@ if st.session_state.get("authentication_status"):
     else:
 
         st.success("✅ Autonomous recovery systems operational")
+    
+    # -------------------------------
+    # 🌍 AI Carbon Optimization Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌍 AI Carbon Optimization")
+
+    carbon_now = round(random.uniform(80, 350), 2)
+
+    carbon_col1, carbon_col2 = st.columns(2)
+
+    carbon_col1.metric(
+        "Current Carbon Intensity",
+        f"{carbon_now} gCO₂/kWh"
+    )
+
+    carbon_col2.metric(
+        "Carbon Reduction",
+        f"{random.randint(5,35)}%"
+    )
+
+    if carbon_now > 250:
+
+        st.warning("⚠ High carbon intensity")
+
+        st.info("""
+        AI Optimization:
+        • Increase renewable dispatch
+        • Reduce fossil generation
+        • Shift flexible loads
+        """)
+
+    else:
+
+        st.success("✅ Carbon optimization stable")
 
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
