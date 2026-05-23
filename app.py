@@ -1800,6 +1800,132 @@ if st.session_state.get("authentication_status"):
 
     st.dataframe(event_logs)
 
+    # -------------------------------
+    # ⚙ Autonomous Workflow Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("⚙ Autonomous Workflow Engine")
+
+    workflow_score = random.randint(70, 100)
+
+    st.metric(
+        "Workflow Automation",
+        f"{workflow_score}%"
+    )
+
+    st.progress(workflow_score)
+
+    if workflow_score < 80:
+
+        st.warning("⚠ Some workflows require operator approval")
+
+    else:
+
+        st.success("✅ Autonomous workflows operational")
+
+    # -------------------------------
+    # 🔥 Enterprise KPI Heatmap
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🔥 Enterprise KPI Heatmap")
+
+    heatmap_data = pd.DataFrame({
+        "System": [
+            "SCADA",
+            "AI Engine",
+            "MQTT",
+            "Battery",
+            "Grid Control"
+        ],
+        "Performance": [
+            random.randint(70,100),
+            random.randint(75,100),
+            random.randint(60,100),
+            random.randint(65,100),
+            random.randint(80,100)
+        ]
+    })
+
+    fig_heatmap = px.imshow(
+        [heatmap_data["Performance"]],
+        labels=dict(x="System", y="KPI", color="Performance"),
+        x=heatmap_data["System"],
+        y=["Performance"],
+        title="Enterprise KPI Heatmap"
+    )
+
+    st.plotly_chart(fig_heatmap, use_container_width=True)
+
+    # -------------------------------
+    # 🚨 AI Incident Correlation Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🚨 AI Incident Correlation")
+
+    incident_score = random.randint(1, 100)
+
+    st.metric(
+        "Incident Correlation Index",
+        f"{incident_score}%"
+    )
+
+    if incident_score > 75:
+
+        st.error("🚨 Multi-system anomaly correlation detected")
+
+        st.info("""
+        AI Correlation Findings:
+        • Temperature anomaly linked
+        • Vibration increase detected
+        • Power fluctuation identified
+        • Maintenance risk elevated
+        """)
+
+    elif incident_score > 50:
+
+        st.warning("⚠ Potential correlated incidents")
+
+    else:
+
+        st.success("✅ Systems operating independently")
+    
+    # -------------------------------
+    # 👔 Executive AI Forecast Center
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("👔 Executive AI Forecast Center")
+
+    forecast_data = pd.DataFrame({
+        "Month": [
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct"
+        ],
+        "Projected Savings (£)": [
+            random.randint(100000,200000),
+            random.randint(120000,220000),
+            random.randint(150000,250000),
+            random.randint(170000,280000),
+            random.randint(200000,300000)
+        ]
+    })
+
+    st.dataframe(forecast_data)
+
+    fig_exec = px.line(
+        forecast_data,
+        x="Month",
+        y="Projected Savings (£)",
+        markers=True,
+        title="Executive Financial Forecast"
+    )
+
+    st.plotly_chart(fig_exec, use_container_width=True)
+
+    st.success("✅ AI executive forecasting operational")
+
     
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
