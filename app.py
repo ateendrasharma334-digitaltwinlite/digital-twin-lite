@@ -2541,6 +2541,176 @@ if st.session_state.get("authentication_status"):
 
     st.success("✅ Global energy analytics operational")
 
+    # -------------------------------
+    # 🧩 AI Plugin Marketplace
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🧩 AI Plugin Marketplace")
+
+    plugins = pd.DataFrame({
+        "Plugin": [
+            "Predictive Maintenance AI",
+            "Carbon Forecast Engine",
+            "SCADA Analytics",
+            "Grid Stability AI",
+            "Battery Optimizer"
+        ],
+        "Status": [
+            "Installed",
+            "Installed",
+            "Available",
+            "Installed",
+            "Available"
+        ],
+        "Version": [
+            "v2.1",
+            "v1.8",
+            "v3.0",
+            "v2.5",
+            "v1.2"
+        ]
+    })
+
+    st.dataframe(plugins)
+
+    st.success("✅ AI marketplace synchronized")
+
+    # -------------------------------
+    # ⚙ Enterprise Workflow Marketplace
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("⚙ Enterprise Workflow Marketplace")
+
+    workflow_market = pd.DataFrame({
+        "Workflow": [
+            "AI Alarm Escalation",
+            "Autonomous Recovery",
+            "Grid Optimization",
+            "Energy Trading",
+            "Carbon Reporting"
+        ],
+        "Automation Level": [
+            "100%",
+            "95%",
+            "90%",
+            "85%",
+            "100%"
+        ]
+    })
+
+    st.dataframe(workflow_market)
+
+    fig_workflow_market = px.bar(
+        workflow_market,
+        x="Workflow",
+        y="Automation Level",
+        color="Automation Level",
+        title="Workflow Automation Marketplace"
+    )
+
+    st.plotly_chart(fig_workflow_market, use_container_width=True)
+
+    # -------------------------------
+    # 🧠 AI Model Registry
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🧠 AI Model Registry")
+
+    model_registry = pd.DataFrame({
+        "Model": [
+            "Failure Prediction",
+            "Energy Forecast",
+            "Carbon Optimization",
+            "Load Balancer",
+            "Risk Intelligence"
+        ],
+        "Accuracy": [
+            random.randint(85,99),
+            random.randint(80,98),
+            random.randint(82,97),
+            random.randint(84,96),
+            random.randint(80,95)
+        ],
+        "Status": [
+            "Production",
+            "Production",
+            "Testing",
+            "Production",
+            "Production"
+        ]
+    })
+
+    st.dataframe(model_registry)
+
+    fig_models = px.scatter(
+        model_registry,
+        x="Model",
+        y="Accuracy",
+        color="Status",
+        size="Accuracy",
+        title="Enterprise AI Models"
+    )
+
+    st.plotly_chart(fig_models, use_container_width=True)
+
+    # -------------------------------
+    # 💳 Smart Contract Energy Transactions
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("💳 Smart Contract Energy Transactions")
+
+    transactions = pd.DataFrame({
+        "Transaction ID": [
+            "TXN-1001",
+            "TXN-1002",
+            "TXN-1003",
+            "TXN-1004"
+        ],
+        "Energy (MWh)": [
+            random.randint(50,300),
+            random.randint(30,200),
+            random.randint(60,400),
+            random.randint(20,150)
+        ],
+        "Status": [
+            "Completed",
+            "Pending",
+            "Completed",
+            "Validated"
+        ]
+    })
+
+    st.dataframe(transactions)
+
+    st.success("✅ Smart energy transactions validated")
+
+    # -------------------------------
+    # 🤝 Industrial Partner Ecosystem
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🤝 Industrial Partner Ecosystem")
+
+    partners = pd.DataFrame({
+        "Partner": [
+            "Siemens Energy",
+            "GE Vernova",
+            "ABB",
+            "Schneider Electric",
+            "Honeywell"
+        ],
+        "Integration": [
+            "Active",
+            "Testing",
+            "Active",
+            "Active",
+            "Planned"
+        ]
+    })
+
+    st.dataframe(partners)
+
+    st.success("✅ Enterprise ecosystem integrations active")
+
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
     # =========================================================
