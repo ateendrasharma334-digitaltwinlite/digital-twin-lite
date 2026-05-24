@@ -2243,6 +2243,75 @@ if st.session_state.get("authentication_status"):
         else:
             st.error(f"❌ {service} Offline")
 
+    # -------------------------------
+    # 🗄 Enterprise Data Lake
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🗄 Enterprise Data Lake")
+
+    data_lake = pd.DataFrame({
+        "Source": [
+            "SCADA",
+            "MQTT Sensors",
+            "Weather API",
+            "Carbon API",
+            "AI Analytics"
+        ],
+        "Records": [
+            random.randint(10000,50000),
+            random.randint(50000,200000),
+            random.randint(5000,20000),
+            random.randint(2000,15000),
+            random.randint(10000,80000)
+        ]
+    })
+
+    st.dataframe(data_lake)
+
+    fig_data_lake = px.pie(
+        data_lake,
+        names="Source",
+        values="Records",
+        title="Enterprise Data Lake Distribution"
+    )
+
+    st.plotly_chart(fig_data_lake, use_container_width=True)
+
+    # -------------------------------
+    # 🌐 AI API Traffic Analytics
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌐 AI API Traffic Analytics")
+
+    api_df = pd.DataFrame({
+        "API": [
+            "Weather API",
+            "Carbon API",
+            "MQTT API",
+            "AI Prediction API",
+            "Grid Analytics API"
+        ],
+        "Requests/min": [
+            random.randint(100,1000),
+            random.randint(50,500),
+            random.randint(500,3000),
+            random.randint(100,1500),
+            random.randint(80,900)
+        ]
+    })
+
+    st.dataframe(api_df)
+ 
+    fig_api = px.bar(
+        api_df,
+        x="API",
+        y="Requests/min",
+        color="Requests/min",
+        title="Live API Traffic"
+    )
+
+    st.plotly_chart(fig_api, use_container_width=True)
+
     
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
