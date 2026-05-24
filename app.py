@@ -2064,6 +2064,33 @@ if st.session_state.get("authentication_status"):
     else:
 
         st.success("✅ Enterprise systems performing optimally")
+    
+    # -------------------------------
+    # 🤖 AI Autonomous Supervisor
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🤖 AI Autonomous Supervisor")
+
+    supervisor_mode = st.toggle(
+        "Enable Autonomous Enterprise Supervision"
+    )
+
+    if supervisor_mode:
+
+        st.success("✅ AI Supervisor Active")
+
+        st.info("""
+        Autonomous Supervision Enabled:
+        • AI risk mitigation
+        • Self-healing workflows
+        • AI asset balancing
+        • Smart operational recovery
+        • Predictive escalation
+        """)
+
+    else:
+
+        st.warning("⚠ Manual supervision mode active")
 
     
     # =========================================================
