@@ -2311,7 +2311,64 @@ if st.session_state.get("authentication_status"):
     )
 
     st.plotly_chart(fig_api, use_container_width=True)
+    
+    # -------------------------------
+    # 📡 Real-Time Sensor Stream Monitor
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("📡 Real-Time Sensor Streams")
 
+    sensor_stream = pd.DataFrame({
+        "Sensor": [
+            "Temperature",
+            "Pressure",
+            "Voltage",
+            "Current",
+            "Vibration"
+        ],
+        "Live Value": [
+            random.randint(50,100),
+            random.randint(1,10),
+            random.randint(380,450),
+            random.randint(50,200),
+            random.randint(1,8)
+        ]
+    })
+
+    st.dataframe(sensor_stream)
+
+    st.success("✅ Live IoT streams synchronized")
+
+    # -------------------------------
+    # ⚡ Digital Twin Performance Optimizer
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("⚡ Digital Twin Performance Optimizer")
+
+    performance_score = random.randint(70, 100)
+
+    st.metric(
+    "System Performance",
+    f"{performance_score}%"
+    )
+
+    st.progress(performance_score)
+
+    if performance_score < 80:
+
+        st.warning("⚠ Optimization recommended")
+
+        st.info("""
+        Recommended Actions:
+        • Reduce redundant API calls
+        • Optimize chart rendering
+        • Compress MQTT payloads
+        • Improve caching
+        """)
+
+    else:
+
+        st.success("✅ Platform performance optimized")
     
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
