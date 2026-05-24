@@ -2370,6 +2370,82 @@ if st.session_state.get("authentication_status"):
 
         st.success("✅ Platform performance optimized")
     
+    # -------------------------------
+    # 🏭 Multi-Site Enterprise Manager
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🏭 Multi-Site Enterprise Manager")
+
+    site_data = pd.DataFrame({
+        "Site": [
+            "London Plant",
+            "Manchester Hub",
+            "Birmingham Grid",
+            "Leeds Facility",
+            "Glasgow Station"
+        ],
+        "Status": [
+            "Operational",
+            "Monitoring",
+            "Operational",
+            "Warning",
+            "Operational"
+        ],
+        "Health (%)": [
+            random.randint(70,100),
+            random.randint(60,95),
+            random.randint(75,100),
+            random.randint(50,85),
+            random.randint(80,100)
+        ]
+    })
+
+    st.dataframe(site_data)
+
+    fig_sites = px.bar(
+        site_data,
+        x="Site",
+        y="Health (%)",
+        color="Status",
+        title="Enterprise Site Health"
+    )
+
+    st.plotly_chart(fig_sites, use_container_width=True)
+
+    # -------------------------------
+    # 👥 AI Tenant Management System
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("👥 AI Tenant Management")
+
+    tenant_df = pd.DataFrame({
+        "Client": [
+            "Energy Corp",
+            "Smart Grid Ltd",
+            "Industrial AI Group",
+            "Utility Systems",
+            "Green Energy UK"
+        ],
+        "Subscription": [
+            "Enterprise",
+            "Professional",
+            "Enterprise",
+            "Standard",
+            "Enterprise"
+        ],
+        "AI Usage (%)": [
+            random.randint(40,100),
+            random.randint(20,90),
+            random.randint(60,100),
+            random.randint(10,80),
+            random.randint(50,100)
+        ]
+    })
+
+    st.dataframe(tenant_df)
+
+    st.success("✅ Multi-tenant AI management active")
+
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
     # =========================================================
