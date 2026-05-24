@@ -2092,6 +2092,157 @@ if st.session_state.get("authentication_status"):
 
         st.warning("⚠ Manual supervision mode active")
 
+    # -------------------------------
+    # 🚨 Enterprise Risk Matrix
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🚨 Enterprise Risk Matrix")
+
+    risk_data = pd.DataFrame({
+        "Risk Area": [
+            "SCADA",
+            "Cybersecurity",
+            "Grid Stability",
+            "Battery Storage",
+            "AI Automation"
+        ],
+        "Risk Score": [
+            random.randint(20,90),
+            random.randint(10,95),
+            random.randint(15,85),
+            random.randint(20,80),
+            random.randint(10,70)
+        ]
+    })
+
+    st.dataframe(risk_data)
+
+    fig_risk = px.bar(
+        risk_data,
+        x="Risk Area",
+        y="Risk Score",
+        color="Risk Score",
+        title="Enterprise Risk Matrix"
+    )
+
+    st.plotly_chart(fig_risk, use_container_width=True)
+
+    # -------------------------------
+    # 🔄 Self-Healing Infrastructure
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🔄 Self-Healing Infrastructure")
+
+    healing_score = random.randint(60, 100)
+
+    st.metric(
+        "Self-Healing Capability",
+        f"{healing_score}%"
+    )
+
+    st.progress(healing_score)
+
+    if healing_score < 75:
+
+        st.warning("⚠ Recovery capability reduced")
+
+        st.info("""
+        AI Healing Actions:
+        • Restart failed workflows
+        • Rebalance energy systems
+        • Restore IoT connections
+        • Activate backup services
+        """)
+
+    else:
+
+        st.success("✅ Self-healing systems operational")
+    
+    # -------------------------------
+    # 💰 AI Cost Optimization Center
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("💰 AI Cost Optimization")
+
+    cost_saving = random.randint(10000, 500000)
+
+    cost_col1, cost_col2, cost_col3 = st.columns(3)
+
+    cost_col1.metric(
+        "Predicted Savings",
+        f"£{cost_saving:,}"
+    )
+
+    cost_col2.metric(
+        "Operational Efficiency",
+        f"{random.randint(75,100)}%"
+    )
+
+    cost_col3.metric(
+        "AI Optimization Gain",
+        f"{random.randint(5,35)}%"
+    )
+
+    st.success("✅ AI financial optimization active")
+
+    # -------------------------------
+    # 🌍 Global Sustainability Intelligence
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌍 Global Sustainability Intelligence")
+
+    sustainability_data = pd.DataFrame({
+        "Region": [
+            "Europe",
+            "Asia",
+            "North America",
+            "Middle East",
+            "Africa"
+        ],
+        "Renewable Usage (%)": [
+            random.randint(40,90),
+            random.randint(30,80),
+            random.randint(35,85),
+            random.randint(20,70),
+            random.randint(25,75)
+        ]
+    })
+
+    st.dataframe(sustainability_data)
+
+    fig_sustain = px.line(
+        sustainability_data,
+        x="Region",
+        y="Renewable Usage (%)",
+        markers=True,
+        title="Global Sustainability Metrics"
+    )
+
+    st.plotly_chart(fig_sustain, use_container_width=True)
+
+    st.success("✅ Sustainability intelligence operational")
+
+    # -------------------------------
+    # ☁ Cloud Connectivity Center
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("☁ Cloud Connectivity Center")
+
+    cloud_services = {
+        "AWS IoT Core": "Online",
+        "Azure Digital Twin": "Online",
+        "MQTT Broker": "Online",
+        "AI Cloud Engine": "Online",
+        "SCADA Gateway": "Online"
+    }
+
+    for service, status in cloud_services.items():
+
+        if status == "Online":
+            st.success(f"✅ {service} Connected")
+        else:
+            st.error(f"❌ {service} Offline")
+
     
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
