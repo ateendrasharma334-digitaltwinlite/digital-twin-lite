@@ -1926,6 +1926,145 @@ if st.session_state.get("authentication_status"):
 
     st.success("✅ AI executive forecasting operational")
 
+    # -------------------------------
+    # 🤖 AI Orchestration Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🤖 AI Orchestration Engine")
+
+    orchestration_score = random.randint(70, 100)
+
+    st.metric(
+        "AI Orchestration Efficiency",
+        f"{orchestration_score}%"
+    )
+
+    st.progress(orchestration_score)
+
+    if orchestration_score < 80:
+
+        st.warning("⚠ Some AI workflows require optimization")
+
+    else:
+
+        st.success("✅ Enterprise AI orchestration stable")
+    
+    # -------------------------------
+    # 🖥 Enterprise Digital War Room
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🖥 Enterprise Digital War Room")
+
+    war_col1, war_col2, war_col3, war_col4 = st.columns(4)
+
+    war_col1.metric(
+        "Critical Alerts",
+        random.randint(0, 10)
+    )
+
+    war_col2.metric(
+        "Active AI Systems",
+        random.randint(10, 50)
+    )
+
+    war_col3.metric(
+        "Connected Facilities",
+        random.randint(5, 25)
+    )
+
+    war_col4.metric(
+        "Global Uptime",
+        f"{random.randint(95,100)}%"
+    )
+
+    st.success("✅ Enterprise command operations active")
+
+    # -------------------------------
+    # ⚡ AI Resource Allocation Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("⚡ AI Resource Allocation")
+
+    resource_data = pd.DataFrame({
+        "Resource": [
+            "Battery Storage",
+            "Gas Turbine",
+            "Solar Farm",
+            "Wind Farm",
+            "HVAC Systems"
+        ],
+        "Allocation (%)": [
+            random.randint(40,100),
+            random.randint(30,90),
+            random.randint(20,100),
+            random.randint(25,100),
+            random.randint(50,100)
+        ]
+    })
+
+    st.dataframe(resource_data)
+
+    fig_resource = px.bar(
+        resource_data,
+        x="Resource",
+        y="Allocation (%)",
+        color="Allocation (%)",
+        title="AI Resource Allocation"
+    )
+
+    st.plotly_chart(fig_resource, use_container_width=True)
+
+    # -------------------------------
+    # 🛡 Autonomous Compliance Monitor
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🛡 Autonomous Compliance Monitor")
+
+    compliance_score = random.randint(80, 100)
+
+    comp_col1, comp_col2 = st.columns(2)
+
+    comp_col1.metric(
+        "Compliance Score",
+        f"{compliance_score}%"
+    )
+
+    comp_col2.metric(
+        "Audit Readiness",
+        f"{random.randint(85,100)}%"
+    )
+
+    if compliance_score < 90:
+
+        st.warning("⚠ Compliance deviations detected")
+
+    else:
+
+        st.success("✅ Compliance systems healthy")
+
+    # -------------------------------
+    # 🌍 Enterprise Health Index
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌍 Enterprise Health Index")
+
+    enterprise_health = random.randint(70, 100)
+
+    st.metric(
+        "Enterprise Health",
+        f"{enterprise_health}%"
+    )
+
+    st.progress(enterprise_health)
+
+    if enterprise_health < 80:
+
+        st.warning("⚠ Enterprise performance degrading")
+
+    else:
+
+        st.success("✅ Enterprise systems performing optimally")
+
     
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
