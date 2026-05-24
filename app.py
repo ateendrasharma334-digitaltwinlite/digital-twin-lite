@@ -2446,6 +2446,101 @@ if st.session_state.get("authentication_status"):
 
     st.success("✅ Multi-tenant AI management active")
 
+    # -------------------------------
+    # 🔔 Enterprise Notification Center
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🔔 Enterprise Notification Center")
+
+    notifications = [
+        "⚡ Grid optimization completed",
+        "🔋 Battery dispatch updated",
+        "🌍 Carbon reduction target achieved",
+        "🚨 Predictive maintenance alert generated",
+        "📡 MQTT sensor synchronization complete"
+    ]  
+
+    for note in notifications:
+        st.info(note)
+    
+    # -------------------------------
+    # 📊 AI Operational Benchmarking
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("📊 AI Operational Benchmarking")
+
+    benchmark_df = pd.DataFrame({
+        "Metric": [
+            "Energy Efficiency",
+            "Carbon Reduction",
+            "Grid Stability",
+            "AI Automation",
+            "Operational Uptime"
+        ],
+        "Your Platform": [
+            random.randint(75,100),
+            random.randint(70,100),
+            random.randint(80,100),
+            random.randint(75,100),
+            random.randint(85,100)
+        ],
+        "Industry Average": [
+            72,
+            65,
+            74,
+            68,
+            80
+        ]
+    })
+
+    st.dataframe(benchmark_df)
+
+    fig_benchmark = px.line(
+        benchmark_df,
+        x="Metric",
+        y=["Your Platform", "Industry Average"],
+        markers=True,
+        title="Enterprise Benchmark Comparison"
+    )
+
+    st.plotly_chart(fig_benchmark, use_container_width=True)
+
+    # -------------------------------
+    # 🌍 Global Energy Command Analytics
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌍 Global Energy Command Analytics")
+
+    global_energy = pd.DataFrame({
+        "Region": [
+            "Europe",
+            "Asia",
+            "North America",
+            "Middle East",
+            "Africa"
+        ],
+        "Demand (GW)": [
+            random.randint(100,500),
+            random.randint(300,900),
+            random.randint(200,700),
+            random.randint(80,300),
+            random.randint(50,250)
+        ]
+    })
+
+    st.dataframe(global_energy)
+
+    fig_global_energy = px.area(
+        global_energy,
+        x="Region",
+        y="Demand (GW)",
+        title="Global Energy Demand Analytics"
+    )
+
+    st.plotly_chart(fig_global_energy, use_container_width=True)
+
+    st.success("✅ Global energy analytics operational")
+
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
     # =========================================================
