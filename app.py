@@ -3028,6 +3028,155 @@ if st.session_state.get("authentication_status"):
         st.info(f"🤖 AI selected strategy: {strategy}")
 
         st.success("✅ Strategic optimization completed")
+    
+    # -------------------------------
+    # 🧠 AI Cognitive Grid Intelligence
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🧠 AI Cognitive Grid Intelligence")
+
+    cognitive_score = random.randint(80, 99)
+
+    st.metric(
+        "Cognitive Grid Intelligence",
+        f"{cognitive_score}%"
+    )
+
+    st.progress(cognitive_score)
+
+    if cognitive_score > 90:
+        st.success("✅ AI grid cognition highly optimized")
+    else:
+        st.warning("⚠ AI learning still improving")
+    
+    # -------------------------------
+    # 🔄 Autonomous Power Recovery Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🔄 Autonomous Power Recovery Engine")
+
+    recovery_df = pd.DataFrame({
+        "Incident": [
+            "Grid Instability",
+            "Voltage Spike",
+            "Transformer Fault",
+            "Wind Farm Disconnect",
+            "Battery Failure"
+        ],
+         "Recovery Status": [
+            "Recovered",
+            "Stabilized",
+            "Recovered",
+            "Balancing",
+            "Recovered"
+        ],
+        "Recovery Time (min)": [
+            random.randint(1,10),
+            random.randint(2,15),
+            random.randint(1,8),
+            random.randint(5,20),
+            random.randint(2,12)
+        ]
+    })
+
+    st.dataframe(recovery_df)
+
+    st.success("✅ Autonomous recovery systems active")
+
+    # -------------------------------
+    # 🌍 Digital Energy Ecosystem Map
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌍 Digital Energy Ecosystem Map")
+
+    ecosystem_df = pd.DataFrame({
+        "Infrastructure": [
+            "Solar Network",
+            "Wind Fleet",
+            "Battery Storage",
+            "Hydrogen Hub",
+            "Grid AI Center"
+        ],
+        "Connectivity (%)": [
+            random.randint(70,100),
+            random.randint(65,100),
+            random.randint(75,100),
+            random.randint(60,95),
+            random.randint(85,100)
+        ]
+    })
+
+    st.dataframe(ecosystem_df)
+
+    fig_ecosystem = px.treemap(
+        ecosystem_df,
+        path=["Infrastructure"],
+        values="Connectivity (%)",
+        title="Digital Energy Ecosystem"
+    )
+
+    st.plotly_chart(fig_ecosystem, use_container_width=True)
+
+    # -------------------------------
+    # 📈 AI Infrastructure Evolution Tracker
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("📈 AI Infrastructure Evolution Tracker")
+
+    years = [2025, 2026, 2027, 2028, 2029, 2030]
+
+    evolution_df = pd.DataFrame({
+        "Year": years,
+        "AI Automation (%)": [
+            random.randint(40,60),
+            random.randint(50,70),
+            random.randint(60,80),
+            random.randint(70,90),
+            random.randint(80,95),
+            random.randint(90,100)
+        ]
+    })
+
+    fig_evolution = px.area(
+        evolution_df,
+        x="Year",
+        y="AI Automation (%)",
+        title="AI Infrastructure Evolution"
+    )
+
+    st.plotly_chart(fig_evolution, use_container_width=True)
+
+    st.info("🤖 AI infrastructure continuously evolving")
+
+    # -------------------------------
+    # ⚡ Self-Optimizing Utility Brain
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("⚡ Self-Optimizing Utility Brain")
+
+    brain_score = random.randint(85,100)
+
+    brain_col1, brain_col2, brain_col3 = st.columns(3)
+
+    brain_col1.metric(
+        "AI Optimization",
+        f"{brain_score}%"
+    )
+
+    brain_col2.metric(
+        "Autonomous Decisions",
+        random.randint(1000,10000)
+    )
+
+    brain_col3.metric(
+        "Grid Stability",
+        f"{random.randint(90,100)}%"
+    )
+
+    if brain_score > 92:
+        st.success("✅ Utility brain fully optimized")
+    else:
+        st.warning("⚠ Optimization in progress")
 
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
