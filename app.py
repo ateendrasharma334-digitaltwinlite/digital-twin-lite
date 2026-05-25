@@ -3340,6 +3340,168 @@ if st.session_state.get("authentication_status"):
     • Cognitive infrastructure optimization
     """)
 
+    # -------------------------------
+    # 🧠 AGI Utility Commander
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🧠 AGI Utility Commander")
+
+    agi_score = random.randint(90, 100)
+
+    st.metric(
+        "AGI Operational Intelligence",
+        f"{agi_score}%"
+    )
+
+    st.progress(agi_score)
+
+    if agi_score > 95:
+        st.success("✅ AGI utility orchestration fully autonomous")
+    else:
+        st.warning("⚠ AGI optimization recalibrating")
+
+    # -------------------------------
+    # 🛰 Space-Based Energy Coordination
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🛰 Space-Based Energy Coordination")
+
+    space_df = pd.DataFrame({
+        "Satellite Grid": [
+            "Orbital Solar Array",
+            "Lunar Storage Hub",
+            "Geo Grid Relay",
+            "Mars Energy Link",
+            "Deep Space Node"
+        ],
+        "Energy Transfer (%)": [
+            random.randint(70,100),
+            random.randint(65,95),
+            random.randint(75,100),
+            random.randint(60,90),
+            random.randint(50,85)
+        ]
+    })
+
+    st.dataframe(space_df)
+
+    fig_space = px.bar(
+        space_df,
+        x="Satellite Grid",
+        y="Energy Transfer (%)",
+        color="Energy Transfer (%)",
+        title="Space Energy Coordination"
+    )
+
+    st.plotly_chart(fig_space, use_container_width=True)
+
+    st.success("✅ Space-grid synchronization stable")
+
+
+    # -------------------------------
+    # 🧬 Autonomous Infrastructure DNA Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🧬 Autonomous Infrastructure DNA Engine")
+
+    dna_df = pd.DataFrame({
+        "Infrastructure Gene": [
+            "Self-Healing",
+            "Adaptive Grid",
+            "AI Learning",
+            "Resilience",
+            "Optimization"
+        ],
+        "Evolution Score": [
+            random.randint(80,100),
+            random.randint(75,98),
+            random.randint(85,100),
+            random.randint(78,99),
+            random.randint(82,100)
+        ]
+    })
+
+    st.dataframe(dna_df)
+
+    fig_dna = px.line_polar(
+        dna_df,
+        r="Evolution Score",
+        theta="Infrastructure Gene",
+        line_close=True
+    )
+
+    fig_dna.update_traces(fill='toself')
+
+    st.plotly_chart(fig_dna, use_container_width=True)
+
+    # -------------------------------
+    # 🌍 AI Civilization Energy Index
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌍 AI Civilization Energy Index")
+
+    civilization_df = pd.DataFrame({
+        "Civilization Sector": [
+            "Transportation",
+            "Industry",
+            "Residential",
+            "Space Infrastructure",
+            "AI Ecosystems"
+        ],
+        "Energy Intelligence (%)": [
+            random.randint(70,100),
+            random.randint(65,98),
+            random.randint(60,95),
+            random.randint(80,100),
+            random.randint(85,100)
+        ]
+    })
+
+    st.dataframe(civilization_df)
+
+    fig_civilization = px.treemap(
+        civilization_df,
+        path=["Civilization Sector"],
+        values="Energy Intelligence (%)",
+        title="Civilization Energy Intelligence"
+    )
+
+    st.plotly_chart(fig_civilization, use_container_width=True)
+
+    # -------------------------------
+    # ⚡ Self-Evolving Utility Intelligence
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("⚡ Self-Evolving Utility Intelligence")
+
+    evolution_col1, evolution_col2, evolution_col3 = st.columns(3)
+
+    evolution_col1.metric(
+        "AI Evolution Rate",
+        f"{random.randint(90,100)}%"
+    )
+
+    evolution_col2.metric(
+        "Autonomous Learning Cycles",
+        random.randint(10000,500000)
+    )
+
+    evolution_col3.metric(
+        "Infrastructure Evolution",
+        f"{random.randint(88,100)}%"
+    )
+
+    st.success("✅ Self-evolving intelligence active")
+
+    st.info("""
+    Evolution Capabilities:
+    • Autonomous AI learning
+    • Dynamic infrastructure adaptation
+    • Predictive civilization scaling
+    • Self-improving energy orchestration
+    • AGI-powered optimization
+    """)
+
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
     # =========================================================
