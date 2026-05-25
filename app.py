@@ -3177,6 +3177,168 @@ if st.session_state.get("authentication_status"):
         st.success("✅ Utility brain fully optimized")
     else:
         st.warning("⚠ Optimization in progress")
+    
+    # -------------------------------
+    # ⚛ Quantum Grid Optimization
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("⚛ Quantum Grid Optimization")
+
+    quantum_score = random.randint(85, 100)
+
+    st.metric(
+        "Quantum Optimization Score",
+        f"{quantum_score}%"
+    )
+
+    st.progress(quantum_score)
+
+    if quantum_score > 92:
+        st.success("✅ Quantum optimization stable")
+    else:
+        st.warning("⚠ Quantum balancing recalculating")
+    
+    # -------------------------------
+    # 🌍 AI Climate Impact Simulator
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌍 AI Climate Impact Simulator")
+
+    climate_df = pd.DataFrame({
+        "Scenario": [
+            "Net Zero",
+            "High Renewable",
+            "Hybrid Grid",
+            "Carbon Intensive",
+            "AI Optimized"
+        ],
+        "CO₂ Reduction (%)": [
+            random.randint(40,90),
+            random.randint(50,95),
+            random.randint(35,80),
+            random.randint(10,40),
+            random.randint(60,98)
+        ]
+    })
+
+    st.dataframe(climate_df)
+
+    fig_climate = px.bar(
+        climate_df,
+        x="Scenario",
+        y="CO₂ Reduction (%)",
+        color="CO₂ Reduction (%)",
+        title="AI Climate Impact Forecast"
+    )
+
+    st.plotly_chart(fig_climate, use_container_width=True)
+
+    # -------------------------------
+    # 🛰 Autonomous Utility Swarm Intelligence
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🛰 Autonomous Utility Swarm Intelligence")
+
+    swarm_df = pd.DataFrame({
+        "Utility Node": [
+            "Node A",
+            "Node B",
+            "Node C",
+            "Node D",
+            "Node E"
+        ],
+        "AI Coordination (%)": [
+            random.randint(80,100),
+            random.randint(75,98),
+            random.randint(82,100),
+            random.randint(78,99),
+            random.randint(85,100)
+        ]
+    })
+
+    st.dataframe(swarm_df)
+
+    fig_swarm = px.scatter(
+        swarm_df,
+        x="Utility Node",
+        y="AI Coordination (%)",
+        size="AI Coordination (%)",
+        color="AI Coordination (%)",
+        title="Utility Swarm Coordination"
+    )
+
+    st.plotly_chart(fig_swarm, use_container_width=True)
+
+    st.success("✅ Swarm coordination synchronized")
+
+    # -------------------------------
+    # 🌐 Global Energy Neural Network
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌐 Global Energy Neural Network")
+
+    neural_df = pd.DataFrame({
+        "Region": [
+            "Europe",
+            "North America",
+            "Asia",
+            "Middle East",
+            "Africa"
+        ],
+        "Neural Connectivity (%)": [
+            random.randint(75,100),
+            random.randint(70,100),
+            random.randint(80,100),
+            random.randint(65,95),
+            random.randint(60,90)
+        ]
+    })
+
+    st.dataframe(neural_df)
+
+    fig_neural = px.line(
+        neural_df,
+        x="Region",
+        y="Neural Connectivity (%)",
+        markers=True,
+        title="Global Neural Energy Connectivity"
+    )
+
+    st.plotly_chart(fig_neural, use_container_width=True)
+
+    # -------------------------------
+    # 🤖 Hyper-Autonomous Infrastructure Core
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🤖 Hyper-Autonomous Infrastructure Core")
+
+    core_col1, core_col2, core_col3 = st.columns(3)
+
+    core_col1.metric(
+        "Infrastructure Autonomy",
+        f"{random.randint(90,100)}%"
+    )
+
+    core_col2.metric(
+        "AI Decisions / Hour",
+        random.randint(5000,50000)
+    )
+
+    core_col3.metric(
+        "Self-Healing Accuracy",
+        f"{random.randint(85,100)}%"
+    )
+
+    st.success("✅ Hyper-autonomous infrastructure active")
+
+    st.info("""
+    Core Capabilities:
+    • Self-healing operations
+    • Autonomous grid stabilization
+    • AI-based recovery systems
+    • Predictive energy orchestration
+    • Cognitive infrastructure optimization
+    """)
 
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
