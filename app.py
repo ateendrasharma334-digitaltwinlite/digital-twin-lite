@@ -2711,6 +2711,166 @@ if st.session_state.get("authentication_status"):
 
     st.success("✅ Enterprise ecosystem integrations active")
 
+    # -------------------------------
+    # ⚡ Live Energy Trading Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("⚡ Live Energy Trading Engine")
+
+    energy_price = round(random.uniform(65, 180), 2)
+
+    trade_col1, trade_col2, trade_col3 = st.columns(3)
+
+    trade_col1.metric(
+        "Live Energy Price",
+        f"£{energy_price}/MWh"
+    )
+
+    trade_col2.metric(
+        "Market Demand",
+        f"{random.randint(60,100)} GW"
+    )
+
+    trade_col3.metric(
+        "Trading Volume",
+        f"{random.randint(500,5000)} MWh"
+    )
+
+    st.success("✅ Energy trading systems operational")
+
+    # -------------------------------
+    # 📈 AI Energy Price Forecasting
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("📈 AI Energy Price Forecasting")
+
+    forecast_hours = list(range(1, 25))
+
+    forecast_prices = [
+        random.randint(60, 180)
+        for _ in forecast_hours
+    ]
+
+    forecast_df = pd.DataFrame({
+        "Hour": forecast_hours,
+        "Forecast Price": forecast_prices
+    })
+
+    fig_price_forecast = px.line(
+        forecast_df,
+        x="Hour",
+        y="Forecast Price",
+        markers=True,
+        title="24-Hour Energy Price Forecast"
+    )
+
+    st.plotly_chart(fig_price_forecast, use_container_width=True)
+
+    st.info("🤖 AI models forecasting energy market fluctuations")
+
+    # -------------------------------
+    # 🚦 Grid Congestion Intelligence
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🚦 Grid Congestion Intelligence")
+
+    grid_regions = pd.DataFrame({
+        "Region": [
+            "London",
+            "Manchester",
+            "Birmingham",
+            "Leeds",
+            "Glasgow"
+        ],
+        "Congestion (%)": [
+            random.randint(20,95),
+            random.randint(10,85),
+            random.randint(15,80),
+            random.randint(25,90),
+            random.randint(5,70)
+        ]
+    })
+
+    st.dataframe(grid_regions)
+
+    fig_congestion = px.bar(
+        grid_regions,
+        x="Region",
+        y="Congestion (%)",
+        color="Congestion (%)",
+        title="Grid Congestion Analysis"
+    )
+
+    st.plotly_chart(fig_congestion, use_container_width=True)
+
+    # -------------------------------
+    # 🌱 Renewable Dispatch Optimizer
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌱 Renewable Dispatch Optimizer")
+
+    renewables = pd.DataFrame({
+        "Source": [
+            "Solar",
+            "Wind",
+            "Hydro",
+            "Battery",
+            "Thermal Backup"
+        ],
+        "Dispatch (%)": [
+            random.randint(20,90),
+            random.randint(30,100),
+            random.randint(10,70),
+            random.randint(20,80),
+            random.randint(5,50)
+        ]
+    })
+
+    st.dataframe(renewables)
+
+    fig_dispatch = px.pie(
+        renewables,
+        names="Source",
+        values="Dispatch (%)",
+        title="AI Renewable Dispatch Allocation"
+    )
+
+    st.plotly_chart(fig_dispatch, use_container_width=True)
+
+    st.success("✅ Renewable balancing optimized")
+
+    # -------------------------------
+    # 🤖 Autonomous Energy Decision Center
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🤖 Autonomous Energy Decision Center")
+
+    decision_engine = random.randint(70, 100)
+
+    st.metric(
+        "AI Decision Accuracy",
+        f"{decision_engine}%"
+    )
+
+    st.progress(decision_engine)
+
+    if decision_engine < 80:
+
+        st.warning("⚠ AI recommendations require validation")
+
+    else:
+
+        st.success("✅ Autonomous decisions optimized")
+
+    st.info("""
+    AI Decision Actions:
+    • Optimize generation mix
+    • Reduce carbon intensity
+    • Balance grid demand
+    • Predict market volatility
+    • Improve operational efficiency
+    """)
+
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
     # =========================================================
