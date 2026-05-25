@@ -2923,12 +2923,14 @@ if st.session_state.get("authentication_status"):
 
     st.dataframe(team_df)
 
-    fig_team = px.radar(
+    fig_team = px.line_polar(
         team_df,
         r="AI Efficiency (%)",
         theta="Department",
         line_close=True
     )
+
+    fig_team.update_traces(fill='toself')
 
     st.plotly_chart(fig_team, use_container_width=True)
 
