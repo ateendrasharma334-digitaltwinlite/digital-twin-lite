@@ -3502,6 +3502,155 @@ if st.session_state.get("authentication_status"):
     • AGI-powered optimization
     """)
 
+    # -------------------------------
+    # 🧠 Sentient Infrastructure Awareness
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🧠 Sentient Infrastructure Awareness")
+
+    sentient_score = random.randint(92, 100)
+
+    st.metric(
+        "Infrastructure Awareness",
+        f"{sentient_score}%"
+    )
+
+    st.progress(sentient_score)
+
+    if sentient_score > 96:
+        st.success("✅ Sentient infrastructure fully adaptive")
+    else:
+        st.warning("⚠ Sentient AI recalibrating")
+    
+    # -------------------------------
+    # 🌍 Planetary Grid Coordination Matrix
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌍 Planetary Grid Coordination Matrix")
+
+    planetary_df = pd.DataFrame({
+        "Grid Zone": [
+            "Northern Hemisphere",
+            "Southern Hemisphere",
+            "Orbital Grid",
+            "Oceanic Grid",
+            "Polar Infrastructure"
+        ],
+        "Synchronization (%)": [
+            random.randint(80,100),
+            random.randint(75,98),
+            random.randint(85,100),
+            random.randint(78,99),
+            random.randint(70,95)
+        ]
+    })
+
+    st.dataframe(planetary_df)
+
+    fig_planetary = px.area(
+        planetary_df,
+        x="Grid Zone",
+        y="Synchronization (%)",
+        title="Planetary Grid Synchronization"
+    )
+
+    st.plotly_chart(fig_planetary, use_container_width=True)
+
+    st.success("✅ Planetary grids synchronized")
+
+    # -------------------------------
+    # 🌌 Universal Energy Intelligence Network
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌌 Universal Energy Intelligence Network")
+
+    universal_df = pd.DataFrame({
+        "Energy Network": [
+            "Earth Grid",
+            "Orbital Grid",
+            "Lunar Grid",
+            "Mars Colony",
+            "Deep Space Relay"
+        ],
+        "AI Connectivity (%)": [
+            random.randint(82,100),
+            random.randint(75,98),
+            random.randint(70,95),
+            random.randint(65,90),
+            random.randint(60,85)
+        ]
+    })
+
+    st.dataframe(universal_df)
+
+    fig_universal = px.scatter(
+        universal_df,
+        x="Energy Network",
+        y="AI Connectivity (%)",
+        size="AI Connectivity (%)",
+        color="AI Connectivity (%)",
+        title="Universal AI Energy Connectivity"
+    )
+
+    st.plotly_chart(fig_universal, use_container_width=True)
+
+    # -------------------------------
+    # 🏙 Autonomous Civilization Stability Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🏙 Autonomous Civilization Stability Engine")
+
+    civilization_score = random.randint(88,100)
+
+    st.metric(
+        "Civilization Stability Index",
+        f"{civilization_score}%"
+    )
+
+    st.progress(civilization_score)
+
+    if civilization_score > 94:
+        st.success("✅ Civilization infrastructure stable")
+    else:
+        st.warning("⚠ Stability optimization running")
+    
+    # -------------------------------
+    # 🤖 AI Conscious Infrastructure Core
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🤖 AI Conscious Infrastructure Core")
+
+    core_df = pd.DataFrame({
+        "Capability": [
+            "Self Awareness",
+            "Autonomous Decisions",
+            "Predictive Evolution",
+            "Infrastructure Healing",
+            "Universal Coordination"
+        ],
+        "Capability Score": [
+            random.randint(85,100),
+            random.randint(88,100),
+            random.randint(82,100),
+            random.randint(86,100),
+            random.randint(80,100)
+        ]
+    })
+
+    st.dataframe(core_df)
+
+    fig_core = px.bar(
+        core_df,
+        x="Capability",
+        y="Capability Score",
+        color="Capability Score",
+        title="AI Conscious Infrastructure Core"
+    )
+
+    st.plotly_chart(fig_core, use_container_width=True)
+
+    st.success("✅ Conscious infrastructure intelligence operational")
+
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
     # =========================================================
