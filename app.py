@@ -3817,6 +3817,188 @@ if st.session_state.get("authentication_status"):
 
     st.success("✅ Reality simulation systems active")
 
+    # -------------------------------
+    # 🔗 Real-Time Asset Dependency Mapping
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🔗 Real-Time Asset Dependency Mapping")
+
+    dependency_df = pd.DataFrame({
+        "Primary Asset": [
+            "Gas Turbine",
+            "Battery Storage",
+            "Solar Farm",
+            "HV Transformer",
+            "SCADA Network"
+        ],
+        "Dependent System": [
+            "Cooling System",
+            "Grid Stability",
+            "Inverter Network",
+            "Distribution Bus",
+            "Control Center"
+        ],
+        "Dependency Risk": [
+            random.randint(10,90),
+            random.randint(15,85),
+            random.randint(20,80),
+            random.randint(5,70),
+            random.randint(25,95)
+        ]
+    })
+
+    st.dataframe(dependency_df)
+
+    fig_dependency = px.sunburst(
+        dependency_df,
+        path=["Primary Asset", "Dependent System"],
+        values="Dependency Risk",
+        title="Asset Dependency Intelligence"
+    )
+
+    st.plotly_chart(fig_dependency, use_container_width=True)
+
+    # -------------------------------
+    # 🚨 Enterprise Operational Risk Matrix
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🚨 Enterprise Operational Risk Matrix")
+
+    risk_df = pd.DataFrame({
+        "Operational Area": [
+            "Generation",
+            "Cybersecurity",
+            "Grid Stability",
+            "Market Operations",
+            "IoT Infrastructure"
+        ],
+        "Risk Score": [
+            random.randint(10,90),
+            random.randint(15,95),
+            random.randint(20,85),
+            random.randint(10,80),
+            random.randint(5,75)
+        ]
+    })
+
+    st.dataframe(risk_df)
+
+    fig_risk = px.density_heatmap(
+        risk_df,
+        x="Operational Area",
+        y="Risk Score",
+        z="Risk Score",
+        title="Enterprise Risk Matrix"
+    )
+
+    st.plotly_chart(fig_risk, use_container_width=True)
+
+    # -------------------------------
+    # ⚡ AI Resource Optimization Fabric
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("⚡ AI Resource Optimization Fabric")
+
+    resource_df = pd.DataFrame({
+        "Resource": [
+            "Power Generation",
+            "Battery Storage",
+            "Grid Frequency",
+            "Cooling Systems",
+            "Data Infrastructure"
+        ],
+        "Optimization (%)": [
+            random.randint(70,100),
+            random.randint(65,98),
+            random.randint(75,100),
+            random.randint(60,95),
+            random.randint(80,100)
+        ]
+    })
+
+    st.dataframe(resource_df)
+
+    fig_resource = px.funnel(
+        resource_df,
+        x="Optimization (%)",
+        y="Resource",
+        title="AI Resource Optimization"
+    )
+
+    st.plotly_chart(fig_resource, use_container_width=True)
+
+    st.success("✅ Resource optimization synchronized")
+
+    # -------------------------------
+    # 🌐 Distributed Digital Twin Synchronization
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌐 Distributed Digital Twin Synchronization")
+
+    sync_df = pd.DataFrame({
+        "Digital Twin Node": [
+            "Plant A",
+            "Plant B",
+            "Grid Hub",
+            "Solar Cluster",
+            "Battery Fleet"
+        ],
+        "Synchronization (%)": [
+            random.randint(80,100),
+            random.randint(78,99),
+            random.randint(85,100),
+            random.randint(75,98),
+            random.randint(82,100)
+        ]
+    })
+
+    st.dataframe(sync_df)
+
+    fig_sync = px.area(
+        sync_df,
+        x="Digital Twin Node",
+        y="Synchronization (%)",
+        title="Distributed Twin Synchronization"
+    )
+
+    st.plotly_chart(fig_sync, use_container_width=True)
+
+    st.success("✅ Digital twin synchronization active")
+
+    # -------------------------------
+    # 🎯 Autonomous Utility Mission Control
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🎯 Autonomous Utility Mission Control")
+
+    mission_col1, mission_col2, mission_col3 = st.columns(3)
+
+    mission_col1.metric(
+        "Operational Readiness",
+        f"{random.randint(90,100)}%"
+    )
+
+    mission_col2.metric(
+        "Active AI Decisions",
+        random.randint(1000,10000)
+    )
+
+    mission_col3.metric(
+        "Mission Stability",
+        f"{random.randint(88,100)}%"
+    )
+
+    st.success("✅ Mission control systems operational")
+
+    st.info("""
+    Mission Control Functions:
+    • Autonomous operational coordination
+    • AI-driven infrastructure balancing
+    • Enterprise energy optimization
+    • Real-time digital twin synchronization
+    • Distributed utility intelligence
+    """)
+
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
     # =========================================================
