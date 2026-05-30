@@ -4668,6 +4668,45 @@ if st.session_state.get("authentication_status"):
                 "Client"
             ]
         )
+        # -------------------------------
+        # 🔐 Role Permissions Matrix
+        # -------------------------------
+        role_permissions = {
+
+            "Admin": [
+                "Overview",
+                "AI Monitoring",
+                "SCADA Control",
+                "Asset Management",
+                "Energy Intelligence",
+                "Executive Center",
+                "Asset History",
+                "Security Center"
+            ],
+
+            "Engineer": [
+                "Overview",
+                "AI Monitoring",
+                "SCADA Control",
+                "Asset Management",
+                "Energy Intelligence"
+            ],
+
+            "Operator": [
+                "Overview",
+                "SCADA Control",
+                "Asset Management"
+            ],
+
+            "Client": [
+                "Overview",
+                "Executive Center"
+            ]
+        }
+        allowed_pages = role_permissions.get(
+            role,
+            ["Overview"]
+        )
 
         # -------------------------------
         # 👔 Executive Control Center
