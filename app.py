@@ -6484,6 +6484,27 @@ if st.session_state.get("authentication_status"):
         )
 
         # -------------------------------
+        # 🚨 Incident History
+        # -------------------------------
+        st.markdown("---")
+        st.subheader("🚨 Incident History")
+
+        incident_df = pd.read_sql_query(
+            """
+            SELECT *
+            FROM incidents
+            ORDER BY id DESC
+            LIMIT 20
+            """,
+            conn
+        )
+
+        st.dataframe(
+            incident_df,
+            use_container_width=True
+        )
+
+        # -------------------------------
         # Download CSV & PDF
         # -------------------------------
         st.subheader("📥 Download Energy Report")
