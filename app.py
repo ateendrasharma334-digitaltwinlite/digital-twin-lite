@@ -586,6 +586,29 @@ conn = sqlite3.connect(
 )
 
 cursor = conn.cursor()
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS asset_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    asset_name TEXT,
+    asset_type TEXT,
+    health_score REAL,
+    status TEXT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+)
+""")
+
+conn.commit()
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS incidents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    asset_name TEXT,
+    incident TEXT,
+    severity TEXT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+)
+""")
+
+conn.commit()
 
 # -------------------------------
 # Wrap entire dashboard
@@ -713,6 +736,18 @@ if st.session_state.get("authentication_status"):
         st.warning("⚠ Moderate Asset Risk")
     else:
         st.success("✅ Asset Risk Low")
+    
+    try:
+
+        save_asset_history(
+            asset_name="Main Asset",
+            asset_type="Industrial Equipment",
+            health_score=health_score,
+            status="Active"
+        )
+
+    except:
+        pass
 
     # -------------------------------
     # 🔮 Remaining Useful Life (RUL)
@@ -4835,7 +4870,7 @@ if st.session_state.get("authentication_status"):
         st.dataframe(df.head())
     
     # -------------------------------
-    # 📊 Rolling Energy Trend (Level 32)
+    # 📊 Rolling Energy Trend 
     # -------------------------------
     st.subheader("📊 Energy Trend Analysis")
 
@@ -5843,7 +5878,7 @@ if st.session_state.get("authentication_status"):
                     st.success("✅ SLA compliant")
                 
                 # -------------------------------
-                # 🧠 Root Cause Analysis (Level 33)
+                # 🧠 Root Cause Analysis
                 # -------------------------------
                 st.subheader("🧠 Root Cause Analysis")
 
@@ -6042,7 +6077,7 @@ if st.session_state.get("authentication_status"):
                         st.success("✅ Model Retrained Successfully")
 
                 # -------------------------------
-                # ⚡ Auto Energy Optimization (Level 34)
+                # ⚡ Auto Energy Optimization
                 # -------------------------------
                 st.subheader("⚡ AI Energy Optimization")
 
