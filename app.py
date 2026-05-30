@@ -37,29 +37,6 @@ client_mqtt.subscribe("digital_twin/sensors")
 client_mqtt.loop_start()
 
 # -------------------------------
-# 🗄 SQLite Asset Historian
-# -------------------------------
-conn = sqlite3.connect(
-    "digital_twin.db",
-    check_same_thread=False
-)
-
-cursor = conn.cursor()
-
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS asset_history(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    asset_name TEXT,
-    asset_type TEXT,
-    health_score REAL,
-    status TEXT
-)
-""")
-
-conn.commit()
-
-# -------------------------------
 # 🔄 Auto Refresh 
 # -------------------------------
 from streamlit_autorefresh import st_autorefresh
@@ -599,6 +576,16 @@ log_security_event(
     st.session_state.get("name"),
     "User Logged In"
 )
+
+# -------------------------------
+# SQLite Database
+# -------------------------------
+conn = sqlite3.connect(
+    "digital_twin.db",
+    check_same_thread=False
+)
+
+cursor = conn.cursor()
 
 # -------------------------------
 # Wrap entire dashboard
