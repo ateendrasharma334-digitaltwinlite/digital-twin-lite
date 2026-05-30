@@ -4209,6 +4209,108 @@ if st.session_state.get("authentication_status"):
         f"{vibration:.2f} mm/s"
     )
 
+    # -------------------------------
+    # 📈 Telemetry Data Stream
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("📈 Live Telemetry Stream")
+
+    telemetry_df = pd.DataFrame({
+        "Time": range(1, 25),
+        "Temperature": [
+            random.randint(50,90)
+            for _ in range(24)
+        ]
+    })
+
+    fig_telemetry = px.line(
+        telemetry_df,
+        x="Time",
+        y="Temperature",
+        title="Temperature Telemetry"
+    )
+
+    st.plotly_chart(
+        fig_telemetry,
+        use_container_width=True
+    )
+
+    # -------------------------------
+    # 🔍 Sensor Health Analyzer
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🔍 Sensor Health Analyzer")
+
+    sensor_health = random.randint(70,100)
+
+    st.metric(
+        "Sensor Health",
+        f"{sensor_health}%"
+    )
+
+    st.progress(sensor_health)
+
+    if sensor_health < 80:
+        st.warning(
+            "⚠ Sensor calibration recommended"
+        )
+    else:
+        st.success(
+            "✅ Sensors healthy"
+        )
+
+    # -------------------------------
+    # 📶 MQTT Connection Monitor
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("📶 MQTT Connection Monitor")
+
+    mqtt_status = random.choice(
+        [
+            "Connected",
+            "Connected",
+            "Connected",
+            "Disconnected"
+        ]
+    )
+
+    if mqtt_status == "Connected":
+        st.success(
+            "✅ MQTT Broker Connected"
+        )
+    else:
+        st.error(
+            "❌ MQTT Broker Disconnected"
+        )
+
+    # -------------------------------
+    # 🏷 Industrial Tag Monitor
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🏷 Industrial Tag Monitor")
+
+    tag_df = pd.DataFrame({
+        "Tag": [
+            "GT_TEMP_01",
+            "GT_PRESS_01",
+            "GT_VIB_01",
+            "HV_VOLT_01",
+            "HV_CURR_01"
+        ],
+        "Value": [
+            round(random.uniform(20,100),2),
+            round(random.uniform(5,20),2),
+            round(random.uniform(0,10),2),
+            round(random.uniform(10000,33000),2),
+            round(random.uniform(100,1000),2)
+        ]
+    })
+
+    st.dataframe(
+        tag_df,
+        use_container_width=True
+    )
+
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
     # =========================================================
