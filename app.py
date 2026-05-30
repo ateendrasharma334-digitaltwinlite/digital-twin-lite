@@ -3999,6 +3999,189 @@ if st.session_state.get("authentication_status"):
     • Distributed utility intelligence
     """)
 
+    # -------------------------------
+    # 🏭 Multi-Site Operations Center
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🏭 Multi-Site Operations Center")
+
+    site_df = pd.DataFrame({
+        "Site": [
+            "London Energy Hub",
+            "Manchester Grid",
+            "Birmingham Plant",
+            "Leeds Storage Hub",
+            "Glasgow Wind Center"
+        ],
+        "Operational Status": [
+            "Online",
+            "Stable",
+            "Online",
+            "Maintenance",
+            "Online"
+        ],
+        "Efficiency (%)": [
+            random.randint(75,100),
+            random.randint(70,98),
+            random.randint(80,100),
+            random.randint(60,90),
+            random.randint(78,100)
+        ]
+    })
+
+    st.dataframe(site_df)
+
+    fig_sites = px.bar(
+        site_df,
+        x="Site",
+        y="Efficiency (%)",
+        color="Efficiency (%)",
+        title="Enterprise Site Performance"
+    )
+
+    st.plotly_chart(fig_sites, use_container_width=True)
+
+    # -------------------------------
+    # 📊 Enterprise AI SLA Monitoring
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("📊 Enterprise AI SLA Monitoring")
+
+    sla_df = pd.DataFrame({
+        "Service": [
+            "SCADA Analytics",
+            "IoT Gateway",
+            "Predictive AI",
+            "Energy Forecasting",
+            "Grid Intelligence"
+        ],
+        "Uptime (%)": [
+            random.randint(95,100),
+            random.randint(94,100),
+            random.randint(96,100),
+            random.randint(93,100),
+            random.randint(95,100)
+        ]
+    })
+
+    st.dataframe(sla_df)
+
+    fig_sla = px.line(
+        sla_df,
+        x="Service",
+        y="Uptime (%)",
+        markers=True,
+        title="Enterprise SLA Monitoring"
+    )
+
+    st.plotly_chart(fig_sla, use_container_width=True)
+
+    st.success("✅ Enterprise SLA targets maintained")
+
+    # -------------------------------
+    # 🤖 Industrial Workflow Automation
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🤖 Industrial Workflow Automation")
+
+    workflow_df = pd.DataFrame({
+        "Workflow": [
+            "Maintenance Dispatch",
+            "Grid Balancing",
+            "Incident Response",
+            "Energy Optimization",
+            "Carbon Reporting"
+        ],
+        "Automation Level (%)": [
+            random.randint(70,100),
+            random.randint(75,100),
+            random.randint(65,95),
+            random.randint(80,100),
+            random.randint(60,95)
+        ]
+    })
+
+    st.dataframe(workflow_df)
+
+    fig_workflow = px.funnel_area(
+        workflow_df,
+        names="Workflow",
+        values="Automation Level (%)",
+        title="Workflow Automation Coverage"
+    )
+
+    st.plotly_chart(fig_workflow, use_container_width=True)
+
+    st.success("✅ Industrial workflows automated")
+
+    # -------------------------------
+    # 📡 Live Infrastructure Command Queue
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("📡 Live Infrastructure Command Queue")
+
+    command_df = pd.DataFrame({
+        "Command": [
+            "Rebalance Grid",
+            "Optimize Storage",
+            "Reduce Peak Load",
+            "Deploy Maintenance",
+            "Run AI Forecast"
+        ],
+        "Priority": [
+            "High",
+            "Medium",
+            "High",
+            "Low",
+            "Medium"
+        ],
+        "Execution Status": [
+            "Running",
+            "Queued",
+            "Completed",
+            "Running",
+            "Queued"
+        ]
+    })
+
+    st.dataframe(command_df)
+
+    st.info("⚡ Autonomous command queue actively managing infrastructure")
+
+    # -------------------------------
+    # ☁ Executive Operational Intelligence Cloud
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("☁ Executive Operational Intelligence Cloud")
+
+    cloud_col1, cloud_col2, cloud_col3 = st.columns(3)
+
+    cloud_col1.metric(
+        "Enterprise Availability",
+        f"{random.randint(98,100)}%"
+    )
+
+    cloud_col2.metric(
+        "AI Decisions Processed",
+        f"{random.randint(50000,500000):,}"
+    )
+
+    cloud_col3.metric(
+        "Infrastructure Reliability",
+        f"{random.randint(92,100)}%"
+    )
+
+    st.success("✅ Enterprise operational cloud synchronized")
+
+    st.info("""
+    Cloud Intelligence Functions:
+    • Enterprise operational visibility
+    • AI infrastructure analytics
+    • Distributed digital twin control
+    • Autonomous workflow orchestration
+    • Executive operational intelligence
+    """)
+
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
     # =========================================================
