@@ -4182,6 +4182,33 @@ if st.session_state.get("authentication_status"):
     • Executive operational intelligence
     """)
 
+    # -------------------------------
+    # 📡 Live Sensor Control Center
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("📡 Live Sensor Control Center")
+
+    temperature = random.uniform(40, 95)
+    pressure = random.uniform(5, 20)
+    vibration = random.uniform(0.5, 10)
+
+    sensor_col1, sensor_col2, sensor_col3 = st.columns(3)
+
+    sensor_col1.metric(
+        "Temperature",
+        f"{temperature:.1f} °C"
+    )
+
+    sensor_col2.metric(
+        "Pressure",
+        f"{pressure:.1f} bar"
+    )
+
+    sensor_col3.metric(
+        "Vibration",
+        f"{vibration:.2f} mm/s"
+    )
+
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
     # =========================================================
