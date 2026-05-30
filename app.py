@@ -4713,6 +4713,10 @@ if st.session_state.get("authentication_status"):
         # -------------------------------
         if page == "Executive Center":
 
+            if page not in allowed_pages:
+                st.error("🚫 Access Denied")
+                st.stop()
+
             st.header("👔 Executive Control Center")
 
             exec_col1, exec_col2, exec_col3 = st.columns(3)
@@ -4738,6 +4742,10 @@ if st.session_state.get("authentication_status"):
         # 🖥 SCADA Control Panel
         # -------------------------------
         if page == "SCADA Control":
+
+            if page not in allowed_pages:
+                st.error("🚫 Access Denied")
+                st.stop()
 
             st.header("🖥 SCADA Control Panel")
 
@@ -4801,6 +4809,10 @@ if st.session_state.get("authentication_status"):
         # 🔐 Security & Compliance Center
         # -------------------------------
         if page == "Security Center":
+
+            if page not in allowed_pages:
+                st.error("🚫 Access Denied")
+                st.stop()
 
             st.header("🔐 Security & Compliance Center")
 
