@@ -4668,6 +4668,9 @@ if st.session_state.get("authentication_status"):
                 "Client"
             ]
         )
+
+        st.sidebar.success(f"Logged in as: {role}")
+
         # -------------------------------
         # 🔐 Role Permissions Matrix
         # -------------------------------
@@ -4707,6 +4710,14 @@ if st.session_state.get("authentication_status"):
             role,
             ["Overview"]
         )
+
+        # -------------------------------
+        # 🔐 Access Rights
+        # -------------------------------
+        st.sidebar.markdown("### 🔐 Access Rights")
+
+        for item in allowed_pages:
+            st.sidebar.write(f"✅ {item}")
 
         # -------------------------------
         # 👔 Executive Control Center
@@ -4855,7 +4866,42 @@ if st.session_state.get("authentication_status"):
             })
 
             st.dataframe(compliance_data)
-        
+
+            # -------------------------------
+            # 👥 User Access Audit
+            # -------------------------------
+            st.markdown("---")
+            st.subheader("👥 User Access Audit")
+
+            audit_df = pd.DataFrame({
+
+                "User": [
+                    "Admin",
+                    "Engineer",
+                    "Operator",
+                    "Client"
+                ],
+
+                "Last Login": [
+                    "Today",
+                    "Today",
+                    "Yesterday",
+                    "Today"
+                ],
+
+                "Status": [
+                    "Active",
+                    "Active",
+                    "Active",
+                    "Active"
+                ]
+            })
+
+            st.dataframe(
+                audit_df,
+                use_container_width=True
+            )
+
         # -------------------------------
         # 🤖 AI Cyber Security Monitor
         # -------------------------------
