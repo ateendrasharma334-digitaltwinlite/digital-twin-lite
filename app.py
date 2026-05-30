@@ -4644,6 +4644,7 @@ if st.session_state.get("authentication_status"):
             "Energy Intelligence",
             "Executive Center",
             "Asset History"
+            "Security Center",
         ]
     )
 
