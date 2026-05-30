@@ -4693,6 +4693,36 @@ if st.session_state.get("authentication_status"):
 
             st.success("✅ Executive systems operational")
         
+            st.markdown("---")
+            st.subheader("🗄 Asset History Database")
+
+            history_df = pd.read_sql_query(
+                """
+                SELECT *
+                FROM assets
+                ORDER BY id DESC
+                LIMIT 20
+                """,
+                get_connection()
+            )
+
+            st.dataframe(history_df, use_container_width=True)
+
+            st.markdown("---")
+            st.subheader("🚨 Incident History")
+
+            incident_df = pd.read_sql_query(
+                """
+                SELECT *
+                FROM incidents
+                ORDER BY id DESC
+                LIMIT 20
+                """,
+                get_connection()
+            )
+
+            st.dataframe(incident_df, use_container_width=True)
+        
         # -------------------------------
         # 🖥 SCADA Control Panel
         # -------------------------------
@@ -6508,27 +6538,6 @@ if st.session_state.get("authentication_status"):
 
         st.dataframe(
             history_df,
-            use_container_width=True
-        )
-
-        # -------------------------------
-        # 🚨 Incident History
-        # -------------------------------
-        st.markdown("---")
-        st.subheader("🚨 Incident History")
-
-        incident_df = pd.read_sql_query(
-            """
-            SELECT *
-            FROM incidents
-            ORDER BY id DESC
-            LIMIT 20
-            """,
-            conn
-        )
-
-        st.dataframe(
-            incident_df,
             use_container_width=True
         )
 
