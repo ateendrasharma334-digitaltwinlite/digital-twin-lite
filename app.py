@@ -6519,27 +6519,6 @@ if st.session_state.get("authentication_status"):
 
         else:
             st.error("🚨 Low AI Reliability")
-        
-        # -------------------------------
-        # 🗄 Asset History Database
-        # -------------------------------
-        st.markdown("---")
-        st.subheader("🗄 Asset History Database")
-
-        history_df = pd.read_sql_query(
-            """
-            SELECT *
-            FROM asset_history
-            ORDER BY id DESC
-            LIMIT 20
-            """,
-            conn
-        )
-
-        st.dataframe(
-            history_df,
-            use_container_width=True
-        )
 
         # -------------------------------
         # Download CSV & PDF
