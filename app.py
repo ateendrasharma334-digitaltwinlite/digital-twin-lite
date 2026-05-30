@@ -161,6 +161,34 @@ def insert_asset(asset_name, asset_type, health_score, criticality, status):
             criticality,
             status
         ))
+# -------------------------------
+# Incident Storage
+# -------------------------------
+def save_incident(asset_name, incident, severity):
+
+    with get_connection() as conn:
+        conn.execute("""
+            INSERT INTO incidents (
+                asset_name,
+                incident,
+                severity
+            )
+            VALUES (?, ?, ?)
+        """, (
+            asset_name,
+            incident,
+            severity
+        ))
+
+
+def fetch_maintenance_history(limit=10):
+    with get_connection() as conn:
+        return conn.execute("""
+            SELECT timestamp, health_score, status
+            FROM maintenance_logs
+            ORDER BY timestamp DESC
+            LIMIT ?
+        """, (limit,)).fetchall()
 
 def fetch_maintenance_history(limit=10):
     with get_connection() as conn:
