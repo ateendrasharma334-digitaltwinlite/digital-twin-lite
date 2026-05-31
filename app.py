@@ -5029,6 +5029,27 @@ if st.session_state.get("authentication_status"):
                     int(probability * 100)
                 )
 
+                st.markdown("---")
+                st.subheader("🧠 AI Recommendation")
+
+                if probability > 0.7:
+
+                    st.error(
+                        "Immediate maintenance recommended"
+                    )
+
+                elif probability > 0.4:
+
+                    st.warning(
+                        "Inspection recommended within 7 days"
+                    )
+
+                else:
+
+                    st.success(
+                        "Asset operating normally"
+                    )
+
         # -------------------------------
         # 🔐 Security & Compliance Center
         # -------------------------------
