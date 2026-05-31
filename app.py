@@ -21,6 +21,8 @@ import os
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 import paho.mqtt.client as mqtt
 import json
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
 
 mqtt_data = {}
 
@@ -161,6 +163,50 @@ def insert_asset(asset_name, asset_type, health_score, criticality, status):
             criticality,
             status
         ))
+
+# -------------------------------
+# AI Failure Prediction Model
+# -------------------------------
+def train_failure_model():
+
+    data = pd.DataFrame({
+
+        "temperature": [
+            60,70,80,90,95,55,65,75,85,100
+        ],
+
+        "vibration": [
+            2,3,4,7,9,2,3,5,8,10
+        ],
+
+        "pressure": [
+            10,12,14,15,16,10,11,13,14,17
+        ],
+
+        "failure": [
+            0,0,0,1,1,0,0,0,1,1
+        ]
+    })
+
+    X = data[
+        [
+            "temperature",
+            "vibration",
+            "pressure"
+        ]
+    ]
+
+    y = data["failure"]
+
+    model = RandomForestClassifier(
+        n_estimators=50,
+        random_state=42
+    )
+
+    model.fit(X, y)
+
+    return model
+
 # -------------------------------
 # Incident Storage
 # -------------------------------
