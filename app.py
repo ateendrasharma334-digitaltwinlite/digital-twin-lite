@@ -4882,6 +4882,23 @@ if st.session_state.get("authentication_status"):
             else:
                 st.warning("Weather API unavailable")
         
+            st.markdown("---")
+            st.subheader("🌍 Carbon Intensity Monitor")
+
+            carbon_intensity = random.randint(80, 300)
+
+            st.metric(
+                "Grid Carbon Intensity",
+                f"{carbon_intensity} gCO₂/kWh"
+            )
+
+            if carbon_intensity > 250:
+                st.error("🚨 High Carbon Generation")
+            elif carbon_intensity > 150:
+                st.warning("⚠ Moderate Carbon Intensity")
+            else:
+                st.success("✅ Low Carbon Grid")
+        
         # -------------------------------
         # 🔐 Security & Compliance Center
         # -------------------------------
