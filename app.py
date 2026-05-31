@@ -174,31 +174,6 @@ def insert_asset(asset_name, asset_type, health_score, criticality, status):
         ))
 
 # -------------------------------
-# Alert Engine
-# -------------------------------
-def create_alert(
-    asset_name,
-    alert_message,
-    severity
-):
-
-    with get_connection() as conn:
-
-        conn.execute("""
-        INSERT INTO alerts (
-            asset_name,
-            alert_message,
-            severity
-        )
-        VALUES (?, ?, ?)
-        """,
-        (
-            asset_name,
-            alert_message,
-            severity
-        ))
-
-# -------------------------------
 # AI Failure Prediction Model
 # -------------------------------
 def train_failure_model():
@@ -815,6 +790,22 @@ if st.session_state.get("authentication_status"):
         criticality = "Warning"
     else:
         criticality = "Healthy"
+    
+    if health_score < 40:
+
+        create_alert(
+            "Main Asset",
+            "Asset health below threshold",
+            "Critical"
+        )
+
+    elif health_score < 70:
+
+        create_alert(
+            "Main Asset",
+            "Asset requires inspection",
+            "Warning"
+        )
 
     insert_asset(
         asset_name,
@@ -4748,7 +4739,8 @@ if st.session_state.get("authentication_status"):
             "Asset History"
             "Security Center",
             "Weather Intelligence",
-            "AI Failure Prediction"
+            "AI Failure Prediction",
+            "Alert Center"
         ]
     )
 
@@ -5085,6 +5077,41 @@ if st.session_state.get("authentication_status"):
                     st.success(
                         "Asset operating normally"
                     )
+        
+        # -------------------------------
+        # 🚨 Alert Center
+        # -------------------------------
+        if page == "Alert Center":
+
+            st.header("🚨 Enterprise Alert Center")
+
+            alert_count = pd.read_sql_query(
+                """
+                SELECT COUNT(*) as total
+                FROM alerts
+                """,
+                get_connection()
+            )
+
+            st.metric(
+                "Total Alerts",
+                int(alert_count["total"][0])
+            )
+
+            alerts_df = pd.read_sql_query(
+                """
+                SELECT *
+                FROM alerts
+                ORDER BY id DESC
+                LIMIT 50
+                """,
+                get_connection()
+            )
+
+            st.dataframe(
+                alerts_df,
+                use_container_width=True
+            )
 
         # -------------------------------
         # 🔐 Security & Compliance Center
