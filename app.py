@@ -121,6 +121,15 @@ def init_db():
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )
         """)
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS alerts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            asset_name TEXT,
+            alert_message TEXT,
+            severity TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
 
 def insert_sensor_data(temp, vibration, pressure):
     with get_connection() as conn:
@@ -162,6 +171,31 @@ def insert_asset(asset_name, asset_type, health_score, criticality, status):
             health_score,
             criticality,
             status
+        ))
+
+# -------------------------------
+# Alert Engine
+# -------------------------------
+def create_alert(
+    asset_name,
+    alert_message,
+    severity
+):
+
+    with get_connection() as conn:
+
+        conn.execute("""
+        INSERT INTO alerts (
+            asset_name,
+            alert_message,
+            severity
+        )
+        VALUES (?, ?, ?)
+        """,
+        (
+            asset_name,
+            alert_message,
+            severity
         ))
 
 # -------------------------------
