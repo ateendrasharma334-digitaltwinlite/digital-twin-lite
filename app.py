@@ -5113,6 +5113,33 @@ if st.session_state.get("authentication_status"):
                 use_container_width=True
             )
 
+            st.markdown("---")
+            st.subheader("📊 Alert Severity Analysis")
+
+            severity_df = pd.read_sql_query(
+                """
+                SELECT severity,
+                       COUNT(*) as count
+                FROM alerts
+                GROUP BY severity
+                """,
+                get_connection()
+            )
+
+            if not severity_df.empty:
+
+                fig_alerts = px.pie(
+                severity_df,
+                names="severity",
+                values="count",
+                title="Alert Distribution"
+            )
+
+            st.plotly_chart(
+                fig_alerts,
+                use_container_width=True
+            )
+
         # -------------------------------
         # 🔐 Security & Compliance Center
         # -------------------------------
