@@ -4666,6 +4666,7 @@ if st.session_state.get("authentication_status"):
             "Executive Center",
             "Asset History"
             "Security Center",
+            "Weather Intelligence"
         ]
     )
 
@@ -4836,6 +4837,50 @@ if st.session_state.get("authentication_status"):
                 incident_df,
                 use_container_width=True
             )
+
+        # -------------------------------
+        # 🌦 Weather Intelligence
+        # -------------------------------
+        if page == "Weather Intelligence":
+
+            st.header("🌦 Weather Intelligence")
+
+            city = st.selectbox(
+                "Select City",
+                [
+                    "London",
+                    "Manchester",
+                    "Birmingham",
+                    "Leeds",
+                    "Glasgow"
+                ]
+            )
+
+            weather = get_weather(city)
+
+            if weather and "main" in weather:
+
+                col1, col2, col3 = st.columns(3)
+
+                col1.metric(
+                    "Temperature",
+                    f"{weather['main']['temp']} °C"
+                )
+
+                col2.metric(
+                    "Humidity",
+                    f"{weather['main']['humidity']}%"
+                )
+
+                col3.metric(
+                    "Wind Speed",
+                    f"{weather['wind']['speed']} m/s"
+                )
+
+                st.success("✅ Live Weather Data Connected")
+
+            else:
+                st.warning("Weather API unavailable")
         
         # -------------------------------
         # 🔐 Security & Compliance Center
