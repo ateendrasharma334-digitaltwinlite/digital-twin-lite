@@ -204,6 +204,27 @@ def fetch_sensor_data():
         return pd.read_sql_query("SELECT * FROM sensor_data", conn)
 
 # -------------------------------
+# Weather API
+# -------------------------------
+def get_weather(city="London"):
+
+    try:
+
+        api_key = "YOUR_OPENWEATHER_API_KEY"
+
+        url = (
+            f"https://api.openweathermap.org/data/2.5/weather"
+            f"?q={city}&appid={api_key}&units=metric"
+        )
+
+        response = requests.get(url)
+
+        return response.json()
+
+    except:
+        return None
+
+# -------------------------------
 # Initialize Database
 # -------------------------------
 init_db()
