@@ -4755,7 +4755,8 @@ if st.session_state.get("authentication_status"):
                 "Executive Center",
                 "Asset History",
                 "Security Center",
-                 "Weather Intelligence"
+                "Weather Intelligence",
+                "AI Failure Prediction"
             ],
 
             "Engineer": [
@@ -4763,7 +4764,8 @@ if st.session_state.get("authentication_status"):
                 "AI Monitoring",
                 "SCADA Control",
                 "Asset Management",
-                "Energy Intelligence"
+                "Energy Intelligence",
+                "AI Failure Prediction"
             ],
 
             "Operator": [
