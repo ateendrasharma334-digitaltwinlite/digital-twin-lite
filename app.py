@@ -4782,7 +4782,8 @@ if st.session_state.get("authentication_status"):
                 "Asset History",
                 "Security Center",
                 "Weather Intelligence",
-                "AI Failure Prediction"
+                "AI Failure Prediction",
+                "Alert Center"
             ],
 
             "Engineer": [
@@ -4791,13 +4792,15 @@ if st.session_state.get("authentication_status"):
                 "SCADA Control",
                 "Asset Management",
                 "Energy Intelligence",
-                "AI Failure Prediction"
+                "AI Failure Prediction",
+                "Alert Center"
             ],
 
             "Operator": [
                 "Overview",
                 "SCADA Control",
-                "Asset Management"
+                "Asset Management",
+                "Alert Center"
             ],
 
             "Client": [
