@@ -274,6 +274,7 @@ def get_weather(city="London"):
 # Initialize Database
 # -------------------------------
 init_db()
+failure_model = train_failure_model()
 
 # -------------------------------
 # App Title
@@ -4712,7 +4713,8 @@ if st.session_state.get("authentication_status"):
             "Executive Center",
             "Asset History"
             "Security Center",
-            "Weather Intelligence"
+            "Weather Intelligence",
+            "AI Failure Prediction"
         ]
     )
 
@@ -4962,7 +4964,71 @@ if st.session_state.get("authentication_status"):
                 st.success("✅ ESG Target Achieved")
             else:
                 st.warning("⚠ Improvement Recommended")
-        
+            
+        # -------------------------------
+        # 🤖 AI Failure Prediction
+        # -------------------------------
+        if page == "AI Failure Prediction":
+
+            st.header("🤖 AI Failure Prediction Engine")
+
+            temperature = st.slider(
+                "Temperature",
+                20,
+                120,
+                75
+            )
+
+            vibration = st.slider(
+                "Vibration",
+                1,
+                15,
+                4
+            )
+
+            pressure = st.slider(
+                "Pressure",
+                5,
+                20,
+                12
+            )
+
+            prediction = failure_model.predict(
+                [[
+                    temperature,
+                    vibration,
+                    pressure
+                ]]
+            )[0]
+
+            if prediction == 1:
+
+                st.error(
+                    "🚨 Failure Risk Detected"
+                )
+
+            else:
+
+                st.success(
+                    "✅ Equipment Healthy"
+                )
+                probability = failure_model.predict_proba(
+                    [[
+                        temperature,
+                        vibration,
+                        pressure
+                    ]]
+                )[0][1]
+
+                st.metric(
+                    "Failure Probability",
+                    f"{probability*100:.1f}%"
+                )
+
+                st.progress(
+                    int(probability * 100)
+                )
+
         # -------------------------------
         # 🔐 Security & Compliance Center
         # -------------------------------
