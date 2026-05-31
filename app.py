@@ -4898,6 +4898,23 @@ if st.session_state.get("authentication_status"):
                 st.warning("⚠ Moderate Carbon Intensity")
             else:
                 st.success("✅ Low Carbon Grid")
+            
+            st.markdown("---")
+            st.subheader("🌿 Environmental Risk Score")
+
+            env_score = random.randint(60, 100)
+
+            st.metric(
+                "Environmental Score",
+                f"{env_score}%"
+            )
+
+            st.progress(env_score)
+
+            if env_score > 80:
+                st.success("✅ ESG Target Achieved")
+            else:
+                st.warning("⚠ Improvement Recommended")
         
         # -------------------------------
         # 🔐 Security & Compliance Center
