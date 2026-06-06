@@ -1,7 +1,6 @@
 import numpy as np
 import streamlit as st
 import pandas as pd
-import networkx as nx
 import matplotlib.pyplot as plt
 import plotly.express as px
 from simulator import forecast_energy, detect_anomalies
@@ -24,6 +23,7 @@ import paho.mqtt.client as mqtt
 import json
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
+import networkx as nx
 
 mqtt_data = {}
 
