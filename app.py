@@ -4757,6 +4757,7 @@ if st.session_state.get("authentication_status"):
             "Weather Intelligence",
             "AI Failure Prediction",
             "Alert Center",
+            "Scenario Simulator"
 
         ]
     )
@@ -5159,6 +5160,13 @@ if st.session_state.get("authentication_status"):
                 fig_alerts,
                 use_container_width=True
             )
+        
+        # -------------------------------
+        # 🔮 Scenario Simulator
+        # -------------------------------
+        if page == "Scenario Simulator":
+
+            st.header("🔮 Digital Twin Scenario Simulator")
 
         # -------------------------------
         # 🔐 Security & Compliance Center
