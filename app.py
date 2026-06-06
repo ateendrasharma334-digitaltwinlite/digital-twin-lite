@@ -5167,7 +5167,22 @@ if st.session_state.get("authentication_status"):
         if page == "Scenario Simulator":
 
             st.header("🔮 Digital Twin Scenario Simulator")
+        
+        st.markdown("---")
+        st.subheader("⚡ Load Change Simulation")
 
+        load_change = st.slider(
+            "Load Increase (%)",
+            -50,
+            50,
+            0
+        )
+
+        st.metric(
+            "Simulated Load",
+            f"{100 + load_change}%"
+        )
+          
         # -------------------------------
         # 🔐 Security & Compliance Center
         # -------------------------------
