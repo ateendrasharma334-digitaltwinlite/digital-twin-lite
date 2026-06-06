@@ -174,6 +174,31 @@ def insert_asset(asset_name, asset_type, health_score, criticality, status):
         ))
 
 # -------------------------------
+# Alert Engine
+# -------------------------------
+def create_alert(
+    asset_name,
+    alert_message,
+    severity
+):
+
+    with get_connection() as conn:
+
+        conn.execute("""
+        INSERT INTO alerts (
+            asset_name,
+            alert_message,
+            severity
+        )
+        VALUES (?, ?, ?)
+        """,
+        (
+            asset_name,
+            alert_message,
+            severity
+        ))
+
+# -------------------------------
 # AI Failure Prediction Model
 # -------------------------------
 def train_failure_model():
@@ -235,15 +260,6 @@ def save_incident(asset_name, incident, severity):
             severity
         ))
 
-
-def fetch_maintenance_history(limit=10):
-    with get_connection() as conn:
-        return conn.execute("""
-            SELECT timestamp, health_score, status
-            FROM maintenance_logs
-            ORDER BY timestamp DESC
-            LIMIT ?
-        """, (limit,)).fetchall()
 
 def fetch_maintenance_history(limit=10):
     with get_connection() as conn:
@@ -4740,7 +4756,8 @@ if st.session_state.get("authentication_status"):
             "Security Center",
             "Weather Intelligence",
             "AI Failure Prediction",
-            "Alert Center"
+            "Alert Center",
+
         ]
     )
 
