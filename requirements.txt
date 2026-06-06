@@ -10,3 +10,4 @@ requests
 openai
 streamlit-autorefresh
 paho-mqtt
+networkx
