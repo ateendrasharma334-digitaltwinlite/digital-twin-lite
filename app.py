@@ -4804,7 +4804,8 @@ if st.session_state.get("authentication_status"):
                 "Weather Intelligence",
                 "AI Failure Prediction",
                 "Alert Center",
-                "Scenario Simulator"
+                "Scenario Simulator",
+                "Asset Relationship Map"
             ],
 
             "Engineer": [
@@ -4815,7 +4816,8 @@ if st.session_state.get("authentication_status"):
                 "Energy Intelligence",
                 "AI Failure Prediction",
                 "Alert Center",
-                "Scenario Simulator"
+                "Scenario Simulator",
+                "Asset Relationship Map"
             ],
 
             "Operator": [
@@ -4828,7 +4830,8 @@ if st.session_state.get("authentication_status"):
             "Client": [
                 "Overview",
                 "Executive Center",
-                "Scenario Simulator"
+                "Scenario Simulator",
+                "Asset Relationship Map"
             ]
         }
         allowed_pages = role_permissions.get(
@@ -5306,7 +5309,75 @@ if st.session_state.get("authentication_status"):
             ("HVAC", "Control Room"),
             ("MQTT Broker", "SCADA"),
             ("SCADA", "AI Engine")
-        ])    
+        ])
+
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+        pos = nx.spring_layout(
+            G,
+            seed=42
+        )
+
+        nx.draw(
+            G,
+            pos,
+            with_labels=True,
+            node_size=3000,
+            font_size=9,
+            ax=ax
+        )
+
+        st.pyplot(fig) 
+
+        st.markdown("---")
+        st.subheader("🚨 Critical Asset Path")
+
+        critical_path = [
+            "Gas Turbine",
+            "Boiler",
+            "Steam Turbine",
+            "Generator",
+            "Transformer",
+            "Grid"
+        ]
+
+        st.write(" ➜ ".join(critical_path)) 
+
+        st.markdown("---")
+        st.subheader("⚠ Failure Impact Simulator")
+
+        failed_asset = st.selectbox(
+            "Select Failed Asset",
+            list(G.nodes())
+        )
+
+        affected_assets = list(
+            nx.node_connected_component(
+                G,
+                failed_asset
+            )
+        )
+
+        st.error(
+            f"Failure impacts {len(affected_assets)} connected assets."
+        )
+
+        st.write(affected_assets) 
+
+        st.markdown("---")
+        st.subheader("📊 Asset Connectivity Metrics")
+
+        col1, col2 = st.columns(2)
+
+        col1.metric(
+            "Total Assets",
+            len(G.nodes())
+        )
+
+        col2.metric(
+            "Connections",
+            len(G.edges())
+        ) 
 
         # -------------------------------
         # 🔐 Security & Compliance Center
