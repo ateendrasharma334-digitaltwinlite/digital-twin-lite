@@ -5182,7 +5182,21 @@ if st.session_state.get("authentication_status"):
             "Simulated Load",
             f"{100 + load_change}%"
         )
-          
+
+        st.markdown("---")
+        st.subheader("💰 Energy Cost Impact")
+
+        base_cost = 100000
+
+        simulated_cost = base_cost * (
+            1 + load_change / 100
+        )
+
+        st.metric(
+            "Projected Annual Cost",
+            f"£{simulated_cost:,.0f}"
+        )
+
         # -------------------------------
         # 🔐 Security & Compliance Center
         # -------------------------------
