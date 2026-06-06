@@ -1,6 +1,7 @@
 import numpy as np
 import streamlit as st
 import pandas as pd
+import networkx as nx
 import matplotlib.pyplot as plt
 import plotly.express as px
 from simulator import forecast_energy, detect_anomalies
@@ -4757,7 +4758,8 @@ if st.session_state.get("authentication_status"):
             "Weather Intelligence",
             "AI Failure Prediction",
             "Alert Center",
-            "Scenario Simulator"
+            "Scenario Simulator",
+            "Asset Relationship Map"
 
         ]
     )
@@ -5285,6 +5287,26 @@ if st.session_state.get("authentication_status"):
             fig_scenario,
             use_container_width=True
         )
+
+        # -------------------------------
+        # 🌐 Asset Relationship Map
+        # -------------------------------
+        if page == "Asset Relationship Map":
+
+            st.header("🌐 Digital Twin Asset Relationship Map")
+
+        G = nx.Graph()
+
+        G.add_edges_from([
+            ("Gas Turbine", "Boiler"),
+            ("Boiler", "Steam Turbine"),
+            ("Steam Turbine", "Generator"),
+            ("Generator", "Transformer"),
+            ("Transformer", "Grid"),
+            ("HVAC", "Control Room"),
+            ("MQTT Broker", "SCADA"),
+            ("SCADA", "AI Engine")
+        ])    
 
         # -------------------------------
         # 🔐 Security & Compliance Center
