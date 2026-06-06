@@ -4801,7 +4801,8 @@ if st.session_state.get("authentication_status"):
                 "Security Center",
                 "Weather Intelligence",
                 "AI Failure Prediction",
-                "Alert Center"
+                "Alert Center",
+                "Scenario Simulator"
             ],
 
             "Engineer": [
@@ -4811,7 +4812,8 @@ if st.session_state.get("authentication_status"):
                 "Asset Management",
                 "Energy Intelligence",
                 "AI Failure Prediction",
-                "Alert Center"
+                "Alert Center",
+                "Scenario Simulator"
             ],
 
             "Operator": [
@@ -4823,7 +4825,8 @@ if st.session_state.get("authentication_status"):
 
             "Client": [
                 "Overview",
-                "Executive Center"
+                "Executive Center",
+                "Scenario Simulator"
             ]
         }
         allowed_pages = role_permissions.get(
@@ -5195,6 +5198,92 @@ if st.session_state.get("authentication_status"):
         st.metric(
             "Projected Annual Cost",
             f"£{simulated_cost:,.0f}"
+        )
+
+        st.markdown("---")
+        st.subheader("🌍 Carbon Impact Forecast")
+
+        base_carbon = 500
+
+        carbon_projection = base_carbon * (
+            1 + load_change / 100
+        )
+
+        st.metric(
+            "Projected CO₂ Emissions",
+            f"{carbon_projection:.0f} tonnes"
+        )
+
+        st.markdown("---")
+        st.subheader("🏭 Asset Stress Prediction")
+
+        stress_score = min(
+            100,
+            max(
+                0,
+                60 + load_change
+            )
+        )
+
+        st.metric(
+            "Stress Score",
+            f"{stress_score}%"
+        )
+
+        st.progress(int(stress_score))
+
+        st.markdown("---")
+        st.subheader("🧠 Executive Recommendation")
+
+        if stress_score > 85:
+
+            st.error(
+                "Reduce load immediately. Asset risk elevated."
+            )
+
+        elif stress_score > 70:
+
+            st.warning(
+                "Monitor asset closely during operation."
+            )
+
+        else:
+
+            st.success(
+                "Scenario acceptable for operation."
+            )
+        
+        st.markdown("---")
+        st.subheader("📊 Scenario Comparison")
+
+        scenario_df = pd.DataFrame({
+
+            "Scenario": [
+                "Current",
+                "Simulated"
+            ],
+
+            "Cost": [
+                base_cost,
+                simulated_cost
+            ],
+
+            "Carbon": [
+                base_carbon,
+                carbon_projection
+            ]
+        })
+
+        fig_scenario = px.bar(
+            scenario_df,
+            x="Scenario",
+            y="Cost",
+            title="Cost Comparison"
+        )
+
+        st.plotly_chart(
+            fig_scenario,
+            use_container_width=True
         )
 
         # -------------------------------
