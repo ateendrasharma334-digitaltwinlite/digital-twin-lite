@@ -4855,8 +4855,8 @@ if st.session_state.get("authentication_status"):
             "Report Center",
             "Enterprise Timeline",
             "System Health",
+            "SLA Center",
             "Asset Criticality"
-
         ]
     )
 
@@ -4905,6 +4905,7 @@ if st.session_state.get("authentication_status"):
                 "Enterprise KPI Scorecard",
                 "Report Center",
                 "Enterprise Timeline",
+                "SLA Center",
                 "Asset Criticality"
             ],
 
@@ -4919,6 +4920,7 @@ if st.session_state.get("authentication_status"):
                 "Scenario Simulator",
                 "Asset Relationship Map",
                 "Enterprise Timeline",
+                "SLA Center",
                 "Asset Criticality"
             ],
 
@@ -5874,6 +5876,133 @@ if st.session_state.get("authentication_status"):
         st.info(
             f"{critical_assets} critical assets require enhanced monitoring and maintenance planning."
         )
+
+        # -------------------------------
+        # 📈 SLA Center
+        # -------------------------------
+        if page == "SLA Center":
+
+            st.header("📈 Service Level Agreement Center")
+
+            st.markdown("---")
+
+            # KPI Cards
+            col1, col2, col3, col4 = st.columns(4)
+
+            col1.metric(
+                "Asset Uptime",
+                f"{random.randint(97,100)}%"
+            )
+
+            col2.metric(
+                "Availability",
+                f"{random.randint(95,100)}%"
+            )
+
+            col3.metric(
+                "Response Time",
+                f"{random.randint(90,100)}%"
+            )
+
+            col4.metric(
+               "Maintenance Compliance",
+               f"{random.randint(85,100)}%"
+            )
+
+            st.markdown("---")
+
+            st.subheader("📋 SLA Performance Scorecard")
+
+            sla_df = pd.DataFrame({
+
+                "Metric": [
+                    "Asset Uptime",
+                    "Availability",
+                    "Response Time",
+                    "Maintenance Compliance"
+                ],
+
+                "Target (%)": [
+                    99,
+                    98,
+                    95,
+                    90
+                ],
+
+                "Actual (%)": [
+                    random.randint(95,100),
+                    random.randint(95,100),
+                    random.randint(90,100),
+                    random.randint(85,100)
+                ]
+            })
+
+            sla_df["Status"] = sla_df.apply(
+                lambda x:
+                "Achieved"
+                if x["Actual (%)"] >= x["Target (%)"]
+                else "Missed",
+                axis=1
+            )
+
+            st.dataframe(
+               sla_df,
+               use_container_width=True
+            )
+
+            st.markdown("---")
+
+            st.subheader("📊 SLA Performance Chart")
+
+            fig_sla = px.bar(
+                sla_df,
+                x="Metric",
+                y="Actual (%)",
+                color="Status",
+                title="SLA Achievement Status"
+            )
+
+            st.plotly_chart(
+                fig_sla,
+                use_container_width=True
+            )
+
+            st.markdown("---")
+
+            st.subheader("🏆 Overall Service Health")
+
+            health_score = sla_df["Actual (%)"].mean()
+
+            st.metric(
+                "Service Health Score",
+                f"{health_score:.1f}%"
+            )
+
+            st.progress(
+                int(health_score)
+            )
+
+            st.markdown("---")
+
+            st.subheader("🧠 Executive Recommendation")
+
+            if health_score >= 95:
+
+                st.success(
+                    "Excellent service performance. All SLA targets achieved."
+                )
+
+            elif health_score >= 85:
+
+                st.warning(
+                    "Good performance. Minor improvements recommended."
+                )
+
+            else:
+
+                st.error(
+                    "Service levels below target. Immediate action required."
+                )
 
         # -------------------------------
         # 🔐 Security & Compliance Center
