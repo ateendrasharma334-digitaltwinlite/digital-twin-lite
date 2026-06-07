@@ -4759,7 +4759,8 @@ if st.session_state.get("authentication_status"):
             "AI Failure Prediction",
             "Alert Center",
             "Scenario Simulator",
-            "Asset Relationship Map"
+            "Asset Relationship Map",
+            "Enterprise KPI Scorecard"
 
         ]
     )
@@ -4805,7 +4806,8 @@ if st.session_state.get("authentication_status"):
                 "AI Failure Prediction",
                 "Alert Center",
                 "Scenario Simulator",
-                "Asset Relationship Map"
+                "Asset Relationship Map",
+                "Enterprise KPI Scorecard"
             ],
 
             "Engineer": [
@@ -4831,7 +4833,8 @@ if st.session_state.get("authentication_status"):
                 "Overview",
                 "Executive Center",
                 "Scenario Simulator",
-                "Asset Relationship Map"
+                "Asset Relationship Map",
+                "Enterprise KPI Scorecard"
             ]
         }
         allowed_pages = role_permissions.get(
@@ -5378,6 +5381,112 @@ if st.session_state.get("authentication_status"):
             "Connections",
             len(G.edges())
         ) 
+
+        # -------------------------------
+        # 📊 Enterprise KPI Scorecard
+        # -------------------------------
+        if page == "Enterprise KPI Scorecard":
+
+            st.header("📊 Enterprise KPI Scorecard")
+        
+        kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+
+        kpi1.metric(
+            "Asset Availability",
+            f"{random.randint(95,99)}%"
+        )
+
+        kpi2.metric(
+            "Reliability Index",
+            f"{random.randint(90,99)}%"
+        )
+
+        kpi3.metric(
+            "Maintenance Compliance",
+            f"{random.randint(85,100)}%"
+        )
+
+        kpi4.metric(
+            "ESG Score",
+            f"{random.randint(75,98)}%"
+        )
+
+        st.markdown("---")
+        st.subheader("🏢 Enterprise Performance Metrics")
+
+        performance_df = pd.DataFrame({
+
+            "Category": [
+                "Operations",
+                "Maintenance",
+                "Energy",
+                "Safety",
+                "ESG"
+            ],
+
+            "Score": [
+                random.randint(80,100),
+                random.randint(80,100),
+                random.randint(80,100),
+                random.randint(80,100),
+                random.randint(80,100)
+            ]
+        })
+
+        st.dataframe(
+            performance_df,
+            use_container_width=True
+        )
+
+        st.markdown("---")
+        st.subheader("📈 KPI Performance Trend")
+
+        fig_kpi = px.bar(
+            performance_df,
+            x="Category",
+            y="Score",
+            title="Enterprise KPI Performance"
+        )
+
+        st.plotly_chart(
+            fig_kpi,
+            use_container_width=True
+        )
+
+        st.markdown("---")
+        st.subheader("🏆 Operational Excellence")
+
+        overall_score = performance_df["Score"].mean()
+
+        st.metric(
+            "Overall Excellence Score",
+            f"{overall_score:.1f}%"
+        )
+
+        st.progress(
+            int(overall_score)
+        )
+
+        st.markdown("---")
+        st.subheader("🧠 Executive Insights")
+
+        if overall_score > 90:
+
+            st.success(
+                "Enterprise performance exceeds strategic targets."
+            )
+
+        elif overall_score > 80:
+
+            st.warning(
+                "Performance is stable with improvement opportunities."
+            )
+
+        else:
+
+            st.error(
+                "Performance improvement program recommended."
+            )
 
         # -------------------------------
         # 🔐 Security & Compliance Center
