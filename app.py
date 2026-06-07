@@ -82,6 +82,7 @@ def generate_sensor_data():
 # -------------------------------
 # Database Utilities
 # -------------------------------
+DB_PATH = "digital_twin.db"
 
 def get_connection():
     return sqlite3.connect(DB_PATH, check_same_thread=False, timeout=30)
