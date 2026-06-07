@@ -170,10 +170,9 @@ def log_security_event(username, action):
             INSERT INTO security_logs (username, action)
             VALUES (?, ?)
         """, (username, action))
-        log_event(
-            "Security",
-            action
-        )
+
+    # Temporarily disabled
+    # log_event("Security", action)
 
 def insert_asset(asset_name, asset_type, health_score, criticality, status):
 
@@ -195,10 +194,10 @@ def insert_asset(asset_name, asset_type, health_score, criticality, status):
             status
         ))
         
-        log_event(
-            "Asset",
-            f"{asset_name} added to system"
-        )
+       # log_event(
+       #     "Asset",
+       #     f"{asset_name} added to system"
+       # )
 
 # -------------------------------
 # Alert Engine
@@ -224,10 +223,10 @@ def create_alert(
             alert_message,
             severity
         ))
-        log_event(
-            "Alert",
-            f"{severity}: {alert_message}"
-        )
+        # log_event(
+        #     "Alert",
+        #     f"{severity}: {alert_message}"
+        # )
 
 # -------------------------------
 # Enterprise Event Logger
