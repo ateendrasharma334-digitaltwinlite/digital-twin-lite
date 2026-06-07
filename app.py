@@ -4805,8 +4805,8 @@ if st.session_state.get("authentication_status"):
             "Alert Center",
             "Scenario Simulator",
             "Asset Relationship Map",
-            "Enterprise KPI Scorecard".
-            "Report Center",
+            "Enterprise KPI Scorecard",
+            "Report Center"
 
         ]
     )
