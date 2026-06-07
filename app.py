@@ -5801,7 +5801,7 @@ if st.session_state.get("authentication_status"):
             elif score >= 40:
                 return "High"
 
-           elif score >= 20:
+            elif score >= 20:
                 return "Medium"
 
             return "Low"
