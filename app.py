@@ -5801,6 +5801,20 @@ if st.session_state.get("authentication_status"):
 
             st.dataframe(compliance_data)
 
+            st.markdown("---")
+            st.subheader("⚙ Database Administration")
+
+            if st.button("Reset Database"):
+
+                import os
+
+                if os.path.exists("digital_twin.db"):
+                    os.remove("digital_twin.db")
+
+                init_db()
+
+                st.success("✅ Database recreated")
+
             # -------------------------------
             # 👥 User Access Audit
             # -------------------------------
