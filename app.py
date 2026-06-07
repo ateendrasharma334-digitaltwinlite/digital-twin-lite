@@ -83,11 +83,11 @@ def generate_sensor_data():
 # Database Utilities
 # -------------------------------
 
-def get_connection():
-    return sqlite3.connect(DB_PATH, check_same_thread=False, timeout=30)
-
 def init_db():
+
     with get_connection() as conn:
+
+        # Sensor Data
         conn.execute("""
         CREATE TABLE IF NOT EXISTS sensor_data (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -97,6 +97,8 @@ def init_db():
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )
         """)
+
+        # Maintenance Logs
         conn.execute("""
         CREATE TABLE IF NOT EXISTS maintenance_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -106,6 +108,7 @@ def init_db():
         )
         """)
 
+        # Security Logs
         conn.execute("""
         CREATE TABLE IF NOT EXISTS security_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -115,6 +118,7 @@ def init_db():
         )
         """)
 
+        # Assets
         conn.execute("""
         CREATE TABLE IF NOT EXISTS assets (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -126,6 +130,8 @@ def init_db():
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )
         """)
+
+        # Alerts
         conn.execute("""
         CREATE TABLE IF NOT EXISTS alerts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -136,9 +142,7 @@ def init_db():
         )
         """)
 
-        # -------------------------------
-        # Enterprise Events Table
-        # -------------------------------
+        # Enterprise Events
         conn.execute("""
         CREATE TABLE IF NOT EXISTS enterprise_events (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -147,6 +151,31 @@ def init_db():
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )
         """)
+
+        # Incidents
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS incidents (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            asset_name TEXT,
+            incident TEXT,
+            severity TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+
+        # SLA Metrics
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS sla_metrics (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            metric_name TEXT,
+            target REAL,
+            actual REAL,
+            status TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+
+        conn.commit()
 
 def insert_sensor_data(temp, vibration, pressure):
     with get_connection() as conn:
