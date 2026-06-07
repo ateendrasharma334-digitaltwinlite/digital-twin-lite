@@ -4854,7 +4854,8 @@ if st.session_state.get("authentication_status"):
             "Enterprise KPI Scorecard",
             "Report Center",
             "Enterprise Timeline",
-            "System Health"
+            "System Health",
+            "Asset Criticality"
 
         ]
     )
@@ -4903,7 +4904,8 @@ if st.session_state.get("authentication_status"):
                 "Asset Relationship Map",
                 "Enterprise KPI Scorecard",
                 "Report Center",
-                "Enterprise Timeline"
+                "Enterprise Timeline",
+                "Asset Criticality"
             ],
 
             "Engineer": [
@@ -4916,7 +4918,8 @@ if st.session_state.get("authentication_status"):
                 "Alert Center",
                 "Scenario Simulator",
                 "Asset Relationship Map",
-                "Enterprise Timeline"
+                "Enterprise Timeline",
+                "Asset Criticality"
             ],
 
             "Operator": [
@@ -5744,6 +5747,133 @@ if st.session_state.get("authentication_status"):
                 fig_events,
                 use_container_width=True
             )
+
+        # -------------------------------
+        # 🎯 Asset Criticality Matrix
+        # -------------------------------
+        if page == "Asset Criticality":
+
+            st.header("🎯 Asset Criticality Matrix")
+        
+        criticality_df = pd.DataFrame({
+
+            "Asset": [
+                "Gas Turbine",
+                "Steam Turbine",
+                "Boiler",
+                "HV Transformer",
+                "Cooling System",
+                "Solar Inverter",
+                "Battery Storage"
+            ],
+
+            "Probability": [
+                8,
+                6,
+                5,
+                9,
+                4,
+                3,
+                7
+            ],
+
+            "Impact": [
+                10,
+                8,
+                7,
+                10,
+                5,
+                4,
+                9
+            ]
+        })
+
+        criticality_df["Risk Score"] = (
+            criticality_df["Probability"] *
+            criticality_df["Impact"]
+        )
+
+        def classify_risk(score):
+
+            if score >= 70:
+                return "Critical"
+
+            elif score >= 40:
+                return "High"
+
+           elif score >= 20:
+                return "Medium"
+
+            return "Low"
+
+
+        criticality_df["Category"] = (
+            criticality_df["Risk Score"]
+            .apply(classify_risk)
+        )
+
+        st.markdown("---")
+        st.subheader("📋 Asset Risk Ranking")
+
+        st.dataframe(
+            criticality_df.sort_values(
+                "Risk Score",
+                ascending=False
+            ),
+            use_container_width=True
+        )
+
+        st.markdown("---")
+        st.subheader("🔥 Criticality Matrix")
+
+        fig_matrix = px.scatter(
+
+            criticality_df,
+
+            x="Probability",
+
+            y="Impact",
+
+            size="Risk Score",
+
+            color="Category",
+
+            hover_name="Asset",
+
+            title="Asset Criticality Matrix"
+        )
+
+        st.plotly_chart(
+            fig_matrix,
+            use_container_width=True
+        )
+
+        top_asset = criticality_df.sort_values(
+            "Risk Score",
+            ascending=False
+        ).iloc[0]
+
+        st.metric(
+            "Highest Risk Asset",
+            top_asset["Asset"]
+        )
+
+        st.warning(
+            f"{top_asset['Asset']} has the highest operational risk score."
+        )
+
+        st.markdown("---")
+        st.subheader("🧠 Executive Recommendation")
+
+        critical_assets = len(
+            criticality_df[
+                criticality_df["Category"] == "Critical"
+            ]
+        )
+
+        st.info(
+            f"{critical_assets} critical assets require enhanced monitoring and maintenance planning."
+        )
 
         # -------------------------------
         # 🔐 Security & Compliance Center
