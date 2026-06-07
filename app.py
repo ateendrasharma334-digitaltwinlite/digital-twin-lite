@@ -136,6 +136,14 @@ def init_db():
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )
         """)
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS enterprise_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_type TEXT,
+            description TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
 
 def insert_sensor_data(temp, vibration, pressure):
     with get_connection() as conn:
@@ -158,6 +166,10 @@ def log_security_event(username, action):
             INSERT INTO security_logs (username, action)
             VALUES (?, ?)
         """, (username, action))
+        log_event(
+            "Security",
+            action
+        )
 
 def insert_asset(asset_name, asset_type, health_score, criticality, status):
 
@@ -178,6 +190,11 @@ def insert_asset(asset_name, asset_type, health_score, criticality, status):
             criticality,
             status
         ))
+        
+        log_event(
+            "Asset",
+            f"{asset_name} added to system"
+        )
 
 # -------------------------------
 # Alert Engine
@@ -202,6 +219,32 @@ def create_alert(
             asset_name,
             alert_message,
             severity
+        ))
+        log_event(
+            "Alert",
+            f"{severity}: {alert_message}"
+        )
+
+# -------------------------------
+# Enterprise Event Logger
+# -------------------------------
+def log_event(
+    event_type,
+    description
+):
+
+    with get_connection() as conn:
+
+        conn.execute("""
+        INSERT INTO enterprise_events (
+            event_type,
+            description
+        )
+        VALUES (?, ?)
+        """,
+        (
+            event_type,
+            description
         ))
 
 # -------------------------------
@@ -4806,7 +4849,8 @@ if st.session_state.get("authentication_status"):
             "Scenario Simulator",
             "Asset Relationship Map",
             "Enterprise KPI Scorecard",
-            "Report Center"
+            "Report Center",
+            "Enterprise Timeline"
 
         ]
     )
@@ -4854,7 +4898,8 @@ if st.session_state.get("authentication_status"):
                 "Scenario Simulator",
                 "Asset Relationship Map",
                 "Enterprise KPI Scorecard",
-                "Report Center"
+                "Report Center",
+                "Enterprise Timeline"
             ],
 
             "Engineer": [
@@ -4866,7 +4911,8 @@ if st.session_state.get("authentication_status"):
                 "AI Failure Prediction",
                 "Alert Center",
                 "Scenario Simulator",
-                "Asset Relationship Map"
+                "Asset Relationship Map",
+                "Enterprise Timeline"
             ],
 
             "Operator": [
@@ -5602,6 +5648,75 @@ if st.session_state.get("authentication_status"):
             • Operational Excellence
             """
         )
+
+        # -------------------------------
+        # 📅 Enterprise Timeline
+        # -------------------------------
+        if page == "Enterprise Timeline":
+
+            st.header("📅 Enterprise Operations Timeline")
+        
+        events_df = pd.read_sql_query(
+            """
+            SELECT *
+            FROM enterprise_events
+            ORDER BY id DESC
+            LIMIT 100
+            """,
+            get_connection()
+        )
+
+        st.metric(
+            "Total Events",
+            len(events_df)
+        )
+
+        event_filter = st.selectbox(
+
+            "Filter Events",
+
+            [
+                "All",
+                "Alert",
+                "Asset",
+                "Security"
+            ]
+        )
+
+        if event_filter != "All":
+
+            events_df = events_df[
+                events_df["event_type"] == event_filter
+            ]
+        
+        st.dataframe(
+            events_df,
+            use_container_width=True
+        )
+
+        st.markdown("---")
+        st.subheader("📊 Event Analytics")
+
+        if not events_df.empty:
+
+            event_summary = (
+                events_df
+                .groupby("event_type")
+                .size()
+                .reset_index(name="count")
+            )
+
+            fig_events = px.bar(
+                event_summary,
+                x="event_type",
+                y="count",
+                title="Enterprise Events"
+            )
+
+            st.plotly_chart(
+                fig_events,
+                use_container_width=True
+            )
 
         # -------------------------------
         # 🔐 Security & Compliance Center
