@@ -87,6 +87,19 @@ def init_db():
 
     with get_connection() as conn:
 
+        tables = pd.read_sql_query(
+            """
+            SELECT name
+            FROM sqlite_master
+            WHERE type='table'
+            """,
+            conn
+        )
+
+    st.write(tables)
+
+    with get_connection() as conn:
+
         # Sensor Data
         conn.execute("""
         CREATE TABLE IF NOT EXISTS sensor_data (
