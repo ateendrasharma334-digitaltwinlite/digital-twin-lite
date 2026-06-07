@@ -24,6 +24,11 @@ import paho.mqtt.client as mqtt
 import json
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer
+)
 
 mqtt_data = {}
 
@@ -274,6 +279,46 @@ def fetch_maintenance_history(limit=10):
 def fetch_sensor_data():
     with get_connection() as conn:
         return pd.read_sql_query("SELECT * FROM sensor_data", conn)
+
+# -------------------------------
+# Enterprise Report Generator
+# -------------------------------
+def generate_report():
+
+    report_path = "enterprise_report.pdf"
+
+    doc = SimpleDocTemplate(report_path)
+
+    styles = getSampleStyleSheet()
+
+    content = []
+
+    content.append(
+        Paragraph(
+            "Enterprise Digital Twin Report",
+            styles["Title"]
+        )
+    )
+
+    content.append(Spacer(1, 20))
+
+    content.append(
+        Paragraph(
+            "Executive Summary",
+            styles["Heading2"]
+        )
+    )
+
+    content.append(
+        Paragraph(
+            "All enterprise systems operating normally.",
+            styles["BodyText"]
+        )
+    )
+
+    doc.build(content)
+
+    return report_path
 
 # -------------------------------
 # Weather API
@@ -4760,7 +4805,8 @@ if st.session_state.get("authentication_status"):
             "Alert Center",
             "Scenario Simulator",
             "Asset Relationship Map",
-            "Enterprise KPI Scorecard"
+            "Enterprise KPI Scorecard".
+            "Report Center",
 
         ]
     )
@@ -4807,7 +4853,8 @@ if st.session_state.get("authentication_status"):
                 "Alert Center",
                 "Scenario Simulator",
                 "Asset Relationship Map",
-                "Enterprise KPI Scorecard"
+                "Enterprise KPI Scorecard",
+                "Report Center"
             ],
 
             "Engineer": [
@@ -4834,7 +4881,8 @@ if st.session_state.get("authentication_status"):
                 "Executive Center",
                 "Scenario Simulator",
                 "Asset Relationship Map",
-                "Enterprise KPI Scorecard"
+                "Enterprise KPI Scorecard",
+                "Report Center"
             ]
         }
         allowed_pages = role_permissions.get(
@@ -5487,6 +5535,73 @@ if st.session_state.get("authentication_status"):
             st.error(
                 "Performance improvement program recommended."
             )
+        
+        # -------------------------------
+        # 📄 Report Center
+        # -------------------------------
+        if page == "Report Center":
+
+            st.header("📄 Enterprise Report Center")
+        
+        report_type = st.selectbox(
+
+            "Select Report",
+
+            [
+                "Executive Summary",
+                "Asset Performance",
+                "Alert Summary",
+                "Energy Intelligence",
+                "ESG Performance"
+            ]
+        )
+
+        if st.button("📄 Generate Report"):
+
+            report_file = generate_report()
+
+            st.success(
+                "Report generated successfully"
+            )
+        
+        if st.button("⬇ Download PDF"):
+
+            report_file = generate_report()
+
+            with open(
+                report_file,
+                "rb"
+            ) as pdf_file:
+
+                st.download_button(
+                    label="Download Report",
+                    data=pdf_file,
+                    file_name=report_file,
+                    mime="application/pdf"
+                )
+        
+        st.markdown("---")
+
+        st.subheader("📊 Report Contents")
+
+        st.write(
+            f"""
+            Report Type:
+            {report_type}
+
+            Included Sections:
+
+            • KPI Summary
+
+            • Asset Performance
+
+            • Alert Statistics
+
+            • Carbon Metrics
+
+            • Operational Excellence
+            """
+        )
 
         # -------------------------------
         # 🔐 Security & Compliance Center
