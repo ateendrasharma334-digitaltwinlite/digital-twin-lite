@@ -4853,7 +4853,8 @@ if st.session_state.get("authentication_status"):
             "Asset Relationship Map",
             "Enterprise KPI Scorecard",
             "Report Center",
-            "Enterprise Timeline"
+            "Enterprise Timeline",
+            "System Health"
 
         ]
     )
@@ -5651,6 +5652,29 @@ if st.session_state.get("authentication_status"):
             • Operational Excellence
             """
         )
+
+        # -------------------------------
+        # 🩺 System Health Check
+        # -------------------------------
+        if page == "System Health":
+
+            st.header("🩺 System Health Check")
+
+            with get_connection() as conn:
+
+                tables = pd.read_sql_query(
+                    """
+                    SELECT name
+                    FROM sqlite_master
+                    WHERE type='table'
+                    """,
+                    conn
+                )
+
+            st.dataframe(
+                tables,
+                use_container_width=True
+            )
 
         # -------------------------------
         # 📅 Enterprise Timeline
