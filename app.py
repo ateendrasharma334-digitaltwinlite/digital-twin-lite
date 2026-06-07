@@ -136,6 +136,10 @@ def init_db():
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )
         """)
+
+        # -------------------------------
+        # Enterprise Events Table
+        # -------------------------------
         conn.execute("""
         CREATE TABLE IF NOT EXISTS enterprise_events (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
