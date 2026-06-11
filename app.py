@@ -4856,7 +4856,8 @@ if st.session_state.get("authentication_status"):
             "Enterprise Timeline",
             "System Health",
             "SLA Center",
-            "Asset Criticality"
+            "Asset Criticality",
+            "AI Root Cause"
         ]
     )
 
@@ -4906,7 +4907,8 @@ if st.session_state.get("authentication_status"):
                 "Report Center",
                 "Enterprise Timeline",
                 "SLA Center",
-                "Asset Criticality"
+                "Asset Criticality",
+                "AI Root Cause"
             ],
 
             "Engineer": [
@@ -4921,7 +4923,8 @@ if st.session_state.get("authentication_status"):
                 "Asset Relationship Map",
                 "Enterprise Timeline",
                 "SLA Center",
-                "Asset Criticality"
+                "Asset Criticality",
+                "AI Root Cause"
             ],
 
             "Operator": [
@@ -6003,6 +6006,192 @@ if st.session_state.get("authentication_status"):
                 st.error(
                     "Service levels below target. Immediate action required."
                 )
+        
+        # -------------------------------
+        # 🧠 AI Root Cause Investigation
+        # -------------------------------
+        if page == "AI Root Cause":
+
+            st.header("🧠 AI Root Cause Investigation Engine")
+        
+        asset = st.selectbox(
+
+            "Select Asset",
+
+            [
+                "Gas Turbine",
+                "Steam Turbine",
+                "Transformer",
+                "Boiler",
+                "Battery System",
+                "Solar Inverter"
+            ]
+        )
+
+        alert = st.selectbox(
+
+            "Select Alert",
+
+            [
+                "High Temperature",
+                "High Vibration",
+                "Pressure Drop",
+                "Low Efficiency",
+                "Communication Failure"
+            ]
+        )
+
+        root_causes = {
+
+            "High Temperature": {
+                "Cooling Failure": 45,
+                "Overload": 30,
+                "Blocked Airflow": 15,
+                "Sensor Fault": 10
+            },
+
+            "High Vibration": {
+                "Bearing Wear": 45,
+                "Misalignment": 30,
+                "Rotor Imbalance": 15,
+                "Sensor Fault": 10
+            },
+
+            "Pressure Drop": {
+                "Leakage": 50,
+                "Valve Failure": 25,
+                "Pump Issue": 15,
+                "Sensor Error": 10
+            },
+
+            "Low Efficiency": {
+                "Fouling": 40,
+                "Equipment Aging": 30,
+                "Poor Fuel Quality": 20,
+                "Sensor Error": 10
+            },
+
+            "Communication Failure": {
+                "Network Issue": 50,
+                "PLC Failure": 20,
+                "Server Error": 20,
+                "Cyber Attack": 10
+            }
+        }
+
+        if st.button("🔍 Investigate Failure"):
+        
+        results = pd.DataFrame({
+
+            "Cause": list(
+                root_causes[alert].keys()
+            ),
+
+            "Probability (%)": list(
+                root_causes[alert].values()
+            )
+        })
+
+        results = results.sort_values(
+            "Probability (%)",
+            ascending=False
+        )
+
+        st.subheader("📋 Root Cause Ranking")
+
+        st.dataframe(
+            results,
+            use_container_width=True
+        )
+
+        fig_root = px.bar(
+
+            results,
+
+            x="Cause",
+
+            y="Probability (%)",
+
+            title="AI Root Cause Analysis"
+        )
+
+        st.plotly_chart(
+            fig_root,
+            use_container_width=True
+        )
+
+        top_cause = results.iloc[0]["Cause"]
+
+        st.markdown("---")
+
+        st.subheader("🧠 AI Recommendation")
+
+        st.success(
+            f"Most likely cause: {top_cause}"
+        )
+
+        actions = {
+
+            "Cooling Failure":
+                "Inspect cooling system and fans.",
+
+            "Bearing Wear":
+                "Perform bearing inspection.",
+
+            "Leakage":
+                "Check pipelines and seals.",
+
+            "Fouling":
+                "Schedule cleaning outage.",
+
+            "Network Issue":
+                "Check network switches and routers.",
+
+            "Overload":
+                "Review operating load profile.",
+
+            "Misalignment":
+                "Perform shaft alignment.",
+
+            "Rotor Imbalance":
+                "Perform balancing test.",
+
+            "Valve Failure":
+                "Inspect control valves.",
+
+            "Pump Issue":
+                "Inspect pump performance.",
+
+            "PLC Failure":
+                "Check PLC diagnostics.",
+
+            "Server Error":
+                "Review server logs.",
+
+            "Cyber Attack":
+                "Initiate cyber incident response."
+        }
+
+        if top_cause in actions:
+
+            st.info(
+                 actions[top_cause]
+            )
+        
+        st.markdown("---")
+
+        st.subheader("👔 Business Impact")
+
+        impact = random.randint(50,95)
+
+        st.metric(
+            "Business Impact Score",
+            impact
+        )
+
+        st.progress(
+            impact
+        )
 
         # -------------------------------
         # 🔐 Security & Compliance Center
