@@ -6081,21 +6081,21 @@ if st.session_state.get("authentication_status"):
 
         if st.button("🔍 Investigate Failure"):
         
-        results = pd.DataFrame({
+                results = pd.DataFrame({
 
-            "Cause": list(
-                root_causes[alert].keys()
-            ),
+                   "Cause": list(
+                       root_causes[alert].keys()
+                    ),
 
-            "Probability (%)": list(
-                root_causes[alert].values()
-            )
-        })
+                   "Probability (%)": list(
+                       root_causes[alert].values()
+                    )
+                })
 
-        results = results.sort_values(
-            "Probability (%)",
-            ascending=False
-        )
+                results = results.sort_values(
+                    "Probability (%)",
+                    ascending=False
+                )
 
         st.subheader("📋 Root Cause Ranking")
 
