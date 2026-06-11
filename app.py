@@ -6013,82 +6013,81 @@ if st.session_state.get("authentication_status"):
         if page == "AI Root Cause":
 
             st.header("🧠 AI Root Cause Investigation Engine")
-        
-        asset = st.selectbox(
 
-            "Select Asset",
+            # Asset Selection
+            asset = st.selectbox(
+                "Select Asset",
+                [
+                    "Gas Turbine",
+                    "Steam Turbine",
+                    "Transformer",
+                    "Boiler",
+                    "Battery System",
+                    "Solar Inverter"
+                ]
+            )
 
-            [
-                "Gas Turbine",
-                "Steam Turbine",
-                "Transformer",
-                "Boiler",
-                "Battery System",
-                "Solar Inverter"
-            ]
-        )
+            # Alert Selection
+            alert = st.selectbox(
+                "Select Alert",
+                [
+                    "High Temperature",
+                    "High Vibration",
+                    "Pressure Drop",
+                    "Low Efficiency",
+                    "Communication Failure"
+                ]
+            )
 
-        alert = st.selectbox(
+            # Root Cause Database
+            root_causes = {
 
-            "Select Alert",
+                "High Temperature": {
+                    "Cooling Failure": 45,
+                    "Overload": 30,
+                    "Blocked Airflow": 15,
+                    "Sensor Fault": 10
+                },
 
-            [
-                "High Temperature",
-                "High Vibration",
-                "Pressure Drop",
-                "Low Efficiency",
-                "Communication Failure"
-            ]
-        )
+                "High Vibration": {
+                    "Bearing Wear": 45,
+                    "Misalignment": 30,
+                    "Rotor Imbalance": 15,
+                    "Sensor Fault": 10
+                },
 
-        root_causes = {
+                "Pressure Drop": {
+                    "Leakage": 50,
+                    "Valve Failure": 25,
+                    "Pump Issue": 15,
+                    "Sensor Error": 10
+                },
 
-            "High Temperature": {
-                "Cooling Failure": 45,
-                "Overload": 30,
-                "Blocked Airflow": 15,
-                "Sensor Fault": 10
-            },
+                "Low Efficiency": {
+                    "Fouling": 40,
+                    "Equipment Aging": 30,
+                    "Poor Fuel Quality": 20,
+                    "Sensor Error": 10
+                },
 
-            "High Vibration": {
-                "Bearing Wear": 45,
-                "Misalignment": 30,
-                "Rotor Imbalance": 15,
-                "Sensor Fault": 10
-            },
-
-            "Pressure Drop": {
-                "Leakage": 50,
-                "Valve Failure": 25,
-                "Pump Issue": 15,
-                "Sensor Error": 10
-            },
-
-            "Low Efficiency": {
-                "Fouling": 40,
-                "Equipment Aging": 30,
-                "Poor Fuel Quality": 20,
-                "Sensor Error": 10
-            },
-
-            "Communication Failure": {
-                "Network Issue": 50,
-                "PLC Failure": 20,
-                "Server Error": 20,
-                "Cyber Attack": 10
+                "Communication Failure": {
+                    "Network Issue": 50,
+                    "PLC Failure": 20,
+                    "Server Error": 20,
+                    "Cyber Attack": 10
+                }
             }
-        }
 
-        if st.button("🔍 Investigate Failure"):
-        
+            if st.button("🔍 Investigate Failure"):
+
                 results = pd.DataFrame({
 
-                   "Cause": list(
-                       root_causes[alert].keys()
+                    "Cause": list(
+                        root_causes[alert].keys()
                     ),
 
-                   "Probability (%)": list(
-                       root_causes[alert].values()
+                    "Probability (%)": list(
+                        root_causes[alert].values()
                     )
                 })
 
@@ -6097,101 +6096,123 @@ if st.session_state.get("authentication_status"):
                     ascending=False
                 )
 
-        st.subheader("📋 Root Cause Ranking")
+                # Results Table
+                st.markdown("---")
+                st.subheader("📋 Root Cause Ranking")
 
-        st.dataframe(
-            results,
-            use_container_width=True
-        )
+                st.dataframe(
+                    results,
+                    use_container_width=True
+                )
 
-        fig_root = px.bar(
+                # Chart
+                st.markdown("---")
+                st.subheader("📊 Root Cause Analysis")
 
-            results,
+                fig_root = px.bar(
+                    results,
+                    x="Cause",
+                    y="Probability (%)",
+                    title="AI Root Cause Analysis"
+                )
 
-            x="Cause",
+                st.plotly_chart(
+                    fig_root,
+                    use_container_width=True
+                )
 
-            y="Probability (%)",
+                # Recommendation
+                top_cause = results.iloc[0]["Cause"]
 
-            title="AI Root Cause Analysis"
-        )
+                st.markdown("---")
+                st.subheader("🧠 AI Recommendation")
 
-        st.plotly_chart(
-            fig_root,
-            use_container_width=True
-        )
+                st.success(
+                    f"Most Likely Cause: {top_cause}"
+                )
 
-        top_cause = results.iloc[0]["Cause"]
+                # Maintenance Actions
+                actions = {
 
-        st.markdown("---")
+                    "Cooling Failure":
+                        "Inspect cooling system, cooling fans, and heat exchangers.",
 
-        st.subheader("🧠 AI Recommendation")
+                    "Bearing Wear":
+                        "Perform bearing inspection and lubrication analysis.",
 
-        st.success(
-            f"Most likely cause: {top_cause}"
-        )
+                    "Leakage":
+                        "Inspect pipelines, joints, and seals for leaks.",
 
-        actions = {
+                    "Fouling":
+                        "Schedule cleaning and efficiency recovery maintenance.",
 
-            "Cooling Failure":
-                "Inspect cooling system and fans.",
+                    "Network Issue":
+                        "Check switches, routers, cables, and communication links.",
 
-            "Bearing Wear":
-                "Perform bearing inspection.",
+                    "Overload":
+                        "Review operating load profile and asset capacity.",
 
-            "Leakage":
-                "Check pipelines and seals.",
+                    "Misalignment":
+                        "Perform shaft alignment inspection.",
 
-            "Fouling":
-                "Schedule cleaning outage.",
+                    "Rotor Imbalance":
+                        "Conduct balancing test and vibration analysis.",
 
-            "Network Issue":
-                "Check network switches and routers.",
+                    "Valve Failure":
+                        "Inspect control valves and actuator performance.",
 
-            "Overload":
-                "Review operating load profile.",
+                    "Pump Issue":
+                        "Review pump efficiency and motor performance.",
 
-            "Misalignment":
-                "Perform shaft alignment.",
+                    "PLC Failure":
+                        "Check PLC diagnostics and communication modules.",
 
-            "Rotor Imbalance":
-                "Perform balancing test.",
+                    "Server Error":
+                        "Review application and server logs.",
 
-            "Valve Failure":
-                "Inspect control valves.",
+                    "Cyber Attack":
+                        "Initiate cybersecurity incident response procedures."
+                }
 
-            "Pump Issue":
-                "Inspect pump performance.",
+                if top_cause in actions:
 
-            "PLC Failure":
-                "Check PLC diagnostics.",
+                    st.info(
+                        actions[top_cause]
+                    )
 
-            "Server Error":
-                "Review server logs.",
+                # Business Impact
+                st.markdown("---")
+                st.subheader("👔 Business Impact Assessment")
 
-            "Cyber Attack":
-                "Initiate cyber incident response."
-        }
+                impact = random.randint(50, 95)
 
-        if top_cause in actions:
+                st.metric(
+                    "Business Impact Score",
+                    impact
+                )
 
-            st.info(
-                 actions[top_cause]
-            )
-        
-        st.markdown("---")
+                st.progress(
+                    impact
+                )
 
-        st.subheader("👔 Business Impact")
+                # Executive Summary
+                st.markdown("---")
+                st.subheader("📈 Executive Summary")
 
-        impact = random.randint(50,95)
+                st.write(
+                    f"""
+                    Asset: {asset}
 
-        st.metric(
-            "Business Impact Score",
-            impact
-        )
+                    Alert: {alert}
 
-        st.progress(
-            impact
-        )
+                    Most Likely Cause: {top_cause}
+
+                    Impact Score: {impact}/100
+
+                    Recommended Action:
+                    {actions.get(top_cause, "Review system condition.")}
+                    """
+                )
 
         # -------------------------------
         # 🔐 Security & Compliance Center
