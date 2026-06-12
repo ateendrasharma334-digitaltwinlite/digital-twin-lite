@@ -4858,7 +4858,8 @@ if st.session_state.get("authentication_status"):
             "SLA Center",
             "Asset Criticality",
             "AI Root Cause",
-            "AI Maintenance Planner"
+            "AI Maintenance Planner",
+            "Carbon Intelligence"
         ]
     )
 
@@ -6477,6 +6478,265 @@ if st.session_state.get("authentication_status"):
                     {shutdown}
                     """
                 )
+        # -------------------------------
+        # 🌍 Carbon Intelligence Twin
+        # -------------------------------
+        if page == "Carbon Intelligence":
+
+            st.header("🌍 Carbon Intelligence & Net-Zero Twin")
+
+            st.markdown(
+                "Real-Time Carbon Analytics • Decarbonization Planning • Net-Zero Roadmap"
+            )
+
+            # --------------------------------
+            # Carbon Inputs
+            # --------------------------------
+            st.subheader("⚙ Operational Inputs")
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+
+                annual_energy = st.number_input(
+                    "Annual Energy Consumption (MWh)",
+                    min_value=100,
+                    value=50000
+                )
+
+                grid_factor = st.number_input(
+                    "Grid Emission Factor (kgCO₂/MWh)",
+                    min_value=0.0,
+                    value=233.0
+                )
+
+            with col2:
+
+                renewable_share = st.slider(
+                    "Renewable Energy Share (%)",
+                    0,
+                    100,
+                    30
+                )
+
+                target_year = st.slider(
+                    "Net-Zero Target Year",
+                    2026,
+                    2050,
+                    2040
+                )
+
+            # --------------------------------
+            # Carbon Calculations
+            # --------------------------------
+            current_emissions = (
+                annual_energy *
+                grid_factor
+            ) / 1000
+
+            renewable_reduction = (
+                current_emissions *
+                renewable_share / 100
+            )
+
+            net_emissions = (
+                current_emissions -
+                renewable_reduction
+            )
+
+            # --------------------------------
+            # KPI Cards
+            # --------------------------------
+            st.markdown("---")
+
+            k1, k2, k3 = st.columns(3)
+
+            k1.metric(
+                "Annual CO₂ Emissions",
+                f"{current_emissions:,.0f} tCO₂"
+            )
+
+            k2.metric(
+                "Carbon Avoided",
+                f"{renewable_reduction:,.0f} tCO₂"
+            )
+
+            k3.metric(
+                "Net Emissions",
+                f"{net_emissions:,.0f} tCO₂"
+            )
+
+            # --------------------------------
+            # Carbon Breakdown
+            # --------------------------------
+            st.markdown("---")
+            st.subheader("📊 Carbon Profile")
+
+            carbon_df = pd.DataFrame({
+
+               "Category": [
+                    "Gross Emissions",
+                    "Renewable Reduction",
+                    "Net Emissions"
+                ],
+
+                "Value": [
+                    current_emissions,
+                    renewable_reduction,
+                    net_emissions
+                ]
+            })
+
+            fig_carbon = px.bar(
+                carbon_df,
+                x="Category",
+                y="Value",
+                title="Carbon Emissions Profile"
+            )
+
+            st.plotly_chart(
+                fig_carbon,
+                use_container_width=True
+            )
+
+            # --------------------------------
+            # Net-Zero Roadmap
+            # --------------------------------
+            st.markdown("---")
+            st.subheader("🛣 Net-Zero Roadmap")
+
+            years = list(
+                range(
+                    datetime.now().year,
+                    target_year + 1
+                )
+            )
+
+            reduction_curve = np.linspace(
+                net_emissions,
+                0,
+                len(years)
+            )
+
+            roadmap_df = pd.DataFrame({
+
+                "Year": years,
+
+                "Projected Emissions":
+                reduction_curve
+            })
+
+            fig_roadmap = px.line(
+                roadmap_df,
+                x="Year",
+                y="Projected Emissions",
+                title="Pathway to Net-Zero"
+            )
+
+            st.plotly_chart(
+                fig_roadmap,
+                use_container_width=True
+            )
+
+            # --------------------------------
+            # Carbon Cost Exposure
+            # --------------------------------
+            st.markdown("---")
+            st.subheader("💷 Carbon Cost Exposure")
+
+            carbon_price = st.slider(
+                "Carbon Price (£/tCO₂)",
+                20,
+                200,
+                80
+            )
+
+            carbon_cost = (
+                net_emissions *
+                carbon_price
+            )
+
+            st.metric(
+                "Annual Carbon Liability",
+                f"£{carbon_cost:,.0f}"
+            )
+
+            # --------------------------------
+            # Decarbonization Opportunities
+            # --------------------------------
+            st.markdown("---")
+            st.subheader("💡 AI Decarbonization Opportunities")
+
+            opportunities = pd.DataFrame({
+
+                "Initiative": [
+
+                    "Solar Expansion",
+
+                    "Battery Storage",
+
+                    "Heat Recovery",
+
+                    "Energy Efficiency",
+
+                    "Green Hydrogen"
+                ],
+
+                "Potential Reduction (%)": [
+
+                    15,
+                    10,
+                    8,
+                    12,
+                    20
+                ]
+            })
+
+            st.dataframe(
+                opportunities,
+                use_container_width=True
+            )
+
+            # --------------------------------
+            # Net-Zero Readiness Score
+            # --------------------------------
+            st.markdown("---")
+            st.subheader("🏆 Net-Zero Readiness")
+
+            readiness = min(
+                100,
+                renewable_share +
+                random.randint(10,25)
+            )
+
+            st.metric(
+                "Net-Zero Readiness Score",
+                f"{readiness}%"
+            )
+
+            st.progress(readiness)
+
+            # --------------------------------
+            # Executive Summary
+            # --------------------------------
+            st.markdown("---")
+            st.subheader("👔 Executive Carbon Summary")
+
+            st.success(
+                f"""
+                Current Emissions: {current_emissions:,.0f} tCO₂
+
+                Net Emissions: {net_emissions:,.0f} tCO₂
+
+                Renewable Share: {renewable_share}%
+
+                Carbon Liability: £{carbon_cost:,.0f}
+
+                Net-Zero Readiness: {readiness}%
+
+                Target Year: {target_year}
+                """
+            )
 
         # -------------------------------
         # 🔐 Security & Compliance Center
