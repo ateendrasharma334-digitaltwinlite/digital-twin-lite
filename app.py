@@ -4860,7 +4860,8 @@ if st.session_state.get("authentication_status"):
             "Asset Criticality",
             "AI Root Cause",
             "AI Maintenance Planner",
-            "Carbon Intelligence"
+            "Carbon Intelligence",
+            "Energy Trading Twin"
         ]
     )
 
@@ -6736,6 +6737,215 @@ if st.session_state.get("authentication_status"):
                 Net-Zero Readiness: {readiness}%
 
                 Target Year: {target_year}
+                """
+            )
+        
+        # -------------------------------
+        # ⚡ Energy Trading Twin
+        # -------------------------------
+        if page == "Energy Trading Twin":
+
+            st.header("⚡ Energy Trading & Battery Optimization Twin")
+
+            st.markdown(
+                "Revenue Optimization • Battery Dispatch • Grid Trading"
+            )
+
+            # -------------------------------
+            # Market Inputs
+            # -------------------------------
+            st.subheader("📈 Market Conditions")
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+
+               buy_price = st.number_input(
+                    "Grid Buy Price (£/MWh)",
+                    20,
+                    500,
+                    75
+                )
+
+                battery_capacity = st.number_input(
+                    "Battery Capacity (MWh)",
+                    1,
+                    1000,
+                    100
+                )
+
+            with col2:
+
+                sell_price = st.number_input(
+                    "Grid Sell Price (£/MWh)",
+                    20,
+                    500,
+                    180
+                )
+
+                battery_soc = st.slider(
+                    "Battery State of Charge (%)",
+                    0,
+                    100,
+                    60
+                )
+
+            st.markdown("---")
+
+            # -------------------------------
+            # Revenue Analysis
+            # -------------------------------
+            energy_available = (
+                battery_capacity *
+                battery_soc / 100
+            )
+
+            potential_revenue = (
+                energy_available *
+                sell_price
+            )
+
+            recharge_cost = (
+                energy_available *
+                buy_price
+            )
+
+            profit = (
+                potential_revenue -
+                recharge_cost
+            )
+
+            c1, c2, c3 = st.columns(3)
+
+            c1.metric(
+                "Energy Available",
+                f"{energy_available:.1f} MWh"
+            )
+
+            c2.metric(
+                "Revenue Potential",
+                f"£{potential_revenue:,.0f}"
+            )
+
+            c3.metric(
+                "Trading Profit",
+                f"£{profit:,.0f}"
+            )
+
+            st.markdown("---")
+
+            # -------------------------------
+            # Battery Dispatch Decision
+            # -------------------------------
+            st.subheader("🧠 AI Dispatch Recommendation")
+
+            if sell_price > buy_price * 1.5:
+
+                decision = "SELL TO GRID"
+
+                st.success(
+                    "📤 AI recommends battery discharge."
+                )
+
+            elif battery_soc < 30:
+
+                decision = "CHARGE BATTERY"
+
+                st.warning(
+                    "🔋 AI recommends charging battery."
+                )
+
+            else:
+
+                decision = "HOLD"
+
+                st.info(
+                    "⏸ AI recommends holding current position."
+                )
+
+            st.metric(
+                "Trading Action",
+                decision
+            )
+
+            st.markdown("---")
+
+            # -------------------------------
+            # 24 Hour Price Forecast
+            # -------------------------------
+            st.subheader("📈 Market Forecast")
+
+            hours = list(range(24))
+
+            prices = np.random.randint(
+                50,
+                250,
+                24
+            )
+
+            market_df = pd.DataFrame({
+
+                "Hour": hours,
+
+                "Price": prices
+            })
+
+            fig_market = px.line(
+                market_df,
+                x="Hour",
+                y="Price",
+                title="24-Hour Electricity Price Forecast"
+            )
+
+            st.plotly_chart(
+                fig_market,
+                use_container_width=True
+            )
+
+            st.markdown("---")
+
+            # -------------------------------
+            # Revenue Optimizer
+            # -------------------------------
+            st.subheader("💰 Revenue Optimization")
+
+            best_price = market_df["Price"].max()
+
+            best_hour = market_df.loc[
+                market_df["Price"].idxmax(),
+                "Hour"
+            ]
+
+            st.metric(
+                "Best Selling Hour",
+                f"{best_hour}:00"
+            )
+
+            st.metric(
+                "Peak Market Price",
+                f"£{best_price}/MWh"
+            )
+
+            st.markdown("---")
+
+            # -------------------------------
+            # Executive Summary
+            # -------------------------------
+            st.subheader("👔 Executive Trading Summary")
+
+            st.success(
+                f"""
+                Battery Capacity: {battery_capacity} MWh
+
+                State of Charge: {battery_soc}%
+
+                Trading Action: {decision}
+
+                Potential Profit: £{profit:,.0f}
+
+                Best Trading Hour: {best_hour}:00
+
+                Peak Forecast Price: £{best_price}/MWh
                 """
             )
 
