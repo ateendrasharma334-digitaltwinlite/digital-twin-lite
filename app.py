@@ -6760,7 +6760,7 @@ if st.session_state.get("authentication_status"):
 
             with col1:
 
-               buy_price = st.number_input(
+                buy_price = st.number_input(
                     "Grid Buy Price (£/MWh)",
                     20,
                     500,
