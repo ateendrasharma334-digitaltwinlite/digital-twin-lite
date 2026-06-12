@@ -4857,7 +4857,8 @@ if st.session_state.get("authentication_status"):
             "System Health",
             "SLA Center",
             "Asset Criticality",
-            "AI Root Cause"
+            "AI Root Cause",
+            "AI Maintenance Planner"
         ]
     )
 
@@ -6211,6 +6212,269 @@ if st.session_state.get("authentication_status"):
 
                     Recommended Action:
                     {actions.get(top_cause, "Review system condition.")}
+                    """
+                )
+        
+        # -------------------------------
+        # 🤖 AI Maintenance Planner
+        # -------------------------------
+        if page == "AI Maintenance Planner":
+
+            st.header("🤖 Autonomous Maintenance Planner")
+
+            # Asset Selection
+            asset = st.selectbox(
+                "Select Asset",
+                [
+                    "Gas Turbine",
+                    "Steam Turbine",
+                    "Transformer",
+                    "Boiler",
+                    "Battery Storage",
+                    "Solar Inverter"
+                ]
+            )
+
+            # Health Score
+            health_score = st.slider(
+                "Asset Health Score",
+                0,
+                100,
+                75
+            )
+
+            # Criticality
+            criticality = st.selectbox(
+                "Criticality",
+                [
+                    "Low",
+                    "Medium",
+                    "High",
+                    "Critical"
+                ]
+            )
+
+            if st.button("🧠 Generate Maintenance Plan"):
+
+                # Risk Calculation
+                risk = 100 - health_score
+
+                priority = "Low"
+
+                if risk > 70:
+                    priority = "Critical"
+
+                elif risk > 50:
+                    priority = "High"
+
+                elif risk > 30:
+                    priority = "Medium"
+
+                # Work Order
+                work_order = f"WO-{random.randint(10000,99999)}"
+
+                # Engineer Assignment
+                engineers = [
+                    "Engineer A",
+                    "Engineer B",
+                    "Engineer C",
+                    "Senior Specialist"
+                ]
+
+                assigned_engineer = random.choice(engineers)
+
+                # Shutdown Recommendation
+                if priority == "Critical":
+
+                    shutdown = "Immediate Shutdown Recommended"
+
+                elif priority == "High":
+
+                    shutdown = "Plan Outage Within 7 Days"
+
+                elif priority == "Medium":
+
+                    shutdown = "Maintenance Within 30 Days"
+
+                else:
+
+                    shutdown = "Routine Monitoring"
+
+                # Display Plan
+                st.markdown("---")
+                st.subheader("📋 AI Maintenance Plan")
+
+                col1, col2 = st.columns(2)
+
+                col1.metric(
+                    "Health Score",
+                    f"{health_score}%"
+                )
+
+                col2.metric(
+                    "Priority",
+                    priority
+                )
+
+                st.success(
+                    f"Work Order Created: {work_order}"
+                )
+
+                st.write(
+                    f"👨‍🔧 Assigned Engineer: {assigned_engineer}"
+                )
+
+                st.write(
+                    f"⚙ Recommended Action: {shutdown}"
+                )
+
+                # Maintenance Tasks
+                tasks = {
+
+                    "Gas Turbine": [
+                        "Inspect Bearings",
+                        "Check Rotor Alignment",
+                        "Review Vibration Trend"
+                    ],
+
+                    "Steam Turbine": [
+                        "Inspect Blades",
+                        "Check Steam Leakage",
+                        "Lubrication Review"
+                    ],
+
+                    "Transformer": [
+                        "Oil Analysis",
+                        "Thermal Scan",
+                        "Insulation Check"
+                    ],
+
+                    "Boiler": [
+                        "Tube Inspection",
+                        "Pressure Test",
+                        "Combustion Review"
+                    ],
+
+                    "Battery Storage": [
+                        "Cell Balancing",
+                        "Thermal Check",
+                        "Capacity Test"
+                    ],
+
+                    "Solar Inverter": [
+                        "DC Inspection",
+                        "Firmware Review",
+                        "Thermal Check"
+                    ]
+                }
+
+                st.markdown("---")
+                st.subheader("🔧 Recommended Maintenance Tasks")
+
+                task_df = pd.DataFrame({
+                    "Task": tasks[asset],
+                    "Status": [
+                        "Pending",
+                        "Pending",
+                        "Pending"
+                    ]
+                })
+
+                st.dataframe(
+                    task_df,
+                    use_container_width=True
+                )
+
+                # Cost Estimation
+                st.markdown("---")
+
+                cost = random.randint(
+                    5000,
+                    50000
+                )
+
+                avoidance = random.randint(
+                    cost * 2,
+                    cost * 8
+                )
+
+                roi = round(
+                    avoidance / cost,
+                    1
+                )
+
+                cost_col1, cost_col2, cost_col3 = st.columns(3)
+
+                cost_col1.metric(
+                    "Maintenance Cost",
+                    f"£{cost:,}"
+                )
+
+                cost_col2.metric(
+                    "Failure Cost Avoided",
+                    f"£{avoidance:,}"
+                )
+
+                cost_col3.metric(
+                    "ROI",
+                    f"{roi}x"
+                )
+
+                # Financial Visualization
+                st.markdown("---")
+                st.subheader("💰 Financial Impact")
+
+                financial_df = pd.DataFrame({
+
+                    "Category": [
+                        "Maintenance Cost",
+                        "Failure Cost Avoided"
+                    ],
+
+                    "Amount": [
+                        cost,
+                        avoidance
+                    ]
+                })
+
+                fig_finance = px.bar(
+                    financial_df,
+                    x="Category",
+                    y="Amount",
+                    title="Maintenance Investment vs Savings"
+                )
+
+                st.plotly_chart(
+                    fig_finance,
+                    use_container_width=True
+                )
+
+                # Executive Summary
+                st.markdown("---")
+                st.subheader("👔 Executive Summary")
+
+                st.info(
+                    f"""
+                    Asset: {asset}
+
+                    Criticality: {criticality}
+
+                    Health Score: {health_score}%
+
+                    Priority: {priority}
+
+                    Assigned Engineer: {assigned_engineer}
+
+                    Work Order: {work_order}
+
+                    Estimated Maintenance Cost: £{cost:,}
+
+                    Potential Failure Cost Avoided: £{avoidance:,}
+
+                    Maintenance ROI: {roi}x
+
+                    Recommended Action:
+                    {shutdown}
                     """
                 )
 
