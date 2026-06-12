@@ -4,6 +4,7 @@ import pandas as pd
 import networkx as nx
 import matplotlib.pyplot as plt
 import plotly.express as px
+from datetime import datetime
 from simulator import forecast_energy, detect_anomalies
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score
