@@ -4861,7 +4861,8 @@ if st.session_state.get("authentication_status"):
             "AI Root Cause",
             "AI Maintenance Planner",
             "Carbon Intelligence",
-            "Energy Trading Twin"
+            "Energy Trading Twin",
+            "Climate Risk Twin"
         ]
     )
 
@@ -6946,6 +6947,258 @@ if st.session_state.get("authentication_status"):
                 Best Trading Hour: {best_hour}:00
 
                 Peak Forecast Price: £{best_price}/MWh
+                """
+            )
+        
+        # -------------------------------
+        # 🌦 Climate Risk Twin
+        # -------------------------------
+        if page == "Climate Risk Twin":
+
+            st.header("🌦 Climate Risk & Resilience Twin")
+
+            st.markdown(
+                "Climate Simulation • Extreme Weather Analysis • Asset Resilience"
+            )
+
+            # --------------------------------
+            # Scenario Selection
+            # --------------------------------
+            st.subheader("🌍 Climate Scenario")
+
+            scenario = st.selectbox(
+
+                "Select Scenario",
+
+                [
+                    "Heatwave",
+                    "Flood",
+                    "Storm",
+                    "Drought",
+                    "Grid Stress Event"
+                ]
+            )
+
+            asset = st.selectbox(
+
+                "Select Asset",
+
+                [
+                    "Gas Turbine",
+                    "Transformer",
+                    "Battery Storage",
+                    "Solar Farm",
+                    "Wind Farm",
+                    "Substation"
+                ]
+            )
+
+            # --------------------------------
+            # Risk Database
+            # --------------------------------
+            risk_db = {
+
+                "Heatwave": {
+                    "Gas Turbine": 70,
+                    "Transformer": 85,
+                    "Battery Storage": 90,
+                    "Solar Farm": 45,
+                    "Wind Farm": 20,
+                    "Substation": 60
+                },
+
+                "Flood": {
+                    "Gas Turbine": 50,
+                    "Transformer": 95,
+                    "Battery Storage": 85,
+                    "Solar Farm": 60,
+                    "Wind Farm": 40,
+                    "Substation": 98
+                },
+
+                "Storm": {
+                    "Gas Turbine": 40,
+                    "Transformer": 60,
+                    "Battery Storage": 50,
+                    "Solar Farm": 85,
+                    "Wind Farm": 95,
+                    "Substation": 70
+                },
+
+                "Drought": {
+                    "Gas Turbine": 80,
+                    "Transformer": 20,
+                    "Battery Storage": 25,
+                    "Solar Farm": 35,
+                    "Wind Farm": 10,
+                    "Substation": 15
+                },
+
+                "Grid Stress Event": {
+                    "Gas Turbine": 75,
+                    "Transformer": 85,
+                    "Battery Storage": 40,
+                    "Solar Farm": 50,
+                    "Wind Farm": 55,
+                    "Substation": 90
+                }
+            }
+
+            risk_score = risk_db[scenario][asset]
+
+            # --------------------------------
+            # KPI Cards
+            # --------------------------------
+            st.markdown("---")
+
+            c1, c2, c3 = st.columns(3)
+
+            c1.metric(
+                "Climate Risk Score",
+                f"{risk_score}/100"
+            )
+
+            c2.metric(
+                "Asset Resilience",
+                f"{100-risk_score}%"
+            )
+
+            c3.metric(
+                "Expected Downtime",
+                f"{round(risk_score/10,1)} hrs"
+            )
+
+            # --------------------------------
+            # Risk Gauge
+            # --------------------------------
+            st.markdown("---")
+            st.subheader("📊 Climate Exposure")
+
+            fig = px.bar(
+                x=["Risk"],
+                y=[risk_score],
+                title="Climate Risk Exposure"
+            )
+
+            st.plotly_chart(
+                fig,
+                use_container_width=True
+            )
+
+            # --------------------------------
+            # Financial Impact
+            # --------------------------------
+            st.markdown("---")
+
+            impact_cost = risk_score * random.randint(
+                1000,
+                5000
+            )
+
+            st.metric(
+                "Estimated Financial Exposure",
+                f"£{impact_cost:,.0f}"
+            )
+
+            # --------------------------------
+            # Resilience Actions
+            # --------------------------------
+            st.markdown("---")
+            st.subheader("🛡 Resilience Recommendations")
+
+            actions = {
+
+                "Heatwave":
+                [
+                    "Increase cooling capacity",
+                    "Monitor transformer temperature",
+                    "Review battery thermal systems"
+                ],
+
+                "Flood":
+                [
+                    "Install flood barriers",
+                    "Elevate critical equipment",
+                    "Improve drainage systems"
+                ],
+
+                "Storm":
+                [
+                    "Inspect structural integrity",
+                    "Secure loose equipment",
+                    "Review emergency procedures"
+                ],
+
+                "Drought":
+                [
+                    "Reduce water consumption",
+                    "Improve cooling efficiency",
+                    "Review water reserves"
+                ],
+
+                "Grid Stress Event":
+                [
+                    "Activate demand response",
+                    "Utilize battery storage",
+                    "Increase reserve capacity"
+                ]
+            }
+
+            for item in actions[scenario]:
+
+                st.write(f"✅ {item}")
+
+            # --------------------------------
+            # Climate Risk Matrix
+            # --------------------------------
+            st.markdown("---")
+
+            st.subheader("📋 Enterprise Climate Matrix")
+
+            matrix_df = pd.DataFrame({
+
+                "Risk Area": [
+                    "Operations",
+                    "Safety",
+                    "Environment",
+                    "Revenue",
+                    "Reliability"
+                ],
+
+                "Exposure": [
+                    random.randint(20,95),
+                    random.randint(20,95),
+                    random.randint(20,95),
+                    random.randint(20,95),
+                    random.randint(20,95)
+                ]
+            })
+
+            st.dataframe(
+                matrix_df,
+                use_container_width=True
+            )
+
+            # --------------------------------
+            # Executive Summary
+            # --------------------------------
+            st.markdown("---")
+
+            st.subheader("👔 Executive Climate Summary")
+
+            st.success(
+                f"""
+                Scenario: {scenario}
+
+                Asset: {asset}
+
+                Climate Risk Score: {risk_score}/100
+
+                Estimated Exposure: £{impact_cost:,.0f}
+
+                Asset Resilience: {100-risk_score}%
+
+                Recommended Mitigation Actions Generated.
                 """
             )
 
