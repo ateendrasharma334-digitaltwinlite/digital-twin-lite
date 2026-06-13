@@ -5074,37 +5074,36 @@ if st.session_state.get("authentication_status"):
             col1, col2, col3 = st.columns(3)
 
             with col1:
+                st.subheader("⚡ Generation")
 
-            st.subheader("⚡ Generation")
+                energy_df = pd.DataFrame({
 
-            energy_df = pd.DataFrame({
+                    "Source": [
+                        "Solar",
+                        "Wind",
+                        "Battery",
+                        "Grid"
+                    ],
 
-                "Source": [
-                    "Solar",
-                    "Wind",
-                    "Battery",
-                    "Grid"
-                ],
+                    "MW": [
+                        random.randint(50,150),
+                        random.randint(50,150),
+                        random.randint(20,80),
+                        random.randint(100,300)
+                    ]
+                })
 
-                "MW": [
-                    random.randint(50,150),
-                    random.randint(50,150),
-                    random.randint(20,80),
-                    random.randint(100,300)
-                ]
-            })
+                fig_energy = px.pie(
+                    energy_df,
+                    names="Source",
+                    values="MW",
+                    hole=0.5
+                )
 
-            fig_energy = px.pie(
-                energy_df,
-                names="Source",
-                values="MW",
-                hole=0.5
-            )
-
-            st.plotly_chart(
-                fig_energy,
-                use_container_width=True
-            )
+                st.plotly_chart(
+                    fig_energy,
+                    use_container_width=True
+                )
 
             # STEP 6
             with col2:
