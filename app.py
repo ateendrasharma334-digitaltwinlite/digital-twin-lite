@@ -1,3 +1,5 @@
+import folium
+from streamlit_folium import st_folium
 import numpy as np
 import streamlit as st
 import pandas as pd
@@ -4862,7 +4864,8 @@ if st.session_state.get("authentication_status"):
             "AI Maintenance Planner",
             "Carbon Intelligence",
             "Energy Trading Twin",
-            "Climate Risk Twin"
+            "Climate Risk Twin",
+            "Geospatial Twin"
         ]
     )
 
@@ -7200,6 +7203,128 @@ if st.session_state.get("authentication_status"):
 
                 Recommended Mitigation Actions Generated.
                 """
+            )
+        
+        # -------------------------------
+        # 🗺 Enterprise Geospatial Twin
+        # -------------------------------
+        if page == "Geospatial Twin":
+
+            st.header("🗺 Enterprise Geospatial Digital Twin")
+
+            st.markdown(
+                "Real-Time Asset Location • Risk Mapping • Geographic Intelligence"
+            )
+
+            # --------------------------------
+            # Asset Database
+            # --------------------------------
+
+            assets_map = pd.DataFrame({
+
+                "Asset": [
+                    "Gas Turbine",
+                    "Battery Storage",
+                    "Solar Farm",
+                    "Wind Farm",
+                    "Substation"
+                ],
+
+                "Latitude": [
+                    51.5074,
+                    51.5200,
+                    51.4900,
+                    51.5600,
+                    51.5350
+                ],
+
+                "Longitude": [
+                    -0.1278,
+                    -0.1500,
+                    -0.2200,
+                    -0.3100,
+                    -0.1800
+                ],
+
+                "Health": [
+                    92,
+                    88,
+                    95,
+                    90,
+                    84
+                ]
+            })
+
+            # --------------------------------
+            # Create Map
+            # --------------------------------
+
+            m = folium.Map(
+
+                location=[
+                    51.5074,
+                    -0.1278
+                ],
+
+                zoom_start=10
+            )
+
+            # --------------------------------
+            # Asset Markers
+            # --------------------------------
+
+            for _, row in assets_map.iterrows():
+
+                color = "green"
+
+                if row["Health"] < 90:
+
+                    color = "orange"
+
+                if row["Health"] < 80:
+
+                    color = "red"
+
+                folium.Marker(
+
+                    location=[
+                        row["Latitude"],
+                        row["Longitude"]
+                    ],
+
+                    popup=f"""
+                    Asset: {row['Asset']}
+                    <br>
+                    Health: {row['Health']}%
+                    """,
+
+                    icon=folium.Icon(
+                        color=color
+                    )
+
+                ).add_to(m)
+
+            # --------------------------------
+            # Display Map
+            # --------------------------------
+
+            st_folium(
+                m,
+                width=1200,
+                height=600
+            )
+
+            # --------------------------------
+            # Asset Summary
+            # --------------------------------
+
+            st.markdown("---")
+
+            st.subheader("📋 Asset Location Register")
+
+            st.dataframe(
+                assets_map,
+                use_container_width=True
             )
 
         # -------------------------------
