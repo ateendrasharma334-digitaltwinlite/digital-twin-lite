@@ -33,6 +33,7 @@ from reportlab.platypus import (
 )
 import folium
 from streamlit_folium import st_folium
+from datetime import datetime
 
 mqtt_data = {}
 
@@ -5030,6 +5031,18 @@ if st.session_state.get("authentication_status"):
 
             st.success(
                 "🟢 Digital Twin Status: ONLINE"
+            )
+
+            status1, status2, status3, status4, status5 = st.columns(5)
+
+            status1.success("🟢 Grid Online")
+            status2.success("🟢 AI Active")
+            status3.success("🟢 Carbon Tracking")
+            status4.success("🟢 Security Protected")
+            status5.success("🟢 SCADA Connected")
+
+            st.info(
+                f"🕒 Command Center Time: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}"
             )
 
             # -------------------------------
