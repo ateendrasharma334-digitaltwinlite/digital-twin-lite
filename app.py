@@ -69,6 +69,62 @@ st.set_page_config(
         layout="wide"
     )
 
+# -------------------------------
+# Enterprise Dashboard Theme
+# -------------------------------
+st.markdown("""
+<style>
+
+/* Main background */
+.stApp{
+    background-color:#0B1120;
+}
+
+/* KPI Cards */
+[data-testid="metric-container"]{
+    background:#111827;
+    border:1px solid #1E293B;
+    padding:15px;
+    border-radius:15px;
+    box-shadow:0px 0px 15px rgba(0,255,255,0.15);
+}
+
+/* Headers */
+h1,h2,h3{
+    color:#00E5FF;
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"]{
+    background:#0F172A;
+}
+
+/* Buttons */
+.stButton button{
+    border-radius:10px;
+    background:#00E5FF;
+    color:black;
+    font-weight:bold;
+}
+
+/* Dataframes */
+[data-testid="stDataFrame"]{
+    border-radius:15px;
+}
+
+/* Success boxes */
+.stSuccess{
+    border-radius:12px;
+}
+
+/* Warning boxes */
+.stWarning{
+    border-radius:12px;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
 
 # -------------------------------
 # Sensor Simulator
