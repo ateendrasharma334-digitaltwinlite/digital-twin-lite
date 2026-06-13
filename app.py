@@ -1,5 +1,3 @@
-import folium
-from streamlit_folium import st_folium
 import numpy as np
 import streamlit as st
 import pandas as pd
@@ -32,6 +30,8 @@ from reportlab.platypus import (
     Paragraph,
     Spacer
 )
+import folium
+from streamlit_folium import st_folium
 
 mqtt_data = {}
 
