@@ -5129,7 +5129,7 @@ if st.session_state.get("authentication_status"):
                 )
 
             # Alert Center
-             with col3:
+            with col3:
 
                 st.subheader("🚨 Live Alert Center")
 
