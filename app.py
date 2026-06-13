@@ -5130,24 +5130,23 @@ if st.session_state.get("authentication_status"):
             
                 #STEP 7
                 with col3:
+                    st.subheader("🚨 Live Alert Center")
 
-                st.subheader("🚨 Live Alert Center")
+                    st.warning(
+                        "Transformer temperature elevated"
+                    )
 
-                st.warning(
-                    "Transformer temperature elevated"
-                )
+                    st.warning(
+                        "Boiler vibration increasing"
+                    )
 
-                st.warning(
-                    "Boiler vibration increasing"
-                )
+                    st.info(
+                        "Battery maintenance due"
+                    )
 
-                st.info(
-                    "Battery maintenance due"
-                )
-
-                st.success(
-                    "Solar farm operational"
-                )
+                    st.success(
+                        "Solar farm operational"
+                    )
 
                 st.markdown("---")
 
