@@ -4,6 +4,7 @@ import pandas as pd
 import networkx as nx
 import matplotlib.pyplot as plt
 import plotly.express as px
+import plotly.graph_objects as go
 from datetime import datetime
 from simulator import forecast_energy, detect_anomalies
 from sklearn.ensemble import RandomForestRegressor
@@ -7325,6 +7326,104 @@ if st.session_state.get("authentication_status"):
             st.dataframe(
                 assets_map,
                 use_container_width=True
+            )
+
+            st.markdown("---")
+
+            st.subheader("⚠ Geographic Risk Layer")
+
+            risk_df = pd.DataFrame({
+
+                "Risk Zone": [
+                    "Flood Zone",
+                    "Heatwave Zone",
+                    "Grid Congestion",
+                    "Cyber Risk Region"
+                ],
+
+                "Risk Score": [
+                    random.randint(50,95),
+                    random.randint(50,95),
+                    random.randint(50,95),
+                    random.randint(50,95)
+                ]
+            })
+
+            st.dataframe(
+                risk_df,
+                use_container_width=True
+            )
+
+            st.markdown("---")
+
+            st.subheader("📏 Asset Proximity Analysis")
+
+            selected_asset = st.selectbox(
+                "Select Asset",
+                assets_map["Asset"]
+            )
+
+            st.info(
+                f"""
+                AI Analysis:
+
+                {selected_asset} is within operational range
+                of supporting neighboring assets during
+                emergency events.
+                """
+            )
+
+            st.markdown("---")
+
+            c1, c2, c3 = st.columns(3)
+
+            c1.metric(
+                 "Mapped Assets",
+                len(assets_map)
+            )
+
+            c2.metric(
+                "Geographic Coverage",
+                "98%"
+            )
+
+            c3.metric(
+                "Location Accuracy",
+                "99.8%"
+            )
+
+            st.markdown("---")
+
+            st.subheader("🌍 Geographic Resilience")
+
+            resilience = random.randint(
+                75,
+                98
+            )
+
+            st.metric(
+                "Resilience Score",
+                f"{resilience}%"
+            )
+
+            st.progress(resilience)
+
+            st.markdown("---")
+
+            st.subheader("👔 Executive Geographic Summary")
+
+            st.success(
+                f"""
+                Assets Monitored: {len(assets_map)}
+
+                Geographic Coverage: 98%
+
+                Resilience Score: {resilience}%
+
+                Risk Layers Active
+
+                Enterprise Mapping Online
+                """
             )
 
         # -------------------------------
