@@ -5105,123 +5105,123 @@ if st.session_state.get("authentication_status"):
                     use_container_width=True
                 )
 
-            # STEP 6
-            with col2:
-                st.subheader("🧠 AI Command Center")
+                # STEP 6
+                with col2:
+                    st.subheader("🧠 AI Command Center")
 
-            st.metric(
-                "Failure Risk",
-                f"{random.randint(1,15)}%"
-            )
+                st.metric(
+                    "Failure Risk",
+                    f"{random.randint(1,15)}%"
+                )
 
-            st.metric(
-                "Predicted Uptime",
-                f"{random.randint(95,99)}%"
-            )
+                st.metric(
+                    "Predicted Uptime",
+                    f"{random.randint(95,99)}%"
+                )
 
-            st.success(
-                "No critical failures predicted"
-            )
+                st.success(
+                    "No critical failures predicted"
+                )
 
-            st.info(
-                "AI Monitoring Active"
-            )
+                st.info(
+                    "AI Monitoring Active"
+                )
 
             
-            #STEP 7
-            with col3:
+                #STEP 7
+                with col3:
 
-            st.subheader("🚨 Live Alert Center")
+                st.subheader("🚨 Live Alert Center")
 
-            st.warning(
-                "Transformer temperature elevated"
-            )
+                st.warning(
+                    "Transformer temperature elevated"
+                )
 
-            st.warning(
-                "Boiler vibration increasing"
-            )
+                st.warning(
+                    "Boiler vibration increasing"
+                )
 
-            st.info(
-                "Battery maintenance due"
-            )
+                st.info(
+                    "Battery maintenance due"
+                )
 
-            st.success(
-                "Solar farm operational"
-            )
+                st.success(
+                    "Solar farm operational"
+                )
 
-            st.markdown("---")
+                st.markdown("---")
 
-            st.subheader("🏭 Asset Health Center")
+                st.subheader("🏭 Asset Health Center")
 
-            asset_df = pd.DataFrame({
+                asset_df = pd.DataFrame({
 
-                "Asset": [
-                    "GT-01",
-                    "GT-02",
-                    "TR-01",
-                    "BAT-01",
-                    "SOL-01"
-                ],
+                    "Asset": [
+                        "GT-01",
+                        "GT-02",
+                        "TR-01",
+                        "BAT-01",
+                        "SOL-01"
+                    ],
 
-                "Health": [
-                    96,
-                    92,
-                    84,
-                    99,
-                    95
-                ]
-            })
+                    "Health": [
+                        96,
+                        92,
+                        84,
+                        99,
+                        95
+                    ]
+                })
 
-            st.dataframe(
-                asset_df,
-                use_container_width=True
-            )
+                st.dataframe(
+                    asset_df,
+                    use_container_width=True
+                )
 
-            st.markdown("---")
+                st.markdown("---")
 
-            st.subheader("📈 Real-Time Operations")
+                st.subheader("📈 Real-Time Operations")
 
-            trend_df = pd.DataFrame({
+                trend_df = pd.DataFrame({
 
-                "Hour": list(range(24)),
+                    "Hour": list(range(24)),
 
-                "Load": [
-                    random.randint(400,900)
-                    for _ in range(24)
-                ]
-            })
+                    "Load": [
+                        random.randint(400,900)
+                        for _ in range(24)
+                    ]
+                })
 
-            fig_load = px.line(
-                trend_df,
-                x="Hour",
-                y="Load",
-                title="24-Hour Load Curve"
-            )
+                fig_load = px.line(
+                    trend_df,
+                    x="Hour",
+                    y="Load",
+                    title="24-Hour Load Curve"
+                )
 
-            st.plotly_chart(
-                fig_load,
-                use_container_width=True
-            )
+                st.plotly_chart(
+                    fig_load,
+                    use_container_width=True
+                )
 
-            st.markdown("---")
+                st.markdown("---")
 
-            st.subheader("👔 Executive Summary")
+                st.subheader("👔 Executive Summary")
 
-            st.success(
-               """
-               🟢 ENTERPRISE STATUS: ONLINE
+                st.success(
+                   """
+                   🟢 ENTERPRISE STATUS: ONLINE
 
-               AI Monitoring Active
+                   AI Monitoring Active
 
-               Predictive Maintenance Running
+                   Predictive Maintenance Running
 
-               Carbon Intelligence Active
+                   Carbon Intelligence Active
 
-               Energy Trading Active
+                   Energy Trading Active
 
-               No Critical System Failures
-               """
-            )
+                   No Critical System Failures
+                   """
+                )
 
             # -------------------------------
             # Command Center Layout
