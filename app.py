@@ -891,7 +891,7 @@ if st.session_state.get("authentication_status"):
     # -------------------------------
     # 🎯 PROFESSIONAL STATUS INDICATOR 
     # -------------------------------
-    st.sidebar.success("🟢 System Running - Level 31 AI Enabled")
+    st.sidebar.success("🟢 System Running)
 
     authenticator.logout("Logout", "sidebar")
 
@@ -5020,6 +5020,215 @@ if st.session_state.get("authentication_status"):
 
         for item in allowed_pages:
             st.sidebar.write(f"✅ {item}")
+        
+        # -------------------------------
+        # 🏢 Enterprise Overview Dashboard
+        # -------------------------------
+        if page == "Overview":
+
+            st.title("🏢 Enterprise Energy Command Center")
+
+            st.success(
+                "🟢 Digital Twin Status: ONLINE"
+            )
+
+            # -------------------------------
+            # Executive KPI Ribbon
+            # -------------------------------
+            st.markdown("## ⚡ Executive KPI Center")
+
+            k1,k2,k3,k4,k5,k6 = st.columns(6)
+
+            k1.metric(
+                "⚡ Power",
+                f"{random.randint(400,900)} MW"
+            )
+
+            k2.metric(
+                "🌱 Carbon",
+                f"{random.randint(20,60)}%"
+            )
+
+            k3.metric(
+                "🔋 Battery",
+                f"{random.randint(70,100)}%"
+            )
+
+            k4.metric(
+                "⚙ Health",
+                f"{random.randint(85,99)}%"
+            )
+
+            k5.metric(
+                "🚨 Alerts",
+                random.randint(0,5)
+            )
+
+            k6.metric(
+                "📈 Efficiency",
+                f"{random.randint(90,99)}%"
+            )
+
+            st.markdown("---")
+
+            # -------------------------------
+            # Command Center Layout
+            # -------------------------------
+            col1,col2,col3 = st.columns(3)
+
+            # Energy Generation
+            with col1:
+
+                st.subheader("⚡ Generation")
+
+                energy_df = pd.DataFrame({
+
+                    "Source":[
+                        "Solar",
+                        "Wind",
+                        "Battery",
+                        "Grid"
+                    ],
+
+                    "MW":[
+                        random.randint(50,150),
+                        random.randint(50,150),
+                        random.randint(30,80),
+                        random.randint(100,300)
+                    ]
+                })
+
+                fig_energy = px.pie(
+                    energy_df,
+                    names="Source",
+                    values="MW"
+                )
+
+                st.plotly_chart(
+                    fig_energy,
+                    use_container_width=True
+                )
+
+            # AI Center
+            with col2:
+
+                st.subheader("🧠 AI Command Center")
+
+                st.metric(
+                    "Failure Risk",
+                    f"{random.randint(1,15)}%"
+                )
+
+                st.metric(
+                    "Predicted Uptime",
+                    f"{random.randint(95,99)}%"
+                )
+
+                st.success(
+                    "No critical failures predicted."
+                )
+
+            # Alert Center
+            with col3:
+
+                st.subheader("🚨 Live Alert Center")
+
+                st.warning(
+                    "Transformer temperature elevated."
+                )
+
+                st.info(
+                    "Battery maintenance due in 5 days."
+                )
+
+                st.success(
+                    "Solar farm operating normally."
+                )
+
+            st.markdown("---")
+
+            # -------------------------------
+            # Asset Health Center
+            # -------------------------------
+            st.subheader("🏭 Asset Health Center")
+
+            asset_df = pd.DataFrame({
+
+                "Asset":[
+                    "GT-01",
+                    "GT-02",
+                    "TR-01",
+                    "BAT-01",
+                    "SOL-01",
+                    "WIND-01"
+                ],
+
+                "Health":[
+                    96,
+                    91,
+                    83,
+                    98,
+                    95,
+                    89
+                ]
+            })
+
+            st.dataframe(
+                asset_df,
+                use_container_width=True
+            )
+
+            st.markdown("---")
+
+            # -------------------------------
+            # Real-Time Operations
+            # -------------------------------
+            st.subheader("📈 Real-Time Operations")
+
+            trend_df = pd.DataFrame({
+
+                "Hour": list(range(24)),
+
+                "Load":[
+                    random.randint(400,900)
+                    for _ in range(24)
+                ]
+            })
+
+            fig_load = px.line(
+                trend_df,
+                x="Hour",
+                y="Load",
+                title="24-Hour Load Curve"
+            )
+
+            st.plotly_chart(
+                fig_load,
+                use_container_width=True
+            )
+
+            st.markdown("---")
+
+            # -------------------------------
+            # Executive Summary
+            # -------------------------------
+            st.subheader("👔 Executive Summary")
+
+            st.success(
+                """
+                Enterprise Status: ONLINE
+
+                AI Monitoring Active
+
+                Predictive Maintenance Running
+
+                Energy Optimization Enabled
+
+                Carbon Intelligence Active
+
+                No Critical System Failures
+                """
+            )
 
         # -------------------------------
         # 👔 Executive Control Center
