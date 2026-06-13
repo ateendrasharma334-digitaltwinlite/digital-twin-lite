@@ -11,5 +11,5 @@ openai
 streamlit-autorefresh
 paho-mqtt
 networkx
-import folium
-from streamlit_folium import st_folium
+folium
+streamlit-folium
