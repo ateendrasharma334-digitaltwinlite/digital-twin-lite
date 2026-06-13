@@ -891,7 +891,7 @@ if st.session_state.get("authentication_status"):
     # -------------------------------
     # 🎯 PROFESSIONAL STATUS INDICATOR 
     # -------------------------------
-    st.sidebar.success("🟢 System Running- Level 31 AI Enabled)
+    st.sidebar.success("🟢 System Running-Level 31 AI Enabled)
 
     authenticator.logout("Logout", "sidebar")
 
