@@ -5071,6 +5071,159 @@ if st.session_state.get("authentication_status"):
 
             st.markdown("---")
 
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+
+            st.subheader("⚡ Generation")
+
+            energy_df = pd.DataFrame({
+
+                "Source": [
+                    "Solar",
+                    "Wind",
+                    "Battery",
+                    "Grid"
+                ],
+
+                "MW": [
+                    random.randint(50,150),
+                    random.randint(50,150),
+                    random.randint(20,80),
+                    random.randint(100,300)
+                ]
+            })
+
+            fig_energy = px.pie(
+                energy_df,
+                names="Source",
+                values="MW",
+                hole=0.5
+            )
+
+            st.plotly_chart(
+                fig_energy,
+                use_container_width=True
+            )
+
+            # STEP 6
+            with col2:
+                st.subheader("🧠 AI Command Center")
+
+            st.metric(
+                "Failure Risk",
+                f"{random.randint(1,15)}%"
+            )
+
+            st.metric(
+                "Predicted Uptime",
+                f"{random.randint(95,99)}%"
+            )
+
+            st.success(
+                "No critical failures predicted"
+            )
+
+            st.info(
+                "AI Monitoring Active"
+            )
+
+            
+            #STEP 7
+            with col3:
+
+            st.subheader("🚨 Live Alert Center")
+
+            st.warning(
+                "Transformer temperature elevated"
+            )
+
+            st.warning(
+                "Boiler vibration increasing"
+            )
+
+            st.info(
+                "Battery maintenance due"
+            )
+
+            st.success(
+                "Solar farm operational"
+            )
+
+            st.markdown("---")
+
+            st.subheader("🏭 Asset Health Center")
+
+            asset_df = pd.DataFrame({
+
+                "Asset": [
+                    "GT-01",
+                    "GT-02",
+                    "TR-01",
+                    "BAT-01",
+                    "SOL-01"
+                ],
+
+                "Health": [
+                    96,
+                    92,
+                    84,
+                    99,
+                    95
+                ]
+            })
+
+            st.dataframe(
+                asset_df,
+                use_container_width=True
+            )
+
+            st.markdown("---")
+
+            st.subheader("📈 Real-Time Operations")
+
+            trend_df = pd.DataFrame({
+
+                "Hour": list(range(24)),
+
+                "Load": [
+                    random.randint(400,900)
+                    for _ in range(24)
+                ]
+            })
+
+            fig_load = px.line(
+                trend_df,
+                x="Hour",
+                y="Load",
+                title="24-Hour Load Curve"
+            )
+
+            st.plotly_chart(
+                fig_load,
+                use_container_width=True
+            )
+
+            st.markdown("---")
+
+            st.subheader("👔 Executive Summary")
+
+            st.success(
+               """
+               🟢 ENTERPRISE STATUS: ONLINE
+
+               AI Monitoring Active
+
+               Predictive Maintenance Running
+
+               Carbon Intelligence Active
+
+               Energy Trading Active
+
+               No Critical System Failures
+               """
+            )
+
             # -------------------------------
             # Command Center Layout
             # -------------------------------
