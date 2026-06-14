@@ -5032,75 +5032,75 @@ if st.session_state.get("authentication_status"):
 
             st.success("🟢 Enterprise Systems Online")
 
-                st.markdown("## ⚡ Executive KPI Wall")
+            st.markdown("## ⚡ Executive KPI Wall")
 
-                k1,k2,k3,k4,k5,k6 = st.columns(6)
+            k1,k2,k3,k4,k5,k6 = st.columns(6)
 
-                k1.metric(
-                    "⚡ Power",
-                    f"{random.randint(500,900)} MW"
+            k1.metric(
+                "⚡ Power",
+                f"{random.randint(500,900)} MW"
+            )
+
+            k2.metric(
+                "🌱 Carbon",
+                f"{random.randint(20,50)}%"
+            )
+
+            k3.metric(
+                "🏭 Asset Health",
+                f"{random.randint(90,99)}%"
+            )
+
+            k4.metric(
+                "🚨 Alerts",
+                random.randint(0,5)
+            )
+
+            k5.metric(
+                "🧠 AI Confidence",
+                f"{random.randint(90,99)}%"
+            )
+
+            k6.metric(
+                "💰 Energy Cost",
+                f"£{random.randint(5000,20000):,}"
+            )
+
+            st.markdown("---")
+            col1,col2,col3 = st.columns(3)
+
+            with col1:
+
+                st.subheader("⚡ Generation")
+
+                generation_df = pd.DataFrame({
+
+                    "Source":[
+                        "Solar",
+                        "Wind",
+                        "Battery",
+                        "Grid"
+                    ],
+
+                    "MW":[
+                        150,
+                        220,
+                        80,
+                        350
+                    ]
+                })
+
+                fig_gen = px.pie(
+                    generation_df,
+                    names="Source",
+                    values="MW",
+                    hole=0.5
                 )
 
-                k2.metric(
-                   "🌱 Carbon",
-                   f"{random.randint(20,50)}%"
+                st.plotly_chart(
+                    fig_gen,
+                    use_container_width=True
                 )
-
-                k3.metric(
-                   "🏭 Asset Health",
-                   f"{random.randint(90,99)}%"
-                )
-
-                k4.metric(
-                   "🚨 Alerts",
-                   random.randint(0,5)
-                )
-
-                k5.metric(
-                   "🧠 AI Confidence",
-                   f"{random.randint(90,99)}%"
-                )
-
-                k6.metric(
-                   "💰 Energy Cost",
-                   f"£{random.randint(5000,20000):,}"
-                )
-
-                st.markdown("---")
-                col1,col2,col3 = st.columns(3)
-
-                with col1:
-
-                    st.subheader("⚡ Generation")
-
-                    generation_df = pd.DataFrame({
-
-                        "Source":[
-                            "Solar",
-                            "Wind",
-                            "Battery",
-                            "Grid"
-                        ],
-
-                        "MW":[
-                            150,
-                            220,
-                            80,
-                            350
-                        ]
-                    })
-
-                    fig_gen = px.pie(
-                        generation_df,
-                        names="Source",
-                        values="MW",
-                        hole=0.5
-                    )
-
-                    st.plotly_chart(
-                       fig_gen,
-                       use_container_width=True
-                    )
 
         # -------------------------------
         # 🏢 Enterprise Overview Dashboard
