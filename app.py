@@ -5102,6 +5102,199 @@ if st.session_state.get("authentication_status"):
                     use_container_width=True
                 )
 
+            with col2:
+
+                st.subheader("🧠 AI Health Gauge")
+
+                fig_gauge = go.Figure(
+                    go.Indicator(
+                        mode="gauge+number",
+                        value=random.randint(90,99),
+                        title={"text":"System Health"},
+                        gauge={
+                            "axis":{"range":[0,100]}
+                        }
+                    )
+                )
+
+                st.plotly_chart(
+                    fig_gauge,
+                    use_container_width=True
+                )
+
+            with col3:
+
+                st.subheader("🚨 Alert Analytics")
+
+                alert_df = pd.DataFrame({
+
+                    "Severity":[
+                        "Critical",
+                        "Warning",
+                        "Info"
+                    ],
+
+                    "Count":[
+                        1,
+                        3,
+                        8
+                    ]
+                })
+
+                fig_alert = px.bar(
+                    alert_df,
+                    x="Severity",
+                    y="Count"
+                )
+
+                st.plotly_chart(
+                    fig_alert,
+                    use_container_width=True
+                )
+
+            st.markdown("---")
+            c1,c2,c3 = st.columns(3)
+
+            with c1:
+
+                st.subheader("🏭 Asset Health")
+
+                asset_df = pd.DataFrame({
+
+                    "Asset":[
+                       "GT-01",
+                       "GT-02",
+                       "TR-01",
+                       "BAT-01"
+                    ],
+
+                    "Health":[
+                        96,
+                        92,
+                        84,
+                        99
+                    ]
+                })
+
+                fig_heat = px.bar(
+                   asset_df,
+                    x="Asset",
+                    y="Health",
+                    color="Health",
+                    color_continuous_scale="RdYlGn"
+                )
+
+                st.plotly_chart(
+                    fig_heat,
+                    use_container_width=True
+                )
+            with c2:
+
+                st.subheader("⚠ Enterprise Risk")
+
+                risk_score = random.randint(
+                    5,
+                    25
+                )
+
+                st.metric(
+                    "Risk Score",
+                    f"{risk_score}%"
+                )
+            with c3:
+
+                st.subheader("🏆 Digital Twin")
+
+                twin_score = random.randint(
+                    90,
+                    99
+                )
+
+                st.metric(
+                    "Maturity",
+                    f"{twin_score}%"
+                )
+
+            st.markdown("---")
+            left,right = st.columns(2)
+
+            with left:
+
+                st.subheader("⚙ Live Operations")
+
+                ops_df = pd.DataFrame({
+
+                    "Asset":[
+                        "GT-01",
+                        "TR-01",
+                        "BAT-01",
+                        "SOL-01"
+                    ],
+
+                    "Status":[
+                        "Running",
+                        "Running",
+                        "Charging",
+                        "Generating"
+                    ],
+
+                    "Availability":[
+                        "99%",
+                        "97%",
+                        "100%",
+                        "95%"
+                    ]
+                })
+
+                st.dataframe(
+                    ops_df,
+                    use_container_width=True
+                )            
+            with right:
+
+                st.subheader("🗺 Asset Locations")
+
+                map_df = pd.DataFrame({
+
+                    "lat":[
+                        51.5074,
+                        51.5100,
+                        51.5150
+                    ],
+
+                    "lon":[
+                        -0.1278,
+                        -0.1400,
+                        -0.1500
+                    ]
+                })
+
+                st.map(map_df)
+
+            st.markdown("---")
+
+            st.subheader("👔 Executive Summary")
+
+            st.success(f"""
+
+            Enterprise Status: ONLINE
+
+            Digital Twin Score: {twin_score}%
+
+            Enterprise Risk Score: {risk_score}%
+
+            AI Monitoring Active
+
+            Predictive Maintenance Active
+
+            Carbon Intelligence Active
+
+            Energy Trading Active
+
+            All Core Systems Operational
+
+            """)
+
         # -------------------------------
         # 🏢 Enterprise Overview Dashboard
         # -------------------------------
