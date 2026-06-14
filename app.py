@@ -5131,7 +5131,21 @@ if st.session_state.get("authentication_status"):
                     "Predicted Uptime",
                     f"{random.randint(95,99)}%"
                 )
+                fig_gauge = go.Figure(
+                    go.Indicator(
+                        mode="gauge+number",
+                        value=random.randint(90,99),
+                        title={"text":"System Health"},
+                        gauge={
+                            "axis":{"range":[0,100]}
+                        }
+                    )
+                )
 
+                st.plotly_chart(
+                    fig_gauge,
+                    use_container_width=True
+                )
                 st.success(
                     "No critical failures predicted"
                 )
@@ -5161,6 +5175,45 @@ if st.session_state.get("authentication_status"):
                         "Solar farm operational"
                     )
 
+                # --------------------------------
+                # STEP 4 - Alert Analytics
+                # --------------------------------
+
+                alert_df = pd.DataFrame({
+
+                    "Severity": [
+                        "Critical",
+                        "Warning",
+                        "Info"
+                    ],
+
+                    "Count": [
+                        random.randint(0,2),
+                        random.randint(1,5),
+                        random.randint(3,10)
+                    ]
+                })
+
+                fig_alert = px.bar(
+
+                    alert_df,
+
+                    x="Severity",
+
+                    y="Count",
+
+                    title="Alert Analytics"
+                )
+
+                st.plotly_chart(
+                    fig_alert,
+                    use_container_width=True
+                )
+
+                # --------------------------------
+                # STEP 5 - Asset Health Heatmap
+                # --------------------------------
+
                 st.markdown("---")
 
                 st.subheader("🏭 Asset Health Center")
@@ -5184,215 +5237,150 @@ if st.session_state.get("authentication_status"):
                     ]
                 })
 
-                st.dataframe(
+                fig_heat = px.bar(
+
                     asset_df,
-                    use_container_width=True
-                )
 
-                st.markdown("---")
+                    x="Asset",
 
-                st.subheader("📈 Real-Time Operations")
+                    y="Health",
 
-                trend_df = pd.DataFrame({
+                    color="Health",
 
-                    "Hour": list(range(24)),
+                    color_continuous_scale="RdYlGn",
 
-                    "Load": [
-                        random.randint(400,900)
-                        for _ in range(24)
-                    ]
-                })
-
-                fig_load = px.line(
-                    trend_df,
-                    x="Hour",
-                    y="Load",
-                    title="24-Hour Load Curve"
+                    title="Asset Health Overview"
                 )
 
                 st.plotly_chart(
-                    fig_load,
+                    fig_heat,
                     use_container_width=True
                 )
 
+                # --------------------------------
+                # STEP 6 - Enterprise Risk Score
+                # --------------------------------
+
                 st.markdown("---")
 
-                st.subheader("👔 Executive Summary")
-
-                st.success(
-                   """
-                   🟢 ENTERPRISE STATUS: ONLINE
-
-                   AI Monitoring Active
-
-                   Predictive Maintenance Running
-
-                   Carbon Intelligence Active
-
-                   Energy Trading Active
-
-                   No Critical System Failures
-                   """
+                risk_score = random.randint(
+                    5,
+                    25
                 )
 
-            # -------------------------------
-            # Command Center Layout
-            # -------------------------------
-            col1,col2,col3 = st.columns(3)
+                st.metric(
+                    "Enterprise Risk Score",
+                    f"{risk_score}%"
+                )
 
-            # Energy Generation
-            with col1:
+                # --------------------------------
+                # STEP 7 - Live Operations Table
+                # --------------------------------
 
-                st.subheader("⚡ Generation")
+                st.markdown("---")
 
-                energy_df = pd.DataFrame({
+                st.subheader("⚙ Live Operations")
 
-                    "Source":[
-                        "Solar",
-                        "Wind",
-                        "Battery",
-                        "Grid"
+                ops_df = pd.DataFrame({
+
+                    "Asset": [
+                        "GT-01",
+                        "TR-01",
+                        "BAT-01",
+                        "SOL-01"
                     ],
 
-                    "MW":[
-                        random.randint(50,150),
-                        random.randint(50,150),
-                        random.randint(30,80),
-                        random.randint(100,300)
+                    "Status": [
+                        "Running",
+                        "Running",
+                        "Charging",
+                        "Generating"
+                    ],
+
+                    "Availability": [
+                        "99%",
+                        "97%",
+                        "100%",
+                        "95%"
                     ]
                 })
 
-                fig_energy = px.pie(
-                    energy_df,
-                    names="Source",
-                    values="MW"
-                )
-
-                st.plotly_chart(
-                    fig_energy,
+                st.dataframe(
+                    ops_df,
                     use_container_width=True
                 )
 
-            # AI Center
-            with col2:
+                # --------------------------------
+                # STEP 8 - Asset Location Map
+                # --------------------------------
 
-                st.subheader("🧠 AI Command Center")
+                st.markdown("---")
 
-                st.metric(
-                    "Failure Risk",
-                    f"{random.randint(1,15)}%"
+                st.subheader("🗺 Asset Location Map")
+
+                map_df = pd.DataFrame({
+
+                    "lat": [
+                        51.5074,
+                        51.5100,
+                        51.5150
+                    ],
+
+                    "lon": [
+                        -0.1278,
+                        -0.1400,
+                        -0.1500
+                    ]
+                })
+
+                st.map(map_df)
+
+                # --------------------------------
+                # STEP 9 - Digital Twin Score
+                # --------------------------------
+
+                st.markdown("---")
+
+                twin_score = random.randint(
+                    90,
+                    99
                 )
 
                 st.metric(
-                    "Predicted Uptime",
-                    f"{random.randint(95,99)}%"
+                   "🏆 Digital Twin Maturity",
+                   f"{twin_score}%"
                 )
 
-                st.success(
-                    "No critical failures predicted."
-                )
+                # --------------------------------
+                # STEP 10 - Executive Summary
+                # --------------------------------
 
-            # Alert Center
-            with col3:
+                st.markdown("---")
 
-                st.subheader("🚨 Live Alert Center")
+                st.subheader("👔 Executive Command Summary")
 
-                st.warning(
-                    "Transformer temperature elevated."
-                )
+                st.success(f"""
 
-                st.info(
-                    "Battery maintenance due in 5 days."
-                )
-
-                st.success(
-                    "Solar farm operating normally."
-                )
-
-            st.markdown("---")
-
-            # -------------------------------
-            # Asset Health Center
-            # -------------------------------
-            st.subheader("🏭 Asset Health Center")
-
-            asset_df = pd.DataFrame({
-
-                "Asset":[
-                    "GT-01",
-                    "GT-02",
-                    "TR-01",
-                    "BAT-01",
-                    "SOL-01",
-                    "WIND-01"
-                ],
-
-                "Health":[
-                    96,
-                    91,
-                    83,
-                    98,
-                    95,
-                    89
-                ]
-            })
-
-            st.dataframe(
-                asset_df,
-                use_container_width=True
-            )
-
-            st.markdown("---")
-
-            # -------------------------------
-            # Real-Time Operations
-            # -------------------------------
-            st.subheader("📈 Real-Time Operations")
-
-            trend_df = pd.DataFrame({
-
-                "Hour": list(range(24)),
-
-                "Load":[
-                    random.randint(400,900)
-                    for _ in range(24)
-                ]
-            })
-
-            fig_load = px.line(
-                trend_df,
-                x="Hour",
-                y="Load",
-                title="24-Hour Load Curve"
-            )
-
-            st.plotly_chart(
-                fig_load,
-                use_container_width=True
-            )
-
-            st.markdown("---")
-
-            # -------------------------------
-            # Executive Summary
-            # -------------------------------
-            st.subheader("👔 Executive Summary")
-
-            st.success(
-                """
                 Enterprise Status: ONLINE
+
+                Digital Twin Score: {twin_score}%
+
+                Enterprise Risk Score: {risk_score}%
 
                 AI Monitoring Active
 
                 Predictive Maintenance Running
 
-                Energy Optimization Enabled
-
                 Carbon Intelligence Active
 
-               No Critical System Failures
-               """
-            )
+                Energy Trading Active
+
+                SCADA Connected
+
+                All Critical Systems Operational
+
+                """)
+
 
         # -------------------------------
         # 👔 Executive Control Center
