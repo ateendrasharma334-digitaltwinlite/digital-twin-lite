@@ -68,7 +68,49 @@ st.set_page_config(
         page_title="Digital Twin Lite",
         page_icon="assets/logo.png",
         layout="wide"
-    )
+)
+
+st.markdown("""
+<style>
+
+/* Main Background */
+.stApp {
+    background-color: #0B1120;
+}
+
+/* Headers */
+h1, h2, h3 {
+    color: #00E5FF;
+}
+
+/* Metric Cards */
+div[data-testid="metric-container"] {
+    background-color: #111827;
+    border: 1px solid #1E293B;
+    padding: 15px;
+    border-radius: 15px;
+    box-shadow: 0px 0px 10px rgba(0,229,255,0.2);
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background-color: #111827;
+}
+
+/* DataFrames */
+[data-testid="stDataFrame"] {
+    border-radius: 15px;
+}
+
+/* Buttons */
+.stButton button {
+    border-radius: 10px;
+    background-color: #00E5FF;
+    color: black;
+}
+
+</style>
+""", unsafe_allow_html=True)
 
 # -------------------------------
 # Enterprise Dashboard Theme
