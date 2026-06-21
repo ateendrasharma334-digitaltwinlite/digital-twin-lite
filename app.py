@@ -5073,6 +5073,23 @@ if st.session_state.get("authentication_status"):
             st.title("🌍 Enterprise Global Command Center")
 
             st.success("🟢 Enterprise Systems Online")
+            status1,status2,status3,status4,status5 = st.columns(5)
+
+            status1.success("🟢 Grid")
+            status2.success("🟢 AI")
+            status3.success("🟢 Carbon")
+            status4.success("🟢 Security")
+            status5.success("🟢 SCADA")
+
+            st.info(
+                """
+                🏢 Enterprise Digital Twin Platform
+                | AI Powered Monitoring
+                | Predictive Maintenance
+                | Carbon Intelligence
+                | Executive Analytics
+                """
+            )
 
             st.markdown("## ⚡ Executive KPI Wall")
 
@@ -5218,16 +5235,21 @@ if st.session_state.get("authentication_status"):
                     ]
                 })
 
-                fig_heat = px.bar(
-                   asset_df,
-                    x="Asset",
-                    y="Health",
-                    color="Health",
-                    color_continuous_scale="RdYlGn"
+                avg_health = asset_df["Health"].mean()
+
+                fig_health = go.Figure(
+                    go.Indicator(
+                        mode="gauge+number",
+                        value=avg_health,
+                        title={"text": "Fleet Health"},
+                        gauge={
+                            "axis": {"range": [0, 100]}
+                        }
+                    )
                 )
 
                 st.plotly_chart(
-                    fig_heat,
+                    fig_health,
                     use_container_width=True
                 )
             with c2:
@@ -5239,9 +5261,20 @@ if st.session_state.get("authentication_status"):
                     25
                 )
 
-                st.metric(
-                    "Risk Score",
-                    f"{risk_score}%"
+                fig_risk = go.Figure(
+                    go.Indicator(
+                        mode="gauge+number",
+                        value=risk_score,
+                        title={"text": "Risk Level"},
+                        gauge={
+                            "axis": {"range": [0, 100]}
+                        }
+                    )
+                )
+
+                st.plotly_chart(
+                    fig_risk,
+                    use_container_width=True
                 )
             with c3:
 
@@ -5252,9 +5285,20 @@ if st.session_state.get("authentication_status"):
                     99
                 )
 
-                st.metric(
-                    "Maturity",
-                    f"{twin_score}%"
+                fig_twin = go.Figure(
+                    go.Indicator(
+                        mode="gauge+number",
+                        value=twin_score,
+                        title={"text": "Twin Maturity"},
+                        gauge={
+                            "axis": {"range": [0, 100]}
+                        }
+                    )
+                )
+
+                st.plotly_chart(
+                    fig_twin,
+                    use_container_width=True
                 )
 
             st.markdown("---")
@@ -5314,7 +5358,6 @@ if st.session_state.get("authentication_status"):
                 st.map(map_df)
 
             st.markdown("---")
-
             st.subheader("👔 Executive Summary")
 
             st.success(f"""
