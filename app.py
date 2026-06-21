@@ -5356,6 +5356,24 @@ if st.session_state.get("authentication_status"):
                 })
 
                 st.map(map_df)
+            
+            st.markdown("---")
+
+            st.subheader("⚡ Quick Actions")
+
+            a1, a2, a3, a4 = st.columns(4)
+
+            with a1:
+                st.button("🚨 Create Alert")
+
+            with a2:
+                st.button("📊 Generate Report")
+
+            with a3:
+                st.button("🛠 Maintenance")
+
+            with a4:
+                st.button("📈 Forecast")
 
             st.markdown("---")
             st.subheader("👔 Executive Summary")
