@@ -5359,6 +5359,30 @@ if st.session_state.get("authentication_status"):
             
             st.markdown("---")
 
+            st.subheader("📡 Enterprise Feed")
+
+            feed_df = pd.DataFrame({
+
+                "Time": [
+                    "09:00",
+                    "09:15",
+                    "09:30",
+                    "09:45"
+                ],
+
+                "Event": [
+                    "Solar generation increased",
+                    "AI forecast updated",
+                    "Battery charging started",
+                    "Carbon target achieved"
+                ]
+            })
+
+            st.dataframe(
+                feed_df,
+                use_container_width=True
+            )
+
             st.subheader("⚡ Quick Actions")
 
             a1, a2, a3, a4 = st.columns(4)
@@ -5397,6 +5421,9 @@ if st.session_state.get("authentication_status"):
             All Core Systems Operational
 
             """)
+            st.caption(
+                "Enterprise Digital Twin Platform | Version 3.0 | AI Enabled Operations Center"
+            )
 
         # -------------------------------
         # 🏢 Enterprise Overview Dashboard
