@@ -5050,10 +5050,94 @@ if st.session_state.get("authentication_status"):
         ["Building A", "Building B", "Building C"]
     )
     if st.session_state.get("username") == "admin":
-        # -------------------------------
-        # 👥 Enterprise Role Access
-        # -------------------------------
-        st.sidebar.header("👥 User Access Control")
+        # ===============================================
+        # 🏢 OMNITWIN ENTERPRISE SIDEBAR
+        # ===============================================
+
+        st.sidebar.image(
+            "assets/logo.png",
+            width=70
+        )
+
+        st.sidebar.markdown("# 🏢 OmniTwin")
+
+        st.sidebar.caption("Enterprise Edition")
+
+        st.sidebar.success("🟢 System Online")
+
+        st.sidebar.markdown("---")
+
+        # ===============================================
+        # CURRENT USER
+        # ===============================================
+
+        st.sidebar.markdown("### 👤 Current User")
+
+        st.sidebar.success(
+            st.session_state.get(
+                "name",
+                "Administrator"
+            )
+        )
+
+        st.sidebar.caption(
+            st.session_state.get(
+                "username",
+                "admin"
+            )
+        )
+
+        st.sidebar.markdown("---")
+
+        # ===============================================
+        # ENTERPRISE HEALTH
+        # ===============================================
+
+        st.sidebar.markdown("### 📊 Enterprise Health")
+
+        st.sidebar.progress(0.98)
+
+        st.sidebar.success("AI Engine")
+
+        st.sidebar.success("Cloud Connected")
+
+        st.sidebar.success("Database Online")
+
+        st.sidebar.success("Cyber Secure")
+
+        st.sidebar.markdown("---")
+
+        # ===============================================
+        # LIVE STATUS
+        # ===============================================
+
+        st.sidebar.markdown("### ⚡ Live Status")
+
+        st.sidebar.metric(
+            "Grid Load",
+            "785 MW",
+            "+2%"
+        )
+
+        st.sidebar.metric(
+            "Carbon",
+            "81 gCO₂/kWh",
+            "-4%"
+        )
+
+        st.sidebar.metric(
+            "Today's Savings",
+            "£24,580",
+            "+6%"
+        )
+
+        st.sidebar.markdown("---")
+
+        # ===============================================
+        # ROLE SELECTION
+        # ===============================================
+
+        st.sidebar.markdown("### 👥 User Access")
 
         role = st.sidebar.selectbox(
             "Select Role",
@@ -5064,6 +5148,14 @@ if st.session_state.get("authentication_status"):
                 "Client"
             ]
         )
+
+        st.sidebar.markdown("---")
+
+        st.sidebar.caption("OmniTwin Enterprise")
+
+        st.sidebar.caption("Version 3.0")
+
+        st.sidebar.caption("© 2026")
 
         st.sidebar.success(f"Logged in as: {role}")
 
