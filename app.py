@@ -5671,9 +5671,20 @@ if st.session_state.get("authentication_status"):
                     25
                 )
 
-                st.metric(
-                    "Enterprise Risk Score",
-                    f"{risk_score}%"
+                fig_twin = go.Figure(
+                    go.Indicator(
+                        mode="gauge+number",
+                        value=twin_score,
+                        title={"text": "Twin Maturity"},
+                        gauge={
+                            "axis": {"range": [0, 100]}
+                        }
+                    )
+                )
+
+                st.plotly_chart(
+                    fig_twin,
+                    use_container_width=True
                 )
 
                 # --------------------------------
