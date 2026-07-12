@@ -884,7 +884,7 @@ credentials = {
 # -------------------------------
 authenticator = stauth.Authenticate(
     credentials,
-    cookie_name="digital_twin_lite",
+    cookie_name="OMNITWIN",
     key="auth",
     cookie_expiry_days=1
 )
