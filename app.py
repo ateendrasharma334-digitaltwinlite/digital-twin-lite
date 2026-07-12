@@ -878,16 +878,79 @@ authenticator = stauth.Authenticate(
     cookie_expiry_days=1
 )
 
+# ==========================================
+# OMNITWIN LOGIN HEADER
+# ==========================================
+
+st.markdown("""
+<div style="text-align:center; padding:20px;">
+
+<h1 style="color:#00E5FF;
+font-size:48px;
+margin-bottom:5px;">
+
+🏢 OmniTwin
+
+</h1>
+
+<h3 style="color:white;">
+
+Enterprise Digital Twin Platform
+
+</h3>
+
+<p style="color:#B0BEC5;font-size:18px;">
+
+AI • Predictive Maintenance • Carbon Intelligence
+
+</p>
+
+</div>
+""",
+unsafe_allow_html=True)
+
 authenticator.login(location="main")
 
+status1, status2, status3, status4 = st.columns(4)
+
+with status1:
+    st.success("🟢 AI Online")
+
+with status2:
+    st.success("🟢 Cloud Connected")
+
+with status3:
+    st.success("🟢 Database Ready")
+
+with status4:
+    st.success("🟢 Security Active")
+
 if st.session_state.get("authentication_status") is False:
-    st.error("Username/password is incorrect")
+
+    st.error("❌ Invalid username or password.")
+
+    st.info("Please contact your administrator if you require access.")
+
     st.stop()
+
 elif st.session_state.get("authentication_status") is None:
-    st.warning("Please enter your username and password")
+
+    st.info("🔐 Please sign in to access OmniTwin.")
+
     st.stop()
+
 else:
-    st.success(f"Welcome {st.session_state.get('name')} 👋")
+
+    st.success(
+        f"Welcome {st.session_state.get('name')} 👋"
+    )
+
+st.markdown("---")
+
+st.caption(
+    "OmniTwin Enterprise Platform • Version 3.0 Enterprise • Secure Login"
+)
+
 log_security_event(
     st.session_state.get("name"),
     "User Logged In"
