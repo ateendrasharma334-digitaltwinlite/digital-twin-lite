@@ -5785,10 +5785,6 @@ if st.session_state.get("authentication_status"):
 
                 st.markdown("---")
 
-                st.caption(
-                    "Enterprise Digital Twin Platform | Version 3.0 | AI Enabled Operations Center"
-                )
-
 
                 # --------------------------------
                 # STEP 10 - Executive Summary
@@ -5819,6 +5815,59 @@ if st.session_state.get("authentication_status"):
                 All Critical Systems Operational
 
                 """)
+            
+                # ===================================
+                # ENTERPRISE FOOTER
+                # ===================================
+
+                st.markdown("---")
+
+                footer_col1, footer_col2, footer_col3 = st.columns(3)
+
+                with footer_col1:
+
+                    st.markdown("### 🏢 OmniTwin")
+
+                    st.write("Enterprise Digital Twin Platform")
+
+                    st.write("Version 3.0")
+
+                with footer_col2:
+
+                    st.markdown("### ⚡ Platform")
+
+                    st.write("✔ AI Monitoring")
+
+                    st.write("✔ Predictive Maintenance")
+
+                    st.write("✔ Carbon Intelligence")
+
+                    st.write("✔ Executive Analytics")
+
+                with footer_col3:
+
+                    st.markdown("### 📊 System Status")
+
+                    st.success("🟢 All Services Online")
+
+                    st.caption("Last Sync: Just Now")
+
+                st.markdown("---")
+
+                st.markdown(
+                    """
+                    <div style='text-align:center;
+                               color:#9CA3AF;
+                               font-size:14px;'>
+
+                    © 2026 <b>OmniTwin</b> • Enterprise Digital Twin Platform •
+                    AI Enabled Operations Center •
+                    Developed by Ateendra Pratap Sharma
+
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
 
 
         # -------------------------------
