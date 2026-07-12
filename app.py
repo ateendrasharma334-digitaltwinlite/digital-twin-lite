@@ -65,10 +65,36 @@ forecast_df = None
 failure_percent = 0
 
 st.set_page_config(
-        page_title="Digital Twin Lite",
+        page_title="OMNITWIN",
         page_icon="assets/logo.png",
         layout="wide"
 )
+
+st.markdown("""
+<style>
+
+/* Hide Streamlit Header */
+header {
+    visibility: hidden;
+}
+
+/* Hide Main Menu */
+#MainMenu {
+    visibility: hidden;
+}
+
+/* Hide Footer */
+footer {
+    visibility: hidden;
+}
+
+/* Remove top padding */
+.block-container{
+    padding-top:1rem;
+}
+
+</style>
+""", unsafe_allow_html=True)
 
 st.markdown("""
 <style>
