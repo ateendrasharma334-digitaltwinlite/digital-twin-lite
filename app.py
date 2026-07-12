@@ -522,21 +522,6 @@ def get_weather(city="London"):
 init_db()
 failure_model = train_failure_model()
 
-# -------------------------------
-# App Title
-# -------------------------------
-st.title("🏢 Digital Twin Lite - Energy Dashboard")
-
-# =====================================================
-# 🖥 Enterprise Command Center
-# =====================================================
-
-st.markdown("""
-# 🖥 Enterprise Energy Command Center
-
-Real-Time Monitoring • AI Forecasting • Predictive Maintenance • Sustainability Analytics
-""")
-
 
 # =========================================================
 # 🌍 ENERGY INTELLIGENCE PLATFORM
