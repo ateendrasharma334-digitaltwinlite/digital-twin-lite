@@ -5450,15 +5450,70 @@ if st.session_state.get("authentication_status"):
                     99
                 )
 
+                # ==========================================
+                # Digital Twin Gauge
+                # ==========================================
+
                 fig_twin = go.Figure(
+
                     go.Indicator(
-                        mode="gauge+number",
+
+                        mode="gauge+number+delta",
+
                         value=twin_score,
-                        title={"text": "Twin Maturity"},
+
+                        delta={
+                            "reference":95
+                        },
+
+                        title={
+                            "text":"Digital Twin Maturity"
+                        },
+
                         gauge={
-                            "axis": {"range": [0, 100]}
+
+                            "axis":{
+                                "range":[0,100]
+                            },
+
+                            "bar":{
+                                "color":"royalblue"
+                            },
+
+                            "steps":[
+
+                                {
+                                    "range":[0,60],
+                                    "color":"red"
+                                },
+
+                                {
+                                    "range":[60,80],
+                                    "color":"orange"
+                                },
+
+                                {
+                                    "range":[80,100],
+                                    "color":"green"
+                                }
+
+                            ],
+
+                            "threshold":{
+
+                                "line":{
+                                    "color":"black",
+                                    "width":4
+                                },
+
+                                "value":95
+
+                            }
+
                         }
+
                     )
+
                 )
 
                 st.plotly_chart(
@@ -5836,6 +5891,15 @@ if st.session_state.get("authentication_status"):
                     25
                 )
 
+                # ==========================================
+                # Digital Twin Maturity Score
+                # ==========================================
+
+                twin_score = random.randint(
+                    90,
+                    99
+                )
+
                 fig_twin = go.Figure(
                     go.Indicator(
                         mode="gauge+number",
@@ -5914,16 +5978,7 @@ if st.session_state.get("authentication_status"):
 
                 st.map(map_df)
 
-                # --------------------------------
-                # STEP 9 - Digital Twin Score
-                # --------------------------------
-
                 st.markdown("---")
-
-                twin_score = random.randint(
-                    90,
-                    99
-                )
 
                 st.metric(
                    "🏆 Digital Twin Maturity",
