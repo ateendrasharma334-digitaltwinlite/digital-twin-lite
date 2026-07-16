@@ -34,6 +34,11 @@ from reportlab.platypus import (
 import folium
 from streamlit_folium import st_folium
 from datetime import datetime
+import os
+
+st.write(os.getcwd())
+
+st.write(os.path.exists("assets/logo.png"))
 
 mqtt_data = {}
 
