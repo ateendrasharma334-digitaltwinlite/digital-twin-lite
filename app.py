@@ -66,7 +66,7 @@ failure_percent = 0
 
 st.set_page_config(
         page_title="OMNITWIN",
-        page_icon="assets/logo.png",
+        page_icon="logo.png",
         layout="wide"
 )
 
@@ -5053,6 +5053,10 @@ if st.session_state.get("authentication_status"):
         # ===============================================
         # 🏢 OMNITWIN ENTERPRISE SIDEBAR
         # ===============================================
+        st.sidebar.image(
+            "logo.png",
+            width=70
+        )
 
         st.sidebar.markdown("# 🏢 OmniTwin")
 
