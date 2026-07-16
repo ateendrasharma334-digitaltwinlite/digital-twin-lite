@@ -5686,62 +5686,62 @@ if st.session_state.get("authentication_status"):
                     use_container_width=True
                 )
 
-                # STEP 6
-                with col2:
-                    st.subheader("🧠 AI Command Center")
+            # STEP 6
+            with col2:
+                st.subheader("🧠 AI Command Center")
 
-                st.metric(
-                    "Failure Risk",
-                    f"{random.randint(1,15)}%"
+            st.metric(
+                "Failure Risk",
+                f"{random.randint(1,15)}%"
+            )
+
+            st.metric(
+                "Predicted Uptime",
+                f"{random.randint(95,99)}%"
+            )
+            fig_gauge = go.Figure(
+                go.Indicator(
+                    mode="gauge+number",
+                    value=random.randint(90,99),
+                    title={"text":"System Health"},
+                    gauge={
+                        "axis":{"range":[0,100]}
+                    }
+                )
+            )
+
+            st.plotly_chart(
+                fig_gauge,
+                use_container_width=True
+            )
+            st.success(
+                "No critical failures predicted"
+            )
+
+            st.info(
+                "AI Monitoring Active"
+            )
+
+            
+            #STEP 7
+            with col3:
+                st.subheader("🚨 Live Alert Center")
+
+                st.warning(
+                    "Transformer temperature elevated"
                 )
 
-                st.metric(
-                    "Predicted Uptime",
-                    f"{random.randint(95,99)}%"
-                )
-                fig_gauge = go.Figure(
-                    go.Indicator(
-                        mode="gauge+number",
-                        value=random.randint(90,99),
-                        title={"text":"System Health"},
-                        gauge={
-                            "axis":{"range":[0,100]}
-                        }
-                    )
-                )
-
-                st.plotly_chart(
-                    fig_gauge,
-                    use_container_width=True
-                )
-                st.success(
-                    "No critical failures predicted"
+                st.warning(
+                    "Boiler vibration increasing"
                 )
 
                 st.info(
-                    "AI Monitoring Active"
+                    "Battery maintenance due"
                 )
 
-            
-                #STEP 7
-                with col3:
-                    st.subheader("🚨 Live Alert Center")
-
-                    st.warning(
-                        "Transformer temperature elevated"
-                    )
-
-                    st.warning(
-                        "Boiler vibration increasing"
-                    )
-
-                    st.info(
-                        "Battery maintenance due"
-                    )
-
-                    st.success(
-                        "Solar farm operational"
-                    )
+                st.success(
+                    "Solar farm operational"
+                )
 
                 # --------------------------------
                 # STEP 4 - Alert Analytics
