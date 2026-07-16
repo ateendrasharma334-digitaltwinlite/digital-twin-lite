@@ -5700,15 +5700,52 @@ if st.session_state.get("authentication_status"):
                 random.randint(0,5)
             )
 
-            k6.metric(
-                "📈 Efficiency",
-                f"{random.randint(90,99)}%"
-            )
+            # ==========================================
+            # Executive Cockpit
+            # ==========================================
 
             st.markdown("---")
 
-            col1, col2, col3 = st.columns(3)
+            st.markdown("## 👔 Executive Cockpit")
 
+            ek1, ek2, ek3, ek4 = st.columns(4)
+
+            with ek1:
+              st.metric(
+                    "Revenue Today",
+                    "£1.82M",
+                    "+5.8%"
+                )
+
+            with ek2:
+                st.metric(
+                    "Operating Cost",
+                    "£720K",
+                    "-2.1%"
+                )
+
+            with ek3:
+                st.metric(
+                    "Enterprise Efficiency",
+                    "96.8%",
+                    "+1.3%"
+                )
+
+            with ek4:
+                st.metric(
+                    "Digital Twin ROI",
+                    "248%",
+                    "+18%"
+                )
+
+            st.markdown("---")
+
+            # ==========================================
+            # Operations Center
+            # ==========================================
+
+            col1, col2, col3 = st.columns(3)
+            
             with col1:
                 st.subheader("⚡ Generation")
 
