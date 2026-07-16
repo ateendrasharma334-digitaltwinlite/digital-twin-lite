@@ -34,11 +34,6 @@ from reportlab.platypus import (
 import folium
 from streamlit_folium import st_folium
 from datetime import datetime
-import os
-
-st.write(os.getcwd())
-
-st.write(os.path.exists("assets/logo.png"))
 
 mqtt_data = {}
 
@@ -5058,11 +5053,6 @@ if st.session_state.get("authentication_status"):
         # ===============================================
         # 🏢 OMNITWIN ENTERPRISE SIDEBAR
         # ===============================================
-
-        st.sidebar.image(
-            "assets/logo.png",
-            width=70
-        )
 
         st.sidebar.markdown("# 🏢 OmniTwin")
 
