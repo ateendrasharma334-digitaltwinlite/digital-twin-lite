@@ -5782,37 +5782,32 @@ if st.session_state.get("authentication_status"):
             with col2:
                 st.subheader("🧠 AI Command Center")
 
-            st.metric(
-                "Failure Risk",
-                f"{random.randint(1,15)}%"
-            )
-
-            st.metric(
-                "Predicted Uptime",
-                f"{random.randint(95,99)}%"
-            )
-            fig_gauge = go.Figure(
-                go.Indicator(
-                    mode="gauge+number",
-                    value=random.randint(90,99),
-                    title={"text":"System Health"},
-                    gauge={
-                        "axis":{"range":[0,100]}
-                    }
+                st.metric(
+                    "Failure Risk",
+                    f"{random.randint(1,15)}%"
                 )
-            )
 
-            st.plotly_chart(
-                fig_gauge,
-                use_container_width=True
-            )
-            st.success(
-                "No critical failures predicted"
-            )
+                st.metric(
+                    "Predicted Uptime",
+                    f"{random.randint(95,99)}%"
+                )
 
-            st.info(
-                "AI Monitoring Active"
-            )
+                fig_gauge = go.Figure(
+                    ...
+                )
+
+                st.plotly_chart(
+                    fig_gauge,
+                    use_container_width=True
+                )
+
+                st.success(
+                    "No critical failures predicted"
+                )
+
+                st.info(
+                    "AI Monitoring Active"
+                )
 
             
             #STEP 7
