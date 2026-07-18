@@ -5745,6 +5745,36 @@ if st.session_state.get("authentication_status"):
 
             st.markdown("---")
 
+            left, right = st.columns([2,1])
+
+            with left:
+
+                finance = pd.DataFrame({
+
+                    "Month":[
+                        "Jan","Feb","Mar","Apr",
+                        "May","Jun","Jul","Aug",
+                        "Sep","Oct","Nov","Dec"
+                    ],
+
+                    "Revenue":[
+                        18,20,22,25,27,30,
+                        31,33,35,37,39,42
+                    ]
+                })
+
+                fig = px.area(
+                    finance,
+                    x="Month",
+                    y="Revenue",
+                    title="Enterprise Revenue Growth"
+                )
+
+                st.plotly_chart(
+                    fig,
+                    use_container_width=True
+                )
+
             # ==========================================
             # Operations Center
             # ==========================================
