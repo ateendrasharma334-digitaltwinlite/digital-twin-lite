@@ -6138,37 +6138,37 @@ if st.session_state.get("authentication_status"):
                 
                 st.markdown("---")
 
-            status = pd.DataFrame({
+                status = pd.DataFrame({
 
-                "Region":[
-                    "United Kingdom",
-                    "Germany",
-                    "India",
-                    "USA",
-                    "Middle East"
-                ],
+                    "Region":[
+                        "United Kingdom",
+                        "Germany",
+                        "India",
+                        "USA",
+                        "Middle East"
+                    ],
 
-                "Status":[
-                    "Online",
-                    "Online",
-                    "Online",
-                    "Online",
-                    "Online"
-                ],
+                    "Status":[
+                        "Online",
+                        "Online",
+                        "Online",
+                        "Online",
+                        "Online"
+                    ],
 
-                "Availability":[
-                    "99.99%",
-                    "99.95%",
-                    "99.97%",
-                    "99.98%",
-                    "99.96%"
-                ]
-            })
+                    "Availability":[
+                        "99.99%",
+                        "99.95%",
+                        "99.97%",
+                        "99.98%",
+                        "99.96%"
+                    ]
+                })
 
-            st.dataframe(
-                status,
-                use_container_width=True
-            )
+                st.dataframe(
+                    status,
+                    use_container_width=True
+                )
 
                 # =====================================================
                 # ROW 4
