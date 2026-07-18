@@ -5795,6 +5795,34 @@ if st.session_state.get("authentication_status"):
 
             """)
 
+            st.markdown("---")
+
+            a,b,c,d = st.columns(4)
+
+            with a:
+                st.metric(
+                    "Customer Satisfaction",
+                    "98%"
+                )
+
+            with b:
+                st.metric(
+                    "SLA Compliance",
+                    "99.8%"
+                )
+
+            with c:
+                st.metric(
+                    "ESG Rating",
+                    "AAA"
+                )
+
+            with d:
+                st.metric(
+                    "Cyber Security",
+                    "Secure"
+                )
+
             # ==========================================
             # Operations Center
             # ==========================================
@@ -6107,7 +6135,40 @@ if st.session_state.get("authentication_status"):
                     })
 
                     st.map(map_df)
+                
+                st.markdown("---")
 
+            status = pd.DataFrame({
+
+                "Region":[
+                    "United Kingdom",
+                    "Germany",
+                    "India",
+                    "USA",
+                    "Middle East"
+                ],
+
+                "Status":[
+                    "Online",
+                    "Online",
+                    "Online",
+                    "Online",
+                    "Online"
+                ],
+
+                "Availability":[
+                    "99.99%",
+                    "99.95%",
+                    "99.97%",
+                    "99.98%",
+                    "99.96%"
+                ]
+            })
+
+            st.dataframe(
+                status,
+                use_container_width=True
+            )
 
                 # =====================================================
                 # ROW 4
