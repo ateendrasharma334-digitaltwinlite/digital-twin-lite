@@ -5822,6 +5822,8 @@ if st.session_state.get("authentication_status"):
                     "Cyber Security",
                     "Secure"
                 )
+                
+            st.markdown("---")
 
             # ==========================================
             # Operations Center
@@ -6137,6 +6139,8 @@ if st.session_state.get("authentication_status"):
                 st.map(map_df)
                 
             st.markdown("---")
+
+            st.subheader("🌍 Global Business Status")
 
             status = pd.DataFrame({
 
