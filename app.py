@@ -5700,8 +5700,13 @@ if st.session_state.get("authentication_status"):
                 random.randint(0,5)
             )
 
+            k6.metric(
+                "📈 Efficiency",
+                f"{random.randint(90,99)}%"
+            )
+
             # ==========================================
-            # Executive Cockpit
+            # 👔 Executive Cockpit
             # ==========================================
 
             st.markdown("---")
@@ -5711,7 +5716,7 @@ if st.session_state.get("authentication_status"):
             ek1, ek2, ek3, ek4 = st.columns(4)
 
             with ek1:
-              st.metric(
+                st.metric(
                     "Revenue Today",
                     "£1.82M",
                     "+5.8%"
@@ -5865,180 +5870,220 @@ if st.session_state.get("authentication_status"):
                     use_container_width=True
                 )
 
-                # --------------------------------
-                # STEP 5 - Asset Health Heatmap
-                # --------------------------------
+                # =====================================================
+                # ROW 2
+                # Asset Health | Enterprise Risk | Digital Twin
+                # =====================================================
 
                 st.markdown("---")
 
-                st.subheader("🏭 Asset Health Center")
-
-                asset_df = pd.DataFrame({
-
-                    "Asset": [
-                        "GT-01",
-                        "GT-02",
-                        "TR-01",
-                        "BAT-01",
-                        "SOL-01"
-                    ],
-
-                    "Health": [
-                        96,
-                        92,
-                        84,
-                        99,
-                        95
-                    ]
-                })
-
-                fig_heat = px.bar(
-
-                    asset_df,
-
-                    x="Asset",
-
-                    y="Health",
-
-                    color="Health",
-
-                    color_continuous_scale="RdYlGn",
-
-                    title="Asset Health Overview"
-                )
-
-                st.plotly_chart(
-                    fig_heat,
-                    use_container_width=True
-                )
+                c1, c2, c3 = st.columns(3)
 
                 # --------------------------------
-                # STEP 6 - Enterprise Risk Score
+                # Asset Health
                 # --------------------------------
+                with c1:
 
-                st.markdown("---")
+                    st.subheader("🏭 Asset Health Center")
 
-                risk_score = random.randint(
-                    5,
-                    25
-                )
+                    asset_df = pd.DataFrame({
 
-                # ==========================================
-                # Digital Twin Maturity Score
-                # ==========================================
+                        "Asset":[
+                            "GT-01",
+                            "GT-02",
+                            "TR-01",
+                            "BAT-01",
+                            "SOL-01"
+                        ],
 
-                twin_score = random.randint(
-                    90,
-                    99
-                )
+                        "Health":[
+                            96,
+                            92,
+                            84,
+                            99,
+                            95
+                        ]
+                    })
 
-                fig_twin = go.Figure(
-                    go.Indicator(
-                        mode="gauge+number",
-                        value=twin_score,
-                        title={"text": "Twin Maturity"},
-                        gauge={
-                            "axis": {"range": [0, 100]}
-                        }
+                    fig_heat = px.bar(
+
+                        asset_df,
+
+                        x="Asset",
+
+                        y="Health",
+
+                        color="Health",
+
+                        color_continuous_scale="RdYlGn"
+
                     )
-                )
 
-                st.plotly_chart(
-                    fig_twin,
-                    use_container_width=True
-                )
+                    st.plotly_chart(
+                        fig_heat,
+                        use_container_width=True
+                    )
+
 
                 # --------------------------------
-                # STEP 7 - Live Operations Table
+                # Enterprise Risk
                 # --------------------------------
+                with c2:
+
+                    st.subheader("⚠ Enterprise Risk")
+
+                    risk_score = random.randint(5,25)
+
+                    st.metric(
+                        "Enterprise Risk",
+                        f"{risk_score}%"
+                    )
+
+                    st.progress(
+                        (100-risk_score)/100
+                    )
+
+
+                # --------------------------------
+                # Digital Twin
+                # --------------------------------
+                with c3:
+
+                    st.subheader("🏆 Digital Twin")
+
+                    twin_score = random.randint(90,99)
+
+                    fig_twin = go.Figure(
+
+                        go.Indicator(
+
+                            mode="gauge+number",
+
+                            value=twin_score,
+
+                            title={
+                                "text":"Twin Maturity"
+                            },
+
+                            gauge={
+                                "axis":{
+                                    "range":[0,100]
+                                }
+                            }
+
+                        )
+
+                    )
+
+                    st.plotly_chart(
+                        fig_twin,
+                        use_container_width=True
+                    )
+
+                    st.metric(
+                        "Twin Score",
+                        f"{twin_score}%"
+                    )
+
+
+                # =====================================================
+                # ROW 3
+                # Live Operations | Asset Map
+                # =====================================================
 
                 st.markdown("---")
 
-                st.subheader("⚙ Live Operations")
-
-                ops_df = pd.DataFrame({
-
-                    "Asset": [
-                        "GT-01",
-                        "TR-01",
-                        "BAT-01",
-                        "SOL-01"
-                    ],
-
-                    "Status": [
-                        "Running",
-                        "Running",
-                        "Charging",
-                        "Generating"
-                    ],
-
-                    "Availability": [
-                        "99%",
-                        "97%",
-                        "100%",
-                        "95%"
-                    ]
-                })
-
-                st.dataframe(
-                    ops_df,
-                    use_container_width=True
-                )
+                left, right = st.columns(2)
 
                 # --------------------------------
-                # STEP 8 - Asset Location Map
+                # Live Operations
                 # --------------------------------
+                with left:
 
-                st.markdown("---")
+                    st.subheader("⚙ Live Operations")
 
-                st.subheader("🗺 Asset Location Map")
+                    ops_df = pd.DataFrame({
 
-                map_df = pd.DataFrame({
+                        "Asset":[
+                            "GT-01",
+                            "TR-01",
+                            "BAT-01",
+                            "SOL-01"
+                        ],
 
-                    "lat": [
-                        51.5074,
-                        51.5100,
-                        51.5150
-                    ],
+                        "Status":[
+                            "Running",
+                            "Running",
+                            "Charging",
+                            "Generating"
+                        ],
 
-                    "lon": [
-                        -0.1278,
-                        -0.1400,
-                        -0.1500
-                    ]
-                })
+                        "Availability":[
+                            "99%",
+                            "97%",
+                            "100%",
+                            "95%"
+                        ]
 
-                st.map(map_df)
+                    })
 
-                st.markdown("---")
+                    st.dataframe(
+                        ops_df,
+                        use_container_width=True
+                    )
 
-                st.metric(
-                   "🏆 Digital Twin Maturity",
-                   f"{twin_score}%"
-                )
 
-                # ===============================
-                # ENTERPRISE FEED LOCATION
-                # ===============================
+                # --------------------------------
+                # Asset Map
+                # --------------------------------
+                with right:
+
+                    st.subheader("🗺 Asset Locations")
+
+                    map_df = pd.DataFrame({
+
+                        "lat":[
+                            51.5074,
+                            51.5100,
+                            51.5150
+                        ],
+
+                        "lon":[
+                            -0.1278,
+                            -0.1400,
+                            -0.1500
+                        ]
+
+                    })
+
+                    st.map(map_df)
+
+
+                # =====================================================
+                # ROW 4
+                # Enterprise Feed
+                # =====================================================
+
                 st.markdown("---")
 
                 st.subheader("📡 Enterprise Feed")
 
                 feed_df = pd.DataFrame({
 
-                    "Time": [
+                    "Time":[
                         "09:00",
                         "09:15",
                         "09:30",
                         "09:45"
                     ],
 
-                    "Event": [
+                    "Event":[
                         "Solar generation increased",
                         "AI forecast updated",
                         "Battery charging started",
                         "Carbon target achieved"
                     ]
+
                 })
 
                 st.dataframe(
@@ -6046,12 +6091,11 @@ if st.session_state.get("authentication_status"):
                     use_container_width=True
                 )
 
-                st.markdown("---")
 
-
-                # --------------------------------
-                # STEP 10 - Executive Summary
-                # --------------------------------
+                # =====================================================
+                # ROW 5
+                # Executive Summary
+                # =====================================================
 
                 st.markdown("---")
 
@@ -6078,16 +6122,17 @@ if st.session_state.get("authentication_status"):
                 All Critical Systems Operational
 
                 """)
-            
-                # ===================================
-                # ENTERPRISE FOOTER
-                # ===================================
+
+
+                # =====================================================
+                # FOOTER
+                # =====================================================
 
                 st.markdown("---")
 
-                footer_col1, footer_col2, footer_col3 = st.columns(3)
+                footer1, footer2, footer3 = st.columns(3)
 
-                with footer_col1:
+                with footer1:
 
                     st.markdown("### 🏢 OmniTwin")
 
@@ -6095,7 +6140,7 @@ if st.session_state.get("authentication_status"):
 
                     st.write("Version 3.0")
 
-                with footer_col2:
+                with footer2:
 
                     st.markdown("### ⚡ Platform")
 
@@ -6107,7 +6152,7 @@ if st.session_state.get("authentication_status"):
 
                     st.write("✔ Executive Analytics")
 
-                with footer_col3:
+                with footer3:
 
                     st.markdown("### 📊 System Status")
 
@@ -6117,20 +6162,19 @@ if st.session_state.get("authentication_status"):
 
                 st.markdown("---")
 
-                st.markdown(
-                    """
-                    <div style='text-align:center;
-                               color:#9CA3AF;
-                               font-size:14px;'>
+                st.markdown("""
 
-                    © 2026 <b>OmniTwin</b> • Enterprise Digital Twin Platform •
-                    AI Enabled Operations Center •
-                    Developed by Ateendra Pratap Sharma
+                <div style='text-align:center;
+                            color:#9CA3AF;
+                            font-size:14px;'>
 
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+                © 2026 <b>OmniTwin</b> • Enterprise Digital Twin Platform •
+                AI Enabled Operations Center •
+                Developed by Ateendra Pratap Sharma
+
+                </div>
+
+                """, unsafe_allow_html=True)
 
 
         # -------------------------------
