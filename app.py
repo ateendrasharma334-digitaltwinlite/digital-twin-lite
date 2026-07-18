@@ -5775,6 +5775,26 @@ if st.session_state.get("authentication_status"):
                     use_container_width=True
                 )
 
+            with right:
+
+                st.info("""
+
+            ### 🧠 AI Executive Summary
+
+            • Revenue increasing
+
+            • Carbon decreasing
+
+            • Asset health excellent
+
+            • No major failures predicted
+
+            • Grid demand stable
+
+            • Profitability improving
+
+            """)
+
             # ==========================================
             # Operations Center
             # ==========================================
