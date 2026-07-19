@@ -6019,9 +6019,11 @@ if st.session_state.get("authentication_status"):
                     f"{risk_score}%"
                 )
 
-                st.progress(
-                    (100-risk_score)/100
-                )
+                risk_health = (100 - risk_score) / 100
+
+                st.progress(risk_health)
+
+                st.caption(f"Overall Enterprise Health: {int(risk_health*100)}%")
 
 
             # --------------------------------
