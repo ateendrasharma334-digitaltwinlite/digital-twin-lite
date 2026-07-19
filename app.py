@@ -5777,8 +5777,8 @@ if st.session_state.get("authentication_status"):
 
             with right:
 
-                st.info("""
-
+                st.info(
+                    """
             ### 🧠 AI Executive Summary
 
             • Revenue increasing
@@ -5792,8 +5792,8 @@ if st.session_state.get("authentication_status"):
             • Grid demand stable
 
             • Profitability improving
-
-            """)
+            """
+                )
 
             st.markdown("---")
 
