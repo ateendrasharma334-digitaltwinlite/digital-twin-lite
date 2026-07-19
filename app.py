@@ -5985,18 +5985,12 @@ if st.session_state.get("authentication_status"):
                     ]
                 })
 
-                fig_heat = px.bar(
-
-                    asset_df,
-
-                    x="Asset",
-
-                    y="Health",
-
-                    color="Health",
-
-                    color_continuous_scale="RdYlGn"
-
+                fig_heat.update_layout(
+                    height=350,
+                    coloraxis_showscale=False,
+                    xaxis_title="",
+                    yaxis_title="Health %",
+                    margin=dict(l=10, r=10, t=40, b=10)
                 )
 
                 st.plotly_chart(
