@@ -70,6 +70,79 @@ st.set_page_config(
         layout="wide"
 )
 
+# =====================================================
+# EXECUTIVE DARK THEME
+# =====================================================
+
+st.markdown("""
+<style>
+
+/* Main App Background */
+.stApp{
+    background-color:#08111F;
+    color:#F8FAFC;
+}
+
+/* Main Content */
+.main{
+    background-color:#08111F;
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"]{
+    background-color:#111827;
+}
+
+/* Headers */
+h1,h2,h3,h4,h5,h6{
+    color:#F8FAFC;
+}
+
+/* Paragraphs and labels */
+p,label,span{
+    color:#F8FAFC;
+}
+
+/* DataFrames */
+[data-testid="stDataFrame"]{
+    background-color:#111827;
+    border-radius:12px;
+}
+
+/* Plotly Charts */
+.js-plotly-plot{
+    border-radius:15px;
+}
+
+/* Buttons */
+.stButton>button{
+    background:#00E5FF;
+    color:black;
+    border-radius:10px;
+    border:none;
+}
+
+.stButton>button:hover{
+    background:#22C55E;
+    color:white;
+}
+
+/* Metric Cards */
+[data-testid="metric-container"]{
+    background:#111827;
+    border-radius:15px;
+    padding:15px;
+    border:1px solid #1F2937;
+}
+
+/* Success */
+div[data-baseweb="notification"]{
+    border-radius:12px;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
 st.markdown("""
 <style>
 
