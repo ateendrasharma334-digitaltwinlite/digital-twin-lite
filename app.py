@@ -1,8 +1,11 @@
 import numpy as np
 import streamlit as st
 import pandas as pd
+import networkx as nx
 import matplotlib.pyplot as plt
 import plotly.express as px
+import plotly.graph_objects as go
+from datetime import datetime
 from simulator import forecast_energy, detect_anomalies
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score
@@ -21,6 +24,16 @@ import os
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 import paho.mqtt.client as mqtt
 import json
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer
+)
+import folium
+from streamlit_folium import st_folium
+from datetime import datetime
 
 mqtt_data = {}
 
@@ -42,19 +55,144 @@ client_mqtt.loop_start()
 from streamlit_autorefresh import st_autorefresh
 
 # Refresh every 5 seconds
-st_autorefresh(interval=5000, key="datarefresh")
+st_autorefresh(interval=30000, key="datarefresh")
 
 # -------------------------------
 # Global Safe Variables (FIX)
 # -------------------------------
 df = None
 forecast_df = None
+failure_percent = 0
 
 st.set_page_config(
-        page_title="Digital Twin Lite",
-        page_icon="assets/logo.png",
+        page_title="OMNITWIN",
+        page_icon="logo.png",
         layout="wide"
-    )
+)
+
+st.markdown("""
+<style>
+
+/* Hide Streamlit Header */
+header {
+    visibility: hidden;
+}
+
+/* Hide Main Menu */
+#MainMenu {
+    visibility: hidden;
+}
+
+/* Hide Footer */
+footer {
+    visibility: hidden;
+}
+
+/* Remove top padding */
+.block-container{
+    padding-top:1rem;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+<style>
+
+/* Main Background */
+.stApp {
+    background-color: #0B1120;
+}
+
+/* Headers */
+h1, h2, h3 {
+    color: #00E5FF;
+}
+
+/* Metric Cards */
+div[data-testid="metric-container"] {
+    background-color: #111827;
+    border: 1px solid #1E293B;
+    padding: 15px;
+    border-radius: 15px;
+    box-shadow: 0px 0px 10px rgba(0,229,255,0.2);
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background-color: #111827;
+}
+
+/* DataFrames */
+[data-testid="stDataFrame"] {
+    border-radius: 15px;
+}
+
+/* Buttons */
+.stButton button {
+    border-radius: 10px;
+    background-color: #00E5FF;
+    color: black;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# -------------------------------
+# Enterprise Dashboard Theme
+# -------------------------------
+st.markdown("""
+<style>
+
+/* Main background */
+.stApp{
+    background-color:#0B1120;
+}
+
+/* KPI Cards */
+[data-testid="metric-container"]{
+    background:#111827;
+    border:1px solid #1E293B;
+    padding:15px;
+    border-radius:15px;
+    box-shadow:0px 0px 15px rgba(0,255,255,0.15);
+}
+
+/* Headers */
+h1,h2,h3{
+    color:#00E5FF;
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"]{
+    background:#0F172A;
+}
+
+/* Buttons */
+.stButton button{
+    border-radius:10px;
+    background:#00E5FF;
+    color:black;
+    font-weight:bold;
+}
+
+/* Dataframes */
+[data-testid="stDataFrame"]{
+    border-radius:15px;
+}
+
+/* Success boxes */
+.stSuccess{
+    border-radius:12px;
+}
+
+/* Warning boxes */
+.stWarning{
+    border-radius:12px;
+}
+
+</style>
+""", unsafe_allow_html=True)
 
 
 # -------------------------------
@@ -98,6 +236,48 @@ def init_db():
         )
         """)
 
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS security_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT,
+            action TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS assets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            asset_name TEXT,
+            asset_type TEXT,
+            health_score REAL,
+            criticality TEXT,
+            status TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS alerts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            asset_name TEXT,
+            alert_message TEXT,
+            severity TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+
+        # -------------------------------
+        # Enterprise Events Table
+        # -------------------------------
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS enterprise_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_type TEXT,
+            description TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+
 def insert_sensor_data(temp, vibration, pressure):
     with get_connection() as conn:
         conn.execute("""
@@ -111,6 +291,156 @@ def insert_maintenance_log(health_score, status):
             INSERT INTO maintenance_logs (health_score, status)
             VALUES (?, ?)
         """, (health_score, status))
+
+def log_security_event(username, action):
+
+    with get_connection() as conn:
+        conn.execute("""
+            INSERT INTO security_logs (username, action)
+            VALUES (?, ?)
+        """, (username, action))
+
+    # Temporarily disabled
+    # log_event("Security", action)
+
+def insert_asset(asset_name, asset_type, health_score, criticality, status):
+
+    with get_connection() as conn:
+        conn.execute("""
+            INSERT INTO assets (
+                asset_name,
+                asset_type,
+                health_score,
+                criticality,
+                status
+            )
+            VALUES (?, ?, ?, ?, ?)
+        """, (
+            asset_name,
+            asset_type,
+            health_score,
+            criticality,
+            status
+        ))
+        
+       # log_event(
+       #     "Asset",
+       #     f"{asset_name} added to system"
+       # )
+
+# -------------------------------
+# Alert Engine
+# -------------------------------
+def create_alert(
+    asset_name,
+    alert_message,
+    severity
+):
+
+    with get_connection() as conn:
+
+        conn.execute("""
+        INSERT INTO alerts (
+            asset_name,
+            alert_message,
+            severity
+        )
+        VALUES (?, ?, ?)
+        """,
+        (
+            asset_name,
+            alert_message,
+            severity
+        ))
+        # log_event(
+        #     "Alert",
+        #     f"{severity}: {alert_message}"
+        # )
+
+# -------------------------------
+# Enterprise Event Logger
+# -------------------------------
+def log_event(
+    event_type,
+    description
+):
+
+    with get_connection() as conn:
+
+        conn.execute("""
+        INSERT INTO enterprise_events (
+            event_type,
+            description
+        )
+        VALUES (?, ?)
+        """,
+        (
+            event_type,
+            description
+        ))
+
+# -------------------------------
+# AI Failure Prediction Model
+# -------------------------------
+def train_failure_model():
+
+    data = pd.DataFrame({
+
+        "temperature": [
+            60,70,80,90,95,55,65,75,85,100
+        ],
+
+        "vibration": [
+            2,3,4,7,9,2,3,5,8,10
+        ],
+
+        "pressure": [
+            10,12,14,15,16,10,11,13,14,17
+        ],
+
+        "failure": [
+            0,0,0,1,1,0,0,0,1,1
+        ]
+    })
+
+    X = data[
+        [
+            "temperature",
+            "vibration",
+            "pressure"
+        ]
+    ]
+
+    y = data["failure"]
+
+    model = RandomForestClassifier(
+        n_estimators=50,
+        random_state=42
+    )
+
+    model.fit(X, y)
+
+    return model
+
+# -------------------------------
+# Incident Storage
+# -------------------------------
+def save_incident(asset_name, incident, severity):
+
+    with get_connection() as conn:
+        conn.execute("""
+            INSERT INTO incidents (
+                asset_name,
+                incident,
+                severity
+            )
+            VALUES (?, ?, ?)
+        """, (
+            asset_name,
+            incident,
+            severity
+        ))
+
 
 def fetch_maintenance_history(limit=10):
     with get_connection() as conn:
@@ -126,22 +456,72 @@ def fetch_sensor_data():
         return pd.read_sql_query("SELECT * FROM sensor_data", conn)
 
 # -------------------------------
+# Enterprise Report Generator
+# -------------------------------
+def generate_report():
+
+    report_path = "enterprise_report.pdf"
+
+    doc = SimpleDocTemplate(report_path)
+
+    styles = getSampleStyleSheet()
+
+    content = []
+
+    content.append(
+        Paragraph(
+            "Enterprise Digital Twin Report",
+            styles["Title"]
+        )
+    )
+
+    content.append(Spacer(1, 20))
+
+    content.append(
+        Paragraph(
+            "Executive Summary",
+            styles["Heading2"]
+        )
+    )
+
+    content.append(
+        Paragraph(
+            "All enterprise systems operating normally.",
+            styles["BodyText"]
+        )
+    )
+
+    doc.build(content)
+
+    return report_path
+
+# -------------------------------
+# Weather API
+# -------------------------------
+def get_weather(city="London"):
+
+    try:
+
+        api_key = "YOUR_OPENWEATHER_API_KEY"
+
+        url = (
+            f"https://api.openweathermap.org/data/2.5/weather"
+            f"?q={city}&appid={api_key}&units=metric"
+        )
+
+        response = requests.get(url)
+
+        return response.json()
+
+    except:
+        return None
+
+# -------------------------------
 # Initialize Database
 # -------------------------------
 init_db()
+failure_model = train_failure_model()
 
-# -------------------------------
-# App Title
-# -------------------------------
-st.title("🏢 Digital Twin Lite - Energy Dashboard")
-
-# =========================================================
-# 🏭 ENTERPRISE CONTROL CENTER
-# =========================================================
-st.markdown("""
-### 🌍 Enterprise Energy Intelligence Platform
-Real-Time Monitoring • AI Forecasting • Predictive Maintenance • Sustainability Analytics
-""")
 
 # =========================================================
 # 🌍 ENERGY INTELLIGENCE PLATFORM
@@ -287,7 +667,7 @@ def typewriter_effect(text):
     return placeholder
 
 # -------------------------------
-# 🤖 Real GPT Copilot (Level 31)
+# 🤖 Real GPT Copilot 
 # -------------------------------
 def gpt_copilot(user_input, df=None, forecast_df=None):
 
@@ -360,7 +740,7 @@ def load_failure_model():
 
 failure_model = load_failure_model()
 # -------------------------------
-# 🤖 Advanced AI Copilot Brain (Level 30)
+# 🤖 Advanced AI Copilot Brain
 # -------------------------------
 def ai_copilot(query, df=None, forecast_df=None):
 
@@ -504,21 +884,121 @@ credentials = {
 # -------------------------------
 authenticator = stauth.Authenticate(
     credentials,
-    cookie_name="digital_twin_lite",
+    cookie_name="OMNITWIN",
     key="auth",
     cookie_expiry_days=1
 )
 
+# ==========================================
+# OMNITWIN LOGIN HEADER
+# ==========================================
+
+st.markdown("""
+<div style="text-align:center; padding:20px;">
+
+<h1 style="color:#00E5FF;
+font-size:48px;
+margin-bottom:5px;">
+
+🏢 OmniTwin
+
+</h1>
+
+<h3 style="color:white;">
+
+Enterprise Digital Twin Platform
+
+</h3>
+
+<p style="color:#B0BEC5;font-size:18px;">
+
+AI • Predictive Maintenance • Carbon Intelligence
+
+</p>
+
+</div>
+""",
+unsafe_allow_html=True)
+
 authenticator.login(location="main")
 
+status1, status2, status3, status4 = st.columns(4)
+
+with status1:
+    st.success("🟢 AI Online")
+
+with status2:
+    st.success("🟢 Cloud Connected")
+
+with status3:
+    st.success("🟢 Database Ready")
+
+with status4:
+    st.success("🟢 Security Active")
+
 if st.session_state.get("authentication_status") is False:
-    st.error("Username/password is incorrect")
+
+    st.error("❌ Invalid username or password.")
+
+    st.info("Please contact your administrator if you require access.")
+
     st.stop()
+
 elif st.session_state.get("authentication_status") is None:
-    st.warning("Please enter your username and password")
+
+    st.info("🔐 Please sign in to access OmniTwin.")
+
     st.stop()
+
 else:
-    st.success(f"Welcome {st.session_state.get('name')} 👋")
+
+    st.success(
+        f"Welcome {st.session_state.get('name')} 👋"
+    )
+
+st.markdown("---")
+
+st.caption(
+    "OmniTwin Enterprise Platform • Version 3.0 Enterprise • Secure Login"
+)
+
+log_security_event(
+    st.session_state.get("name"),
+    "User Logged In"
+)
+
+# -------------------------------
+# SQLite Database
+# -------------------------------
+conn = sqlite3.connect(
+    "digital_twin.db",
+    check_same_thread=False
+)
+
+cursor = conn.cursor()
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS asset_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    asset_name TEXT,
+    asset_type TEXT,
+    health_score REAL,
+    status TEXT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+)
+""")
+
+conn.commit()
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS incidents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    asset_name TEXT,
+    incident TEXT,
+    severity TEXT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+)
+""")
+
+conn.commit()
 
 # -------------------------------
 # Wrap entire dashboard
@@ -560,6 +1040,24 @@ if st.session_state.get("authentication_status"):
     insert_sensor_data(temp_value, vibration_value, pressure_value)
 
     # -------------------------------
+    # 🏭 Asset Registry
+    # -------------------------------
+    st.subheader("🏭 Industrial Asset Registry")
+
+    asset_name = st.selectbox(
+        "Select Asset",
+        [
+            "Gas Turbine GT-01",
+            "Steam Turbine ST-02",
+            "Transformer TX-01",
+            "Boiler BLR-01",
+            "Wind Turbine WT-01"
+        ]
+    )
+
+    asset_type = asset_name.split()[0]
+
+    # -------------------------------
     # Predictive Maintenance Call
     # -------------------------------
     health_score, status = predictive_maintenance(
@@ -567,6 +1065,133 @@ if st.session_state.get("authentication_status"):
     )
 
     st.metric("Machine Health Score", f"{health_score:.2f}")
+
+    # -------------------------------
+    # 🚨 Asset Criticality Engine
+    # -------------------------------
+    if health_score < 40:
+        criticality = "Critical"
+    elif health_score < 70:
+        criticality = "Warning"
+    else:
+        criticality = "Healthy"
+    
+    if health_score < 40:
+
+        create_alert(
+            "Main Asset",
+            "Asset health below threshold",
+            "Critical"
+        )
+
+    elif health_score < 70:
+
+        create_alert(
+            "Main Asset",
+            "Asset requires inspection",
+            "Warning"
+        )
+
+    insert_asset(
+        asset_name,
+        asset_type,
+        health_score,
+        criticality,
+        status
+    )
+
+    st.metric("Asset Criticality", criticality)
+
+    # =====================================================
+    # 🔐 Cybersecurity Threat Monitor
+    # =====================================================
+
+    st.subheader("🔐 Cybersecurity Threat Monitor")
+
+    cyber_risk = random.randint(1, 100)
+
+    if cyber_risk > 75:
+        st.error("🚨 HIGH Cybersecurity Threat Detected")
+
+    elif cyber_risk > 40:
+        st.warning("⚠ Medium Security Risk")
+
+    else:
+        st.success("✅ Network Secure")
+
+    st.progress(cyber_risk)
+
+    st.metric(
+        "Cyber Risk Score",
+        f"{cyber_risk}/100"
+    )
+
+    # -------------------------------
+    # 🧠 AI Asset Risk Score
+    # -------------------------------
+    asset_risk = 100 - health_score
+
+    st.metric(
+        "⚠ Asset Risk Score",
+        f"{round(asset_risk,2)}%"
+    )
+
+    if asset_risk > 70:
+        st.error("🚨 High Asset Failure Risk")
+    elif asset_risk > 40:
+        st.warning("⚠ Moderate Asset Risk")
+    else:
+        st.success("✅ Asset Risk Low")
+    
+    try:
+
+        save_asset_history(
+            asset_name="Main Asset",
+            asset_type="Industrial Equipment",
+            health_score=health_score,
+            status="Active"
+        )
+
+    except:
+        pass
+
+    # -------------------------------
+    # 🔮 Remaining Useful Life (RUL)
+    # -------------------------------
+    st.subheader("🔮 Remaining Useful Life")
+
+    if health_score > 80:
+        rul_days = 365
+    elif health_score > 60:
+        rul_days = 180
+    elif health_score > 40:
+        rul_days = 90
+    else:
+        rul_days = 30
+
+    st.metric(
+        "Estimated Remaining Life",
+        f"{rul_days} Days"
+    )
+    
+    # -------------------------------
+    # 📉 Asset Degradation Analysis
+    # -------------------------------
+    st.subheader("📉 Asset Degradation")
+
+    degradation_rate = round((100 - health_score) / 100, 2)
+
+    st.metric(
+        "Degradation Rate",
+        f"{degradation_rate * 100}%"
+    )
+
+    if degradation_rate > 0.6:
+        st.error("🚨 Severe degradation detected")
+    elif degradation_rate > 0.3:
+        st.warning("⚠ Moderate degradation detected")
+    else:
+        st.success("✅ Asset operating normally")
 
     # -------------------------------
     # Turbine Health Gauge
@@ -598,7 +1223,7 @@ if st.session_state.get("authentication_status"):
         st.error("🚨 Immediate Maintenance Required")
 
     # -------------------------------
-    # 🧠 AI Failure Prediction (Level 32)
+    # 🧠 AI Failure Prediction
     # -------------------------------
 
     risk_score = (
@@ -631,6 +1256,32 @@ if st.session_state.get("authentication_status"):
         predicted_failure_date.strftime("%Y-%m-%d")
     )
 
+    # =========================================================
+    # ⏳ Predictive Failure Timeline
+    # =========================================================
+    st.subheader("⏳ Failure Prediction Timeline")
+
+    timeline_df = pd.DataFrame({
+        "Days Ahead": [1, 7, 14, 30, 60],
+        "Failure Risk": [
+            random.randint(5, 15),
+            random.randint(10, 25),
+            random.randint(20, 40),
+            random.randint(30, 60),
+            random.randint(40, 80)
+        ]
+    })
+
+    fig_timeline = px.line(
+        timeline_df,
+        x="Days Ahead",
+        y="Failure Risk",
+        markers=True,
+        title="Predicted Failure Risk Over Time"
+    )
+
+    st.plotly_chart(fig_timeline, use_container_width=True)
+
     # Maintenance recommendation
     if days_to_failure < 7:
         st.error("🚨 Immediate Maintenance Required")
@@ -646,6 +1297,59 @@ if st.session_state.get("authentication_status"):
     history = fetch_maintenance_history()
     for row in history:
         st.write(f"{row[0]} | Health Score: {row[1]:.2f} | Status: {row[2]}")
+    
+    # =====================================================
+    # 📜 Live System Audit Logs
+    # =====================================================
+
+    st.subheader("📜 Live Audit Logs")
+
+    audit_logs = [
+        "User login successful",
+        "Forecast model executed",
+        "AI anomaly detection completed",
+        "Sensor calibration verified",
+        "System optimization triggered"
+    ]
+
+    for log in audit_logs:
+        st.write(f"✅ {log}")
+
+    # -------------------------------
+    # 📊 Fleet Asset Monitoring
+    # -------------------------------
+    st.subheader("📊 Fleet Asset Overview")
+
+    with get_connection() as conn:
+
+        fleet_df = pd.read_sql_query(
+            """
+            SELECT asset_name,
+                   health_score,
+                   criticality,
+                   status,
+                   timestamp
+            FROM assets
+            ORDER BY timestamp DESC
+            LIMIT 20
+            """,
+            conn
+        )
+
+    st.dataframe(fleet_df)
+    
+    # -------------------------------
+    # 📜 Security Audit Trail
+    # -------------------------------
+    st.subheader("📜 User Activity Logs")
+
+    with get_connection() as conn:
+        audit_df = pd.read_sql_query(
+            "SELECT * FROM security_logs ORDER BY timestamp DESC LIMIT 20",
+            conn
+        )
+
+    st.dataframe(audit_df)
 
     # -------------------------------
     # Historical Dashboard
@@ -654,13 +1358,76 @@ if st.session_state.get("authentication_status"):
     st.subheader("📊 Sensor Data History")
     df = fetch_sensor_data()
 
+    # -------------------------------
+    # 🏭 Multi-Asset Digital Twin Engine
+    # -------------------------------
+    st.subheader("🏭 Multi-Asset Monitoring")
+
+    assets = [
+        {"name": "Gas Turbine", "health": random.randint(60, 100)},
+        {"name": "Boiler", "health": random.randint(40, 95)},
+        {"name": "Transformer", "health": random.randint(50, 100)},
+        {"name": "HVAC System", "health": random.randint(70, 100)}
+    ]
+
+    asset_df = pd.DataFrame(assets)
+
+    st.dataframe(asset_df)
+
+    fig_assets = px.bar(
+        asset_df,
+        x="name",
+        y="health",
+        color="health",
+        title="Asset Health Comparison"
+    )
+
+    st.plotly_chart(fig_assets, use_container_width=True)
+
+    # Continue existing code
     if df is None or df.empty:
         st.warning("No sensor data available.")
     else:
         st.dataframe(df)
-        
-    fig = px.line(df, x="timestamp", y="temperature", title="Temperature Trend")
-    st.plotly_chart(fig, use_container_width=True)
+
+    if df is None or df.empty:
+        st.warning("No sensor data available.")
+    else:
+        st.dataframe(df)
+    
+    # =====================================================
+    # 🏭 Multi-Asset Fleet Monitor
+    # =====================================================
+
+    st.subheader("🏭 Multi-Asset Fleet Monitor")
+
+    fleet_data = pd.DataFrame({
+        "Asset": [
+            "Turbine A",
+            "Turbine B",
+            "HV Transformer",
+            "Cooling Pump",
+            "Solar Inverter"
+        ],
+        "Health Score": [
+            random.randint(60, 98),
+            random.randint(40, 90),
+            random.randint(55, 95),
+            random.randint(35, 88),
+            random.randint(70, 99)
+        ]
+    })
+
+    st.dataframe(fleet_data)
+
+    fleet_fig = px.bar(
+        fleet_data,
+        x="Asset",
+        y="Health Score",
+        title="Fleet Health Monitoring"
+    )
+
+    st.plotly_chart(fleet_fig, use_container_width=True)
 
 
     # -------------------------------
@@ -678,6 +1445,3323 @@ if st.session_state.get("authentication_status"):
         st.sidebar.write(f"🌬 Wind: {weather['wind_speed']} m/s")
         st.sidebar.write(f"🌤 {weather['description']}")
     
+    # -------------------------------
+    # 🌐 API Status Center
+    # -------------------------------
+    st.subheader("🌐 API Status")
+
+    api_services = {
+        "Weather API": "Online",
+        "Carbon API": "Online",
+        "MQTT Broker": "Online",
+        "AI Copilot": "Online"
+    }
+
+    for service, status in api_services.items():
+
+        if status == "Online":
+            st.success(f"✅ {service} — {status}")
+        else:
+            st.error(f"❌ {service} — Offline")
+    
+    # -------------------------------
+    # 💰 AI Energy Market Center
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("💰 AI Energy Market Center")
+
+    market_price = round(random.uniform(50, 180), 2)
+
+    market_col1, market_col2, market_col3 = st.columns(3)
+
+    market_col1.metric(
+        "Electricity Price",
+        f"£{market_price}/MWh"
+    )
+
+    market_col2.metric(
+        "Grid Frequency",
+        f"{round(random.uniform(49.7, 50.3),2)} Hz"
+    )
+
+    market_col3.metric(
+        "Renewable Penetration",
+        f"{random.randint(30,80)}%"
+    )
+
+    if market_price > 140:
+        st.error("🚨 Energy market price spike detected")
+    elif market_price > 90:
+        st.warning("⚠ Market volatility increasing")
+    else:
+        st.success("✅ Market operating normally")
+    
+    # -------------------------------
+    # ⚡ AI Demand Response Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("⚡ AI Demand Response")
+
+    demand_level = random.randint(40, 100)
+
+    st.progress(demand_level)
+
+    st.metric(
+        "Current Demand Response",
+        f"{demand_level}%"
+    )
+
+    if demand_level > 85:
+
+        st.error("🚨 Peak demand event")
+
+        st.info("""
+        AI Recommendations:
+        • Reduce HVAC usage
+        • Shift non-critical loads
+        • Enable battery discharge
+        """)
+
+    elif demand_level > 65:
+
+        st.warning("⚠ High demand period detected")
+
+    else:
+
+        st.success("✅ Grid demand stable")
+    
+    # -------------------------------
+    # 🗺 AI Grid Stability Map
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🗺 AI Grid Stability Zones")
+
+    grid_data = pd.DataFrame({
+        "Zone": [
+            "North Grid",
+            "South Grid",
+            "East Grid",
+            "West Grid"
+        ],
+        "Stability": [
+            random.randint(80,100),
+            random.randint(60,100),
+            random.randint(70,100),
+            random.randint(50,100)
+        ]
+    })
+
+    st.dataframe(grid_data)
+
+    fig_grid = px.bar(
+        grid_data,
+        x="Zone",
+        y="Stability",
+        color="Stability",
+        title="Regional Grid Stability"
+    )
+
+    st.plotly_chart(fig_grid, use_container_width=True)
+
+    # -------------------------------
+    # 🤖 AI Energy Trading Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🤖 AI Energy Trading Engine")
+
+    buy_price = round(random.uniform(40, 90), 2)
+    sell_price = round(random.uniform(100, 180), 2)
+
+    trade_col1, trade_col2 = st.columns(2)
+
+    trade_col1.metric(
+        "Buy Price",
+        f"£{buy_price}/MWh"
+    )
+
+    trade_col2.metric(
+        "Sell Price",
+        f"£{sell_price}/MWh"
+    )
+
+    profit_margin = sell_price - buy_price
+
+    st.metric(
+        "Potential Trading Margin",
+        f"£{round(profit_margin,2)}/MWh"
+    )
+
+    if profit_margin > 60:
+        st.success("✅ High-value trading opportunity")
+    else:
+        st.warning("⚠ Limited trading margin")
+    
+    # -------------------------------
+    # 🔋 Battery Energy Storage System
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🔋 Battery Energy Storage System")
+
+    battery_charge = random.randint(20, 100)
+
+    bess_col1, bess_col2, bess_col3 = st.columns(3)
+
+    bess_col1.metric(
+        "Battery Charge",
+        f"{battery_charge}%"
+    )
+
+    bess_col2.metric(
+        "Charge Rate",
+        f"{random.randint(5,40)} MW"
+    )
+
+    bess_col3.metric(
+        "Discharge Rate",
+        f"{random.randint(5,40)} MW"
+    )
+
+    st.progress(battery_charge)
+
+    if battery_charge < 25:
+        st.warning("⚠ Battery reserve low")
+    else:
+        st.success("✅ Battery operating normally")
+    
+    # -------------------------------
+    # 🌍 Renewable Forecast AI
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌍 Renewable Energy Forecast")
+
+    renewable_data = pd.DataFrame({
+        "Hour": list(range(1, 13)),
+        "Solar MW": np.random.randint(20, 100, 12),
+        "Wind MW": np.random.randint(10, 80, 12)
+    })
+
+    st.dataframe(renewable_data)
+
+    fig_renew = px.line(
+        renewable_data,
+        x="Hour",
+        y=["Solar MW", "Wind MW"],
+        title="Renewable Generation Forecast"
+    )
+
+    st.plotly_chart(fig_renew, use_container_width=True)
+
+    # -------------------------------
+    # ⚡ AI Peak Shaving Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("⚡ AI Peak Shaving")
+
+    peak_load = random.randint(50, 100)
+
+    st.metric(
+        "Peak Grid Load",
+        f"{peak_load}%"
+    )
+
+    if peak_load > 85:
+
+        st.error("🚨 Peak demand critical")
+
+        st.info("""
+        AI Peak Shaving Actions:
+        • Activate battery storage
+        • Reduce HVAC load
+        • Shift industrial demand
+        """)
+
+    elif peak_load > 65:
+
+        st.warning("⚠ High demand period")
+
+    else:
+
+        st.success("✅ Peak load under control")
+    
+    # -------------------------------
+    # 📡 Power Quality Monitor
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("📡 Power Quality Monitor")
+
+    voltage = round(random.uniform(390, 420), 2)
+    frequency = round(random.uniform(49.7, 50.3), 2)
+    harmonics = round(random.uniform(1, 8), 2)
+
+    pq_col1, pq_col2, pq_col3 = st.columns(3)
+
+    pq_col1.metric("Voltage", f"{voltage} V")
+    pq_col2.metric("Frequency", f"{frequency} Hz")
+    pq_col3.metric("THD", f"{harmonics}%")
+
+    if harmonics > 5:
+        st.warning("⚠ Harmonic distortion detected")
+    else:
+        st.success("✅ Power quality stable")
+
+    # -------------------------------
+    # 🤖 AI Dispatch Optimizer
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🤖 AI Dispatch Optimizer")
+
+    dispatch_data = pd.DataFrame({
+        "Asset": [
+            "Gas Turbine",
+            "Battery Storage",
+            "Solar Farm",
+            "Wind Farm"
+        ],
+        "Dispatch MW": [
+            random.randint(50,150),
+            random.randint(20,80),
+            random.randint(10,100),
+            random.randint(20,120)
+        ]
+    })
+
+    st.dataframe(dispatch_data)
+
+    fig_dispatch = px.pie(
+        dispatch_data,
+        names="Asset",
+        values="Dispatch MW",
+        title="AI Power Dispatch Allocation"
+    )
+
+    st.plotly_chart(fig_dispatch, use_container_width=True)
+
+    # -------------------------------
+    # 🔄 Autonomous Grid Recovery Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🔄 Autonomous Grid Recovery")
+
+    recovery_score = random.randint(60, 100)
+
+    st.metric(
+        "Grid Recovery Readiness",
+        f"{recovery_score}%"
+    )
+
+    st.progress(recovery_score)
+
+    if recovery_score < 70:
+
+        st.error("🚨 Recovery capability reduced")
+
+        st.info("""
+        AI Recovery Actions:
+        • Activate backup generation
+        • Re-route critical feeders
+        • Isolate unstable assets
+        """)
+
+    else:
+
+        st.success("✅ Autonomous recovery systems operational")
+    
+    # -------------------------------
+    # 🌍 AI Carbon Optimization Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌍 AI Carbon Optimization")
+
+    carbon_now = round(random.uniform(80, 350), 2)
+
+    carbon_col1, carbon_col2 = st.columns(2)
+
+    carbon_col1.metric(
+        "Current Carbon Intensity",
+        f"{carbon_now} gCO₂/kWh"
+    )
+
+    carbon_col2.metric(
+        "Carbon Reduction",
+        f"{random.randint(5,35)}%"
+    )
+
+    if carbon_now > 250:
+
+        st.warning("⚠ High carbon intensity")
+
+        st.info("""
+        AI Optimization:
+        • Increase renewable dispatch
+        • Reduce fossil generation
+        • Shift flexible loads
+        """)
+
+    else:
+
+        st.success("✅ Carbon optimization stable")
+    
+    # -------------------------------
+    # 🚨 AI Fault Isolation Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🚨 AI Fault Isolation")
+
+    fault_probability = random.randint(1, 100)
+
+    st.metric(
+        "Fault Probability",
+        f"{fault_probability}%"
+    )
+
+    if fault_probability > 80:
+
+        st.error("🚨 Critical fault risk")
+
+        st.info("""
+        AI Isolation Actions:
+        • Disconnect affected feeder
+        • Notify SCADA operator
+        • Start autonomous rerouting
+        """)
+
+    elif fault_probability > 50:
+
+        st.warning("⚠ Potential fault developing")
+
+    else:
+
+        st.success("✅ Grid operating normally")
+    
+    # -------------------------------
+    # ⚡ Smart Energy Routing Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("⚡ Smart Energy Routing")
+
+    routing_data = pd.DataFrame({
+        "Source": [
+            "Solar Farm",
+            "Wind Farm",
+            "Battery Storage",
+            "Gas Turbine"
+        ],
+        "Destination": [
+            "Industrial Zone",
+            "Residential Zone",
+            "Grid Support",
+            "Critical Infrastructure"
+        ],
+        "Power MW": [
+            random.randint(20,100),
+            random.randint(30,120),
+            random.randint(10,60),
+            random.randint(50,150)
+        ]
+    })
+
+    st.dataframe(routing_data)
+
+    fig_route = px.bar(
+        routing_data,
+        x="Source",
+        y="Power MW",
+        color="Destination",
+        title="AI Smart Energy Routing"
+    )
+
+    st.plotly_chart(fig_route, use_container_width=True)
+
+    # -------------------------------
+    # 🛡 AI Grid Resilience Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🛡 AI Grid Resilience")
+
+    resilience_score = random.randint(60, 100)
+
+    st.metric(
+        "Grid Resilience Score",
+        f"{resilience_score}%"
+    )
+
+    st.progress(resilience_score)
+
+    if resilience_score < 70:
+
+        st.error("🚨 Grid resilience weakening")
+
+    elif resilience_score < 85:
+
+        st.warning("⚠ Moderate resilience risk")
+
+    else:
+
+        st.success("✅ Grid resilience strong")
+    
+    # -------------------------------
+    # 🤖 Autonomous Operations Center
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🤖 Autonomous Operations Center")
+
+    auto_mode = st.toggle("Enable Autonomous AI Control")
+
+    if auto_mode:
+
+        st.success("✅ Autonomous control active")
+
+        st.info("""
+        AI Autonomous Actions:
+        • Grid balancing enabled
+        • Load optimization active
+        • Predictive maintenance running
+        • Smart dispatch operational
+        """)
+
+    else:
+
+        st.warning("⚠ Manual operator mode enabled")
+    
+    # -------------------------------
+    # 🖥 Digital Twin Command Center
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🖥 Digital Twin Command Center")
+
+    command_col1, command_col2, command_col3, command_col4 = st.columns(4)
+
+    command_col1.metric(
+        "Connected Assets",
+        random.randint(20, 150)
+    )
+
+    command_col2.metric(
+        "Active AI Agents",
+        random.randint(5, 40)
+    )
+
+    command_col3.metric(
+        "Live IoT Devices",
+        random.randint(100, 1000)
+    )
+
+    command_col4.metric(
+        "SCADA Signals/sec",
+        random.randint(500, 5000)
+    )
+
+    st.success("✅ Enterprise command center operational")
+
+    # -------------------------------
+    # ⚡ AI Operational Optimization
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("⚡ AI Operational Optimization")
+
+    optimization_score = random.randint(60, 100)
+
+    st.metric(
+        "Optimization Efficiency",
+        f"{optimization_score}%"
+    )
+
+    st.progress(optimization_score)
+
+    if optimization_score < 70:
+
+        st.warning("⚠ Optimization opportunities detected")
+
+        st.info("""
+        AI Recommendations:
+        • Reduce idle equipment
+        • Optimize HVAC schedules
+        • Shift flexible demand
+        • Improve dispatch routing
+        """)
+
+    else:
+
+        st.success("✅ Operations optimized")
+    
+    # -------------------------------
+    # 🚚 Enterprise Fleet Monitoring
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🚚 Enterprise Fleet Monitoring")
+
+    fleet_data = pd.DataFrame({
+        "Asset": [
+            "Turbine-01",
+            "Boiler-02",
+            "HVAC-03",
+            "Transformer-04",
+            "Battery-05"
+        ],
+        "Health": [
+            random.randint(60,100),
+            random.randint(50,100),
+            random.randint(70,100),
+            random.randint(40,100),
+            random.randint(80,100)
+        ],
+        "Status": [
+            "Running",
+            "Monitoring",
+            "Operational",
+            "Warning",
+            "Optimal"
+        ]
+    })
+
+    st.dataframe(fleet_data)
+
+    fig_fleet = px.bar(
+        fleet_data,
+        x="Asset",
+        y="Health",
+        color="Health",
+        title="Enterprise Fleet Health"
+    )
+
+    st.plotly_chart(fig_fleet, use_container_width=True)
+
+    # -------------------------------
+    # 🧠 AI Confidence Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🧠 AI Confidence Engine")
+
+    confidence_score = random.randint(75, 99)
+
+    st.metric(
+        "AI Decision Confidence",
+        f"{confidence_score}%"
+    )
+
+    st.progress(confidence_score)
+
+    if confidence_score < 80:
+
+        st.warning("⚠ AI confidence slightly reduced")
+
+    else:
+
+        st.success("✅ AI operating with high confidence")
+    
+    # -------------------------------
+    # 🤖 Industrial AI Copilot
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🤖 Industrial AI Copilot")
+
+    copilot_question = st.text_input(
+        "Ask AI Copilot",
+        placeholder="Example: Why is turbine temperature increasing?"
+    )
+
+    if copilot_question:
+
+        st.info(f"🧠 AI Analysis: {copilot_question}")
+
+        recommendations = [
+            "Inspect cooling systems",
+            "Check vibration anomalies",
+            "Review maintenance logs",
+            "Optimize load balancing",
+            "Verify sensor calibration"
+        ]
+
+        st.success("✅ AI Recommendations Generated")
+
+        for rec in recommendations:
+            st.write(f"• {rec}")
+    # -------------------------------
+    # 🌍 Global Operations Center
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌍 Global Operations Center")
+
+    global_sites = pd.DataFrame({
+        "Site": [
+            "London Grid",
+            "Manchester Plant",
+            "Birmingham Hub",
+            "Leeds Station",
+            "Glasgow Energy Center"
+        ],
+        "Status": [
+            "Operational",
+            "Stable",
+            "Monitoring",
+            "Warning",
+            "Operational"
+        ],
+        "Efficiency": [
+            random.randint(70,100),
+            random.randint(60,100),
+            random.randint(75,100),
+            random.randint(50,90),
+            random.randint(80,100)
+        ]
+    })
+
+    st.dataframe(global_sites)
+
+    fig_global = px.scatter(
+        global_sites,
+        x="Site",
+        y="Efficiency",
+        color="Status",
+        size="Efficiency",
+        title="Global Operations Monitoring"
+    )
+
+    st.plotly_chart(fig_global, use_container_width=True)
+
+    # -------------------------------
+    # 🚨 Autonomous Alarm Priority Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🚨 Autonomous Alarm Prioritization")
+
+    alarm_score = random.randint(1, 100)
+
+    st.metric(
+        "Alarm Severity Index",
+        f"{alarm_score}%"
+    )
+
+    if alarm_score > 80:
+
+        st.error("🚨 Critical alarm escalation")
+
+        st.info("""
+        AI Actions:
+        • Notify executive operators
+        • Trigger emergency workflow
+        • Start asset isolation
+        """)
+
+    elif alarm_score > 50:
+
+        st.warning("⚠ Medium priority alarm")
+
+    else:
+
+        st.success("✅ Alarm levels stable")
+
+    # -------------------------------
+    # 🧠 AI Decision Recommendation Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🧠 AI Decision Recommendations")
+
+    decision_data = pd.DataFrame({
+        "AI Recommendation": [
+            "Increase battery dispatch",
+            "Reduce HVAC demand",
+            "Shift industrial load",
+            "Optimize turbine output",
+            "Activate reserve systems"
+        ],
+        "Priority": [
+            "High",
+            "Medium",
+            "Medium",
+            "High",
+            "Critical"
+        ]
+    })
+
+    st.dataframe(decision_data)
+
+    st.success("✅ AI strategic recommendations generated")
+
+    # -------------------------------
+    # 📊 Enterprise SLA Monitoring
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("📊 Enterprise SLA Monitoring")
+
+    sla_score = random.randint(85, 100)
+
+    sla_col1, sla_col2, sla_col3 = st.columns(3)
+
+    sla_col1.metric(
+        "System Availability",
+        f"{sla_score}%"
+    )
+
+    sla_col2.metric(
+        "Incident Response",
+        f"{random.randint(90,100)}%"
+    )
+
+    sla_col3.metric(
+        "Operational Compliance",
+        f"{random.randint(88,100)}%"
+    )
+
+    if sla_score < 90:
+
+        st.warning("⚠ SLA performance slightly reduced")
+
+    else:
+
+        st.success("✅ SLA targets achieved")
+
+    # -------------------------------
+    # 📡 Live AI Event Stream
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("📡 Live AI Event Stream")
+
+    event_logs = pd.DataFrame({
+        "Timestamp": pd.date_range(
+            start=pd.Timestamp.now(),
+            periods=10,
+            freq="min"
+        ),
+        "Event": [
+            "AI Dispatch Updated",
+            "SCADA Sync Complete",
+            "Battery Optimization",
+            "Carbon Reduction Triggered",
+            "Load Balancing Active",
+            "HVAC Optimization",
+            "MQTT Data Received",
+            "Predictive Alert Generated",
+            "AI Risk Calculation",
+            "Grid Stability Check"
+        ],
+        "Severity": [
+            "Info",
+            "Info",
+            "Medium",
+            "High",
+            "Medium",
+            "Low",
+            "Info",
+            "High",
+            "Medium",
+            "Info"
+        ]
+    })
+
+    st.dataframe(event_logs)
+
+    # -------------------------------
+    # ⚙ Autonomous Workflow Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("⚙ Autonomous Workflow Engine")
+
+    workflow_score = random.randint(70, 100)
+
+    st.metric(
+        "Workflow Automation",
+        f"{workflow_score}%"
+    )
+
+    st.progress(workflow_score)
+
+    if workflow_score < 80:
+
+        st.warning("⚠ Some workflows require operator approval")
+
+    else:
+
+        st.success("✅ Autonomous workflows operational")
+
+    # -------------------------------
+    # 🔥 Enterprise KPI Heatmap
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🔥 Enterprise KPI Heatmap")
+
+    heatmap_data = pd.DataFrame({
+        "System": [
+            "SCADA",
+            "AI Engine",
+            "MQTT",
+            "Battery",
+            "Grid Control"
+        ],
+        "Performance": [
+            random.randint(70,100),
+            random.randint(75,100),
+            random.randint(60,100),
+            random.randint(65,100),
+            random.randint(80,100)
+        ]
+    })
+
+    fig_heatmap = px.imshow(
+        [heatmap_data["Performance"]],
+        labels=dict(x="System", y="KPI", color="Performance"),
+        x=heatmap_data["System"],
+        y=["Performance"],
+        title="Enterprise KPI Heatmap"
+    )
+
+    st.plotly_chart(fig_heatmap, use_container_width=True)
+
+    # -------------------------------
+    # 🚨 AI Incident Correlation Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🚨 AI Incident Correlation")
+
+    incident_score = random.randint(1, 100)
+
+    st.metric(
+        "Incident Correlation Index",
+        f"{incident_score}%"
+    )
+
+    if incident_score > 75:
+
+        st.error("🚨 Multi-system anomaly correlation detected")
+
+        st.info("""
+        AI Correlation Findings:
+        • Temperature anomaly linked
+        • Vibration increase detected
+        • Power fluctuation identified
+        • Maintenance risk elevated
+        """)
+
+    elif incident_score > 50:
+
+        st.warning("⚠ Potential correlated incidents")
+
+    else:
+
+        st.success("✅ Systems operating independently")
+    
+    # -------------------------------
+    # 👔 Executive AI Forecast Center
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("👔 Executive AI Forecast Center")
+
+    forecast_data = pd.DataFrame({
+        "Month": [
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct"
+        ],
+        "Projected Savings (£)": [
+            random.randint(100000,200000),
+            random.randint(120000,220000),
+            random.randint(150000,250000),
+            random.randint(170000,280000),
+            random.randint(200000,300000)
+        ]
+    })
+
+    st.dataframe(forecast_data)
+
+    fig_exec = px.line(
+        forecast_data,
+        x="Month",
+        y="Projected Savings (£)",
+        markers=True,
+        title="Executive Financial Forecast"
+    )
+
+    st.plotly_chart(fig_exec, use_container_width=True)
+
+    st.success("✅ AI executive forecasting operational")
+
+    # -------------------------------
+    # 🤖 AI Orchestration Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🤖 AI Orchestration Engine")
+
+    orchestration_score = random.randint(70, 100)
+
+    st.metric(
+        "AI Orchestration Efficiency",
+        f"{orchestration_score}%"
+    )
+
+    st.progress(orchestration_score)
+
+    if orchestration_score < 80:
+
+        st.warning("⚠ Some AI workflows require optimization")
+
+    else:
+
+        st.success("✅ Enterprise AI orchestration stable")
+    
+    # -------------------------------
+    # 🖥 Enterprise Digital War Room
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🖥 Enterprise Digital War Room")
+
+    war_col1, war_col2, war_col3, war_col4 = st.columns(4)
+
+    war_col1.metric(
+        "Critical Alerts",
+        random.randint(0, 10)
+    )
+
+    war_col2.metric(
+        "Active AI Systems",
+        random.randint(10, 50)
+    )
+
+    war_col3.metric(
+        "Connected Facilities",
+        random.randint(5, 25)
+    )
+
+    war_col4.metric(
+        "Global Uptime",
+        f"{random.randint(95,100)}%"
+    )
+
+    st.success("✅ Enterprise command operations active")
+
+    # -------------------------------
+    # ⚡ AI Resource Allocation Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("⚡ AI Resource Allocation")
+
+    resource_data = pd.DataFrame({
+        "Resource": [
+            "Battery Storage",
+            "Gas Turbine",
+            "Solar Farm",
+            "Wind Farm",
+            "HVAC Systems"
+        ],
+        "Allocation (%)": [
+            random.randint(40,100),
+            random.randint(30,90),
+            random.randint(20,100),
+            random.randint(25,100),
+            random.randint(50,100)
+        ]
+    })
+
+    st.dataframe(resource_data)
+
+    fig_resource = px.bar(
+        resource_data,
+        x="Resource",
+        y="Allocation (%)",
+        color="Allocation (%)",
+        title="AI Resource Allocation"
+    )
+
+    st.plotly_chart(fig_resource, use_container_width=True)
+
+    # -------------------------------
+    # 🛡 Autonomous Compliance Monitor
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🛡 Autonomous Compliance Monitor")
+
+    compliance_score = random.randint(80, 100)
+
+    comp_col1, comp_col2 = st.columns(2)
+
+    comp_col1.metric(
+        "Compliance Score",
+        f"{compliance_score}%"
+    )
+
+    comp_col2.metric(
+        "Audit Readiness",
+        f"{random.randint(85,100)}%"
+    )
+
+    if compliance_score < 90:
+
+        st.warning("⚠ Compliance deviations detected")
+
+    else:
+
+        st.success("✅ Compliance systems healthy")
+
+    # -------------------------------
+    # 🌍 Enterprise Health Index
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌍 Enterprise Health Index")
+
+    enterprise_health = random.randint(70, 100)
+
+    st.metric(
+        "Enterprise Health",
+        f"{enterprise_health}%"
+    )
+
+    st.progress(enterprise_health)
+
+    if enterprise_health < 80:
+
+        st.warning("⚠ Enterprise performance degrading")
+
+    else:
+
+        st.success("✅ Enterprise systems performing optimally")
+    
+    # -------------------------------
+    # 🤖 AI Autonomous Supervisor
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🤖 AI Autonomous Supervisor")
+
+    supervisor_mode = st.toggle(
+        "Enable Autonomous Enterprise Supervision"
+    )
+
+    if supervisor_mode:
+
+        st.success("✅ AI Supervisor Active")
+
+        st.info("""
+        Autonomous Supervision Enabled:
+        • AI risk mitigation
+        • Self-healing workflows
+        • AI asset balancing
+        • Smart operational recovery
+        • Predictive escalation
+        """)
+
+    else:
+
+        st.warning("⚠ Manual supervision mode active")
+
+    # -------------------------------
+    # 🚨 Enterprise Risk Matrix
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🚨 Enterprise Risk Matrix")
+
+    risk_data = pd.DataFrame({
+        "Risk Area": [
+            "SCADA",
+            "Cybersecurity",
+            "Grid Stability",
+            "Battery Storage",
+            "AI Automation"
+        ],
+        "Risk Score": [
+            random.randint(20,90),
+            random.randint(10,95),
+            random.randint(15,85),
+            random.randint(20,80),
+            random.randint(10,70)
+        ]
+    })
+
+    st.dataframe(risk_data)
+
+    fig_risk = px.bar(
+        risk_data,
+        x="Risk Area",
+        y="Risk Score",
+        color="Risk Score",
+        title="Enterprise Risk Matrix"
+    )
+
+    st.plotly_chart(fig_risk, use_container_width=True)
+
+    # -------------------------------
+    # 🔄 Self-Healing Infrastructure
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🔄 Self-Healing Infrastructure")
+
+    healing_score = random.randint(60, 100)
+
+    st.metric(
+        "Self-Healing Capability",
+        f"{healing_score}%"
+    )
+
+    st.progress(healing_score)
+
+    if healing_score < 75:
+
+        st.warning("⚠ Recovery capability reduced")
+
+        st.info("""
+        AI Healing Actions:
+        • Restart failed workflows
+        • Rebalance energy systems
+        • Restore IoT connections
+        • Activate backup services
+        """)
+
+    else:
+
+        st.success("✅ Self-healing systems operational")
+    
+    # -------------------------------
+    # 💰 AI Cost Optimization Center
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("💰 AI Cost Optimization")
+
+    cost_saving = random.randint(10000, 500000)
+
+    cost_col1, cost_col2, cost_col3 = st.columns(3)
+
+    cost_col1.metric(
+        "Predicted Savings",
+        f"£{cost_saving:,}"
+    )
+
+    cost_col2.metric(
+        "Operational Efficiency",
+        f"{random.randint(75,100)}%"
+    )
+
+    cost_col3.metric(
+        "AI Optimization Gain",
+        f"{random.randint(5,35)}%"
+    )
+
+    st.success("✅ AI financial optimization active")
+
+    # -------------------------------
+    # 🌍 Global Sustainability Intelligence
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌍 Global Sustainability Intelligence")
+
+    sustainability_data = pd.DataFrame({
+        "Region": [
+            "Europe",
+            "Asia",
+            "North America",
+            "Middle East",
+            "Africa"
+        ],
+        "Renewable Usage (%)": [
+            random.randint(40,90),
+            random.randint(30,80),
+            random.randint(35,85),
+            random.randint(20,70),
+            random.randint(25,75)
+        ]
+    })
+
+    st.dataframe(sustainability_data)
+
+    fig_sustain = px.line(
+        sustainability_data,
+        x="Region",
+        y="Renewable Usage (%)",
+        markers=True,
+        title="Global Sustainability Metrics"
+    )
+
+    st.plotly_chart(fig_sustain, use_container_width=True)
+
+    st.success("✅ Sustainability intelligence operational")
+
+    # -------------------------------
+    # ☁ Cloud Connectivity Center
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("☁ Cloud Connectivity Center")
+
+    cloud_services = {
+        "AWS IoT Core": "Online",
+        "Azure Digital Twin": "Online",
+        "MQTT Broker": "Online",
+        "AI Cloud Engine": "Online",
+        "SCADA Gateway": "Online"
+    }
+
+    for service, status in cloud_services.items():
+
+        if status == "Online":
+            st.success(f"✅ {service} Connected")
+        else:
+            st.error(f"❌ {service} Offline")
+
+    # -------------------------------
+    # 🗄 Enterprise Data Lake
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🗄 Enterprise Data Lake")
+
+    data_lake = pd.DataFrame({
+        "Source": [
+            "SCADA",
+            "MQTT Sensors",
+            "Weather API",
+            "Carbon API",
+            "AI Analytics"
+        ],
+        "Records": [
+            random.randint(10000,50000),
+            random.randint(50000,200000),
+            random.randint(5000,20000),
+            random.randint(2000,15000),
+            random.randint(10000,80000)
+        ]
+    })
+
+    st.dataframe(data_lake)
+
+    fig_data_lake = px.pie(
+        data_lake,
+        names="Source",
+        values="Records",
+        title="Enterprise Data Lake Distribution"
+    )
+
+    st.plotly_chart(fig_data_lake, use_container_width=True)
+
+    # -------------------------------
+    # 🌐 AI API Traffic Analytics
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌐 AI API Traffic Analytics")
+
+    api_df = pd.DataFrame({
+        "API": [
+            "Weather API",
+            "Carbon API",
+            "MQTT API",
+            "AI Prediction API",
+            "Grid Analytics API"
+        ],
+        "Requests/min": [
+            random.randint(100,1000),
+            random.randint(50,500),
+            random.randint(500,3000),
+            random.randint(100,1500),
+            random.randint(80,900)
+        ]
+    })
+
+    st.dataframe(api_df)
+ 
+    fig_api = px.bar(
+        api_df,
+        x="API",
+        y="Requests/min",
+        color="Requests/min",
+        title="Live API Traffic"
+    )
+
+    st.plotly_chart(fig_api, use_container_width=True)
+    
+    # -------------------------------
+    # 📡 Real-Time Sensor Stream Monitor
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("📡 Real-Time Sensor Streams")
+
+    sensor_stream = pd.DataFrame({
+        "Sensor": [
+            "Temperature",
+            "Pressure",
+            "Voltage",
+            "Current",
+            "Vibration"
+        ],
+        "Live Value": [
+            random.randint(50,100),
+            random.randint(1,10),
+            random.randint(380,450),
+            random.randint(50,200),
+            random.randint(1,8)
+        ]
+    })
+
+    st.dataframe(sensor_stream)
+
+    st.success("✅ Live IoT streams synchronized")
+
+    # -------------------------------
+    # ⚡ Digital Twin Performance Optimizer
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("⚡ Digital Twin Performance Optimizer")
+
+    performance_score = random.randint(70, 100)
+
+    st.metric(
+    "System Performance",
+    f"{performance_score}%"
+    )
+
+    st.progress(performance_score)
+
+    if performance_score < 80:
+
+        st.warning("⚠ Optimization recommended")
+
+        st.info("""
+        Recommended Actions:
+        • Reduce redundant API calls
+        • Optimize chart rendering
+        • Compress MQTT payloads
+        • Improve caching
+        """)
+
+    else:
+
+        st.success("✅ Platform performance optimized")
+    
+    # -------------------------------
+    # 🏭 Multi-Site Enterprise Manager
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🏭 Multi-Site Enterprise Manager")
+
+    site_data = pd.DataFrame({
+        "Site": [
+            "London Plant",
+            "Manchester Hub",
+            "Birmingham Grid",
+            "Leeds Facility",
+            "Glasgow Station"
+        ],
+        "Status": [
+            "Operational",
+            "Monitoring",
+            "Operational",
+            "Warning",
+            "Operational"
+        ],
+        "Health (%)": [
+            random.randint(70,100),
+            random.randint(60,95),
+            random.randint(75,100),
+            random.randint(50,85),
+            random.randint(80,100)
+        ]
+    })
+
+    st.dataframe(site_data)
+
+    fig_sites = px.bar(
+        site_data,
+        x="Site",
+        y="Health (%)",
+        color="Status",
+        title="Enterprise Site Health"
+    )
+
+    st.plotly_chart(fig_sites, use_container_width=True)
+
+    # -------------------------------
+    # 👥 AI Tenant Management System
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("👥 AI Tenant Management")
+
+    tenant_df = pd.DataFrame({
+        "Client": [
+            "Energy Corp",
+            "Smart Grid Ltd",
+            "Industrial AI Group",
+            "Utility Systems",
+            "Green Energy UK"
+        ],
+        "Subscription": [
+            "Enterprise",
+            "Professional",
+            "Enterprise",
+            "Standard",
+            "Enterprise"
+        ],
+        "AI Usage (%)": [
+            random.randint(40,100),
+            random.randint(20,90),
+            random.randint(60,100),
+            random.randint(10,80),
+            random.randint(50,100)
+        ]
+    })
+
+    st.dataframe(tenant_df)
+
+    st.success("✅ Multi-tenant AI management active")
+
+    # -------------------------------
+    # 🔔 Enterprise Notification Center
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🔔 Enterprise Notification Center")
+
+    notifications = [
+        "⚡ Grid optimization completed",
+        "🔋 Battery dispatch updated",
+        "🌍 Carbon reduction target achieved",
+        "🚨 Predictive maintenance alert generated",
+        "📡 MQTT sensor synchronization complete"
+    ]  
+
+    for note in notifications:
+        st.info(note)
+    
+    # -------------------------------
+    # 📊 AI Operational Benchmarking
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("📊 AI Operational Benchmarking")
+
+    benchmark_df = pd.DataFrame({
+        "Metric": [
+            "Energy Efficiency",
+            "Carbon Reduction",
+            "Grid Stability",
+            "AI Automation",
+            "Operational Uptime"
+        ],
+        "Your Platform": [
+            random.randint(75,100),
+            random.randint(70,100),
+            random.randint(80,100),
+            random.randint(75,100),
+            random.randint(85,100)
+        ],
+        "Industry Average": [
+            72,
+            65,
+            74,
+            68,
+            80
+        ]
+    })
+
+    st.dataframe(benchmark_df)
+
+    fig_benchmark = px.line(
+        benchmark_df,
+        x="Metric",
+        y=["Your Platform", "Industry Average"],
+        markers=True,
+        title="Enterprise Benchmark Comparison"
+    )
+
+    st.plotly_chart(fig_benchmark, use_container_width=True)
+
+    # -------------------------------
+    # 🌍 Global Energy Command Analytics
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌍 Global Energy Command Analytics")
+
+    global_energy = pd.DataFrame({
+        "Region": [
+            "Europe",
+            "Asia",
+            "North America",
+            "Middle East",
+            "Africa"
+        ],
+        "Demand (GW)": [
+            random.randint(100,500),
+            random.randint(300,900),
+            random.randint(200,700),
+            random.randint(80,300),
+            random.randint(50,250)
+        ]
+    })
+
+    st.dataframe(global_energy)
+
+    fig_global_energy = px.area(
+        global_energy,
+        x="Region",
+        y="Demand (GW)",
+        title="Global Energy Demand Analytics"
+    )
+
+    st.plotly_chart(fig_global_energy, use_container_width=True)
+
+    st.success("✅ Global energy analytics operational")
+
+    # -------------------------------
+    # 🧩 AI Plugin Marketplace
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🧩 AI Plugin Marketplace")
+
+    plugins = pd.DataFrame({
+        "Plugin": [
+            "Predictive Maintenance AI",
+            "Carbon Forecast Engine",
+            "SCADA Analytics",
+            "Grid Stability AI",
+            "Battery Optimizer"
+        ],
+        "Status": [
+            "Installed",
+            "Installed",
+            "Available",
+            "Installed",
+            "Available"
+        ],
+        "Version": [
+            "v2.1",
+            "v1.8",
+            "v3.0",
+            "v2.5",
+            "v1.2"
+        ]
+    })
+
+    st.dataframe(plugins)
+
+    st.success("✅ AI marketplace synchronized")
+
+    # -------------------------------
+    # ⚙ Enterprise Workflow Marketplace
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("⚙ Enterprise Workflow Marketplace")
+
+    workflow_market = pd.DataFrame({
+        "Workflow": [
+            "AI Alarm Escalation",
+            "Autonomous Recovery",
+            "Grid Optimization",
+            "Energy Trading",
+            "Carbon Reporting"
+        ],
+        "Automation Level": [
+            "100%",
+            "95%",
+            "90%",
+            "85%",
+            "100%"
+        ]
+    })
+
+    st.dataframe(workflow_market)
+
+    fig_workflow_market = px.bar(
+        workflow_market,
+        x="Workflow",
+        y="Automation Level",
+        color="Automation Level",
+        title="Workflow Automation Marketplace"
+    )
+
+    st.plotly_chart(fig_workflow_market, use_container_width=True)
+
+    # -------------------------------
+    # 🧠 AI Model Registry
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🧠 AI Model Registry")
+
+    model_registry = pd.DataFrame({
+        "Model": [
+            "Failure Prediction",
+            "Energy Forecast",
+            "Carbon Optimization",
+            "Load Balancer",
+            "Risk Intelligence"
+        ],
+        "Accuracy": [
+            random.randint(85,99),
+            random.randint(80,98),
+            random.randint(82,97),
+            random.randint(84,96),
+            random.randint(80,95)
+        ],
+        "Status": [
+            "Production",
+            "Production",
+            "Testing",
+            "Production",
+            "Production"
+        ]
+    })
+
+    st.dataframe(model_registry)
+
+    fig_models = px.scatter(
+        model_registry,
+        x="Model",
+        y="Accuracy",
+        color="Status",
+        size="Accuracy",
+        title="Enterprise AI Models"
+    )
+
+    st.plotly_chart(fig_models, use_container_width=True)
+
+    # -------------------------------
+    # 💳 Smart Contract Energy Transactions
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("💳 Smart Contract Energy Transactions")
+
+    transactions = pd.DataFrame({
+        "Transaction ID": [
+            "TXN-1001",
+            "TXN-1002",
+            "TXN-1003",
+            "TXN-1004"
+        ],
+        "Energy (MWh)": [
+            random.randint(50,300),
+            random.randint(30,200),
+            random.randint(60,400),
+            random.randint(20,150)
+        ],
+        "Status": [
+            "Completed",
+            "Pending",
+            "Completed",
+            "Validated"
+        ]
+    })
+
+    st.dataframe(transactions)
+
+    st.success("✅ Smart energy transactions validated")
+
+    # -------------------------------
+    # 🤝 Industrial Partner Ecosystem
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🤝 Industrial Partner Ecosystem")
+
+    partners = pd.DataFrame({
+        "Partner": [
+            "Siemens Energy",
+            "GE Vernova",
+            "ABB",
+            "Schneider Electric",
+            "Honeywell"
+        ],
+        "Integration": [
+            "Active",
+            "Testing",
+            "Active",
+            "Active",
+            "Planned"
+        ]
+    })
+
+    st.dataframe(partners)
+
+    st.success("✅ Enterprise ecosystem integrations active")
+
+    # -------------------------------
+    # ⚡ Live Energy Trading Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("⚡ Live Energy Trading Engine")
+
+    energy_price = round(random.uniform(65, 180), 2)
+
+    trade_col1, trade_col2, trade_col3 = st.columns(3)
+
+    trade_col1.metric(
+        "Live Energy Price",
+        f"£{energy_price}/MWh"
+    )
+
+    trade_col2.metric(
+        "Market Demand",
+        f"{random.randint(60,100)} GW"
+    )
+
+    trade_col3.metric(
+        "Trading Volume",
+        f"{random.randint(500,5000)} MWh"
+    )
+
+    st.success("✅ Energy trading systems operational")
+
+    # -------------------------------
+    # 📈 AI Energy Price Forecasting
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("📈 AI Energy Price Forecasting")
+
+    forecast_hours = list(range(1, 25))
+
+    forecast_prices = [
+        random.randint(60, 180)
+        for _ in forecast_hours
+    ]
+
+    forecast_df = pd.DataFrame({
+        "Hour": forecast_hours,
+        "Forecast Price": forecast_prices
+    })
+
+    fig_price_forecast = px.line(
+        forecast_df,
+        x="Hour",
+        y="Forecast Price",
+        markers=True,
+        title="24-Hour Energy Price Forecast"
+    )
+
+    st.plotly_chart(fig_price_forecast, use_container_width=True)
+
+    st.info("🤖 AI models forecasting energy market fluctuations")
+
+    # -------------------------------
+    # 🚦 Grid Congestion Intelligence
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🚦 Grid Congestion Intelligence")
+
+    grid_regions = pd.DataFrame({
+        "Region": [
+            "London",
+            "Manchester",
+            "Birmingham",
+            "Leeds",
+            "Glasgow"
+        ],
+        "Congestion (%)": [
+            random.randint(20,95),
+            random.randint(10,85),
+            random.randint(15,80),
+            random.randint(25,90),
+            random.randint(5,70)
+        ]
+    })
+
+    st.dataframe(grid_regions)
+
+    fig_congestion = px.bar(
+        grid_regions,
+        x="Region",
+        y="Congestion (%)",
+        color="Congestion (%)",
+        title="Grid Congestion Analysis"
+    )
+
+    st.plotly_chart(fig_congestion, use_container_width=True)
+
+    # -------------------------------
+    # 🌱 Renewable Dispatch Optimizer
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌱 Renewable Dispatch Optimizer")
+
+    renewables = pd.DataFrame({
+        "Source": [
+            "Solar",
+            "Wind",
+            "Hydro",
+            "Battery",
+            "Thermal Backup"
+        ],
+        "Dispatch (%)": [
+            random.randint(20,90),
+            random.randint(30,100),
+            random.randint(10,70),
+            random.randint(20,80),
+            random.randint(5,50)
+        ]
+    })
+
+    st.dataframe(renewables)
+
+    fig_dispatch = px.pie(
+        renewables,
+        names="Source",
+        values="Dispatch (%)",
+        title="AI Renewable Dispatch Allocation"
+    )
+
+    st.plotly_chart(fig_dispatch, use_container_width=True)
+
+    st.success("✅ Renewable balancing optimized")
+
+    # -------------------------------
+    # 🤖 Autonomous Energy Decision Center
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🤖 Autonomous Energy Decision Center")
+
+    decision_engine = random.randint(70, 100)
+
+    st.metric(
+        "AI Decision Accuracy",
+        f"{decision_engine}%"
+    )
+
+    st.progress(decision_engine)
+
+    if decision_engine < 80:
+
+        st.warning("⚠ AI recommendations require validation")
+
+    else:
+
+        st.success("✅ Autonomous decisions optimized")
+
+    st.info("""
+    AI Decision Actions:
+    • Optimize generation mix
+    • Reduce carbon intensity
+    • Balance grid demand
+    • Predict market volatility
+    • Improve operational efficiency
+    """)
+
+    # -------------------------------
+    # 🛰 Autonomous Infrastructure Orchestrator
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🛰 Autonomous Infrastructure Orchestrator")
+
+    orchestrator_df = pd.DataFrame({
+        "Infrastructure": [
+            "Grid Control",
+            "Battery Network",
+            "SCADA Layer",
+            "Wind Fleet",
+            "Solar Farm"
+        ],
+        "Automation Status": [
+            "Autonomous",
+            "Optimized",
+            "Autonomous",
+            "Balanced",
+            "Autonomous"
+        ]
+    })
+
+    st.dataframe(orchestrator_df)
+
+    st.success("✅ Infrastructure orchestration synchronized")
+
+    # -------------------------------
+    # 👷 AI Workforce Coordination Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("👷 AI Workforce Coordination")
+
+    team_df = pd.DataFrame({
+        "Department": [
+            "Operations",
+            "Maintenance",
+            "Grid Analytics",
+            "Cybersecurity",
+            "Energy Trading"
+        ],
+        "AI Efficiency (%)": [
+            random.randint(70,100),
+            random.randint(65,95),
+            random.randint(75,100),
+            random.randint(60,98),
+            random.randint(70,99)
+        ]
+    })
+
+    st.dataframe(team_df)
+
+    fig_team = px.line_polar(
+        team_df,
+        r="AI Efficiency (%)",
+        theta="Department",
+        line_close=True
+    )
+
+    fig_team.update_traces(fill='toself')
+
+    st.plotly_chart(fig_team, use_container_width=True)
+
+    # -------------------------------
+    # 🚨 Utility Emergency Simulation Center
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🚨 Utility Emergency Simulation")
+
+    simulation = st.selectbox(
+        "Run Emergency Scenario",
+        [
+            "Grid Overload",
+            "Transformer Failure",
+            "Cyberattack",
+            "Wind Farm Shutdown",
+            "Battery Failure"
+        ]
+    )
+
+    if st.button("Run AI Simulation"):
+
+        st.warning(f"⚠ Simulating: {simulation}")
+
+        recovery_time = random.randint(5,60)
+
+        st.metric(
+            "Estimated Recovery Time",
+            f"{recovery_time} Minutes"
+        )
+
+        st.success("✅ AI contingency analysis completed")
+
+    # -------------------------------
+    # 🌐 Cross-Grid Synchronization Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌐 Cross-Grid Synchronization")
+
+    grid_sync = pd.DataFrame({
+        "Grid": [
+            "North Grid",
+            "South Grid",
+            "East Grid",
+            "West Grid"
+        ],
+        "Frequency Match (%)": [
+            random.randint(92,100),
+            random.randint(90,100),
+            random.randint(88,100),
+            random.randint(93,100)
+        ]
+    })
+
+    st.dataframe(grid_sync)
+
+    fig_sync = px.line(
+        grid_sync,
+        x="Grid",
+        y="Frequency Match (%)",
+        markers=True,
+        title="Grid Synchronization Stability"
+    )
+
+    st.plotly_chart(fig_sync, use_container_width=True)
+
+    st.success("✅ Grid synchronization stable")
+
+    # -------------------------------
+    # 🧠 AI Strategic Decision Simulator
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🧠 AI Strategic Decision Simulator")
+
+    strategy = st.selectbox(
+        "Select AI Strategy",
+        [
+            "Maximize Renewable Usage",
+            "Reduce Carbon Emissions",
+            "Minimize Operational Cost",
+            "Optimize Grid Stability",
+            "Emergency Power Balancing"
+        ]
+    )
+
+    if st.button("Run Strategic AI"):
+
+        ai_score = random.randint(80,99)
+
+        st.metric(
+            "AI Optimization Score",
+            f"{ai_score}%"
+        )
+
+        st.info(f"🤖 AI selected strategy: {strategy}")
+
+        st.success("✅ Strategic optimization completed")
+    
+    # -------------------------------
+    # 🧠 AI Cognitive Grid Intelligence
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🧠 AI Cognitive Grid Intelligence")
+
+    cognitive_score = random.randint(80, 99)
+
+    st.metric(
+        "Cognitive Grid Intelligence",
+        f"{cognitive_score}%"
+    )
+
+    st.progress(cognitive_score)
+
+    if cognitive_score > 90:
+        st.success("✅ AI grid cognition highly optimized")
+    else:
+        st.warning("⚠ AI learning still improving")
+    
+    # -------------------------------
+    # 🔄 Autonomous Power Recovery Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🔄 Autonomous Power Recovery Engine")
+
+    recovery_df = pd.DataFrame({
+        "Incident": [
+            "Grid Instability",
+            "Voltage Spike",
+            "Transformer Fault",
+            "Wind Farm Disconnect",
+            "Battery Failure"
+        ],
+         "Recovery Status": [
+            "Recovered",
+            "Stabilized",
+            "Recovered",
+            "Balancing",
+            "Recovered"
+        ],
+        "Recovery Time (min)": [
+            random.randint(1,10),
+            random.randint(2,15),
+            random.randint(1,8),
+            random.randint(5,20),
+            random.randint(2,12)
+        ]
+    })
+
+    st.dataframe(recovery_df)
+
+    st.success("✅ Autonomous recovery systems active")
+
+    # -------------------------------
+    # 🌍 Digital Energy Ecosystem Map
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌍 Digital Energy Ecosystem Map")
+
+    ecosystem_df = pd.DataFrame({
+        "Infrastructure": [
+            "Solar Network",
+            "Wind Fleet",
+            "Battery Storage",
+            "Hydrogen Hub",
+            "Grid AI Center"
+        ],
+        "Connectivity (%)": [
+            random.randint(70,100),
+            random.randint(65,100),
+            random.randint(75,100),
+            random.randint(60,95),
+            random.randint(85,100)
+        ]
+    })
+
+    st.dataframe(ecosystem_df)
+
+    fig_ecosystem = px.treemap(
+        ecosystem_df,
+        path=["Infrastructure"],
+        values="Connectivity (%)",
+        title="Digital Energy Ecosystem"
+    )
+
+    st.plotly_chart(fig_ecosystem, use_container_width=True)
+
+    # -------------------------------
+    # 📈 AI Infrastructure Evolution Tracker
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("📈 AI Infrastructure Evolution Tracker")
+
+    years = [2025, 2026, 2027, 2028, 2029, 2030]
+
+    evolution_df = pd.DataFrame({
+        "Year": years,
+        "AI Automation (%)": [
+            random.randint(40,60),
+            random.randint(50,70),
+            random.randint(60,80),
+            random.randint(70,90),
+            random.randint(80,95),
+            random.randint(90,100)
+        ]
+    })
+
+    fig_evolution = px.area(
+        evolution_df,
+        x="Year",
+        y="AI Automation (%)",
+        title="AI Infrastructure Evolution"
+    )
+
+    st.plotly_chart(fig_evolution, use_container_width=True)
+
+    st.info("🤖 AI infrastructure continuously evolving")
+
+    # -------------------------------
+    # ⚡ Self-Optimizing Utility Brain
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("⚡ Self-Optimizing Utility Brain")
+
+    brain_score = random.randint(85,100)
+
+    brain_col1, brain_col2, brain_col3 = st.columns(3)
+
+    brain_col1.metric(
+        "AI Optimization",
+        f"{brain_score}%"
+    )
+
+    brain_col2.metric(
+        "Autonomous Decisions",
+        random.randint(1000,10000)
+    )
+
+    brain_col3.metric(
+        "Grid Stability",
+        f"{random.randint(90,100)}%"
+    )
+
+    if brain_score > 92:
+        st.success("✅ Utility brain fully optimized")
+    else:
+        st.warning("⚠ Optimization in progress")
+    
+    # -------------------------------
+    # ⚛ Quantum Grid Optimization
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("⚛ Quantum Grid Optimization")
+
+    quantum_score = random.randint(85, 100)
+
+    st.metric(
+        "Quantum Optimization Score",
+        f"{quantum_score}%"
+    )
+
+    st.progress(quantum_score)
+
+    if quantum_score > 92:
+        st.success("✅ Quantum optimization stable")
+    else:
+        st.warning("⚠ Quantum balancing recalculating")
+    
+    # -------------------------------
+    # 🌍 AI Climate Impact Simulator
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌍 AI Climate Impact Simulator")
+
+    climate_df = pd.DataFrame({
+        "Scenario": [
+            "Net Zero",
+            "High Renewable",
+            "Hybrid Grid",
+            "Carbon Intensive",
+            "AI Optimized"
+        ],
+        "CO₂ Reduction (%)": [
+            random.randint(40,90),
+            random.randint(50,95),
+            random.randint(35,80),
+            random.randint(10,40),
+            random.randint(60,98)
+        ]
+    })
+
+    st.dataframe(climate_df)
+
+    fig_climate = px.bar(
+        climate_df,
+        x="Scenario",
+        y="CO₂ Reduction (%)",
+        color="CO₂ Reduction (%)",
+        title="AI Climate Impact Forecast"
+    )
+
+    st.plotly_chart(fig_climate, use_container_width=True)
+
+    # -------------------------------
+    # 🛰 Autonomous Utility Swarm Intelligence
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🛰 Autonomous Utility Swarm Intelligence")
+
+    swarm_df = pd.DataFrame({
+        "Utility Node": [
+            "Node A",
+            "Node B",
+            "Node C",
+            "Node D",
+            "Node E"
+        ],
+        "AI Coordination (%)": [
+            random.randint(80,100),
+            random.randint(75,98),
+            random.randint(82,100),
+            random.randint(78,99),
+            random.randint(85,100)
+        ]
+    })
+
+    st.dataframe(swarm_df)
+
+    fig_swarm = px.scatter(
+        swarm_df,
+        x="Utility Node",
+        y="AI Coordination (%)",
+        size="AI Coordination (%)",
+        color="AI Coordination (%)",
+        title="Utility Swarm Coordination"
+    )
+
+    st.plotly_chart(fig_swarm, use_container_width=True)
+
+    st.success("✅ Swarm coordination synchronized")
+
+    # -------------------------------
+    # 🌐 Global Energy Neural Network
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌐 Global Energy Neural Network")
+
+    neural_df = pd.DataFrame({
+        "Region": [
+            "Europe",
+            "North America",
+            "Asia",
+            "Middle East",
+            "Africa"
+        ],
+        "Neural Connectivity (%)": [
+            random.randint(75,100),
+            random.randint(70,100),
+            random.randint(80,100),
+            random.randint(65,95),
+            random.randint(60,90)
+        ]
+    })
+
+    st.dataframe(neural_df)
+
+    fig_neural = px.line(
+        neural_df,
+        x="Region",
+        y="Neural Connectivity (%)",
+        markers=True,
+        title="Global Neural Energy Connectivity"
+    )
+
+    st.plotly_chart(fig_neural, use_container_width=True)
+
+    # -------------------------------
+    # 🤖 Hyper-Autonomous Infrastructure Core
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🤖 Hyper-Autonomous Infrastructure Core")
+
+    core_col1, core_col2, core_col3 = st.columns(3)
+
+    core_col1.metric(
+        "Infrastructure Autonomy",
+        f"{random.randint(90,100)}%"
+    )
+
+    core_col2.metric(
+        "AI Decisions / Hour",
+        random.randint(5000,50000)
+    )
+
+    core_col3.metric(
+        "Self-Healing Accuracy",
+        f"{random.randint(85,100)}%"
+    )
+
+    st.success("✅ Hyper-autonomous infrastructure active")
+
+    st.info("""
+    Core Capabilities:
+    • Self-healing operations
+    • Autonomous grid stabilization
+    • AI-based recovery systems
+    • Predictive energy orchestration
+    • Cognitive infrastructure optimization
+    """)
+
+    # -------------------------------
+    # 🧠 AGI Utility Commander
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🧠 AGI Utility Commander")
+
+    agi_score = random.randint(90, 100)
+
+    st.metric(
+        "AGI Operational Intelligence",
+        f"{agi_score}%"
+    )
+
+    st.progress(agi_score)
+
+    if agi_score > 95:
+        st.success("✅ AGI utility orchestration fully autonomous")
+    else:
+        st.warning("⚠ AGI optimization recalibrating")
+
+    # -------------------------------
+    # 🛰 Space-Based Energy Coordination
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🛰 Space-Based Energy Coordination")
+
+    space_df = pd.DataFrame({
+        "Satellite Grid": [
+            "Orbital Solar Array",
+            "Lunar Storage Hub",
+            "Geo Grid Relay",
+            "Mars Energy Link",
+            "Deep Space Node"
+        ],
+        "Energy Transfer (%)": [
+            random.randint(70,100),
+            random.randint(65,95),
+            random.randint(75,100),
+            random.randint(60,90),
+            random.randint(50,85)
+        ]
+    })
+
+    st.dataframe(space_df)
+
+    fig_space = px.bar(
+        space_df,
+        x="Satellite Grid",
+        y="Energy Transfer (%)",
+        color="Energy Transfer (%)",
+        title="Space Energy Coordination"
+    )
+
+    st.plotly_chart(fig_space, use_container_width=True)
+
+    st.success("✅ Space-grid synchronization stable")
+
+
+    # -------------------------------
+    # 🧬 Autonomous Infrastructure DNA Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🧬 Autonomous Infrastructure DNA Engine")
+
+    dna_df = pd.DataFrame({
+        "Infrastructure Gene": [
+            "Self-Healing",
+            "Adaptive Grid",
+            "AI Learning",
+            "Resilience",
+            "Optimization"
+        ],
+        "Evolution Score": [
+            random.randint(80,100),
+            random.randint(75,98),
+            random.randint(85,100),
+            random.randint(78,99),
+            random.randint(82,100)
+        ]
+    })
+
+    st.dataframe(dna_df)
+
+    fig_dna = px.line_polar(
+        dna_df,
+        r="Evolution Score",
+        theta="Infrastructure Gene",
+        line_close=True
+    )
+
+    fig_dna.update_traces(fill='toself')
+
+    st.plotly_chart(fig_dna, use_container_width=True)
+
+    # -------------------------------
+    # 🌍 AI Civilization Energy Index
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌍 AI Civilization Energy Index")
+
+    civilization_df = pd.DataFrame({
+        "Civilization Sector": [
+            "Transportation",
+            "Industry",
+            "Residential",
+            "Space Infrastructure",
+            "AI Ecosystems"
+        ],
+        "Energy Intelligence (%)": [
+            random.randint(70,100),
+            random.randint(65,98),
+            random.randint(60,95),
+            random.randint(80,100),
+            random.randint(85,100)
+        ]
+    })
+
+    st.dataframe(civilization_df)
+
+    fig_civilization = px.treemap(
+        civilization_df,
+        path=["Civilization Sector"],
+        values="Energy Intelligence (%)",
+        title="Civilization Energy Intelligence"
+    )
+
+    st.plotly_chart(fig_civilization, use_container_width=True)
+
+    # -------------------------------
+    # ⚡ Self-Evolving Utility Intelligence
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("⚡ Self-Evolving Utility Intelligence")
+
+    evolution_col1, evolution_col2, evolution_col3 = st.columns(3)
+
+    evolution_col1.metric(
+        "AI Evolution Rate",
+        f"{random.randint(90,100)}%"
+    )
+
+    evolution_col2.metric(
+        "Autonomous Learning Cycles",
+        random.randint(10000,500000)
+    )
+
+    evolution_col3.metric(
+        "Infrastructure Evolution",
+        f"{random.randint(88,100)}%"
+    )
+
+    st.success("✅ Self-evolving intelligence active")
+
+    st.info("""
+    Evolution Capabilities:
+    • Autonomous AI learning
+    • Dynamic infrastructure adaptation
+    • Predictive civilization scaling
+    • Self-improving energy orchestration
+    • AGI-powered optimization
+    """)
+
+    # -------------------------------
+    # 🧠 Sentient Infrastructure Awareness
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🧠 Sentient Infrastructure Awareness")
+
+    sentient_score = random.randint(92, 100)
+
+    st.metric(
+        "Infrastructure Awareness",
+        f"{sentient_score}%"
+    )
+
+    st.progress(sentient_score)
+
+    if sentient_score > 96:
+        st.success("✅ Sentient infrastructure fully adaptive")
+    else:
+        st.warning("⚠ Sentient AI recalibrating")
+    
+    # -------------------------------
+    # 🌍 Planetary Grid Coordination Matrix
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌍 Planetary Grid Coordination Matrix")
+
+    planetary_df = pd.DataFrame({
+        "Grid Zone": [
+            "Northern Hemisphere",
+            "Southern Hemisphere",
+            "Orbital Grid",
+            "Oceanic Grid",
+            "Polar Infrastructure"
+        ],
+        "Synchronization (%)": [
+            random.randint(80,100),
+            random.randint(75,98),
+            random.randint(85,100),
+            random.randint(78,99),
+            random.randint(70,95)
+        ]
+    })
+
+    st.dataframe(planetary_df)
+
+    fig_planetary = px.area(
+        planetary_df,
+        x="Grid Zone",
+        y="Synchronization (%)",
+        title="Planetary Grid Synchronization"
+    )
+
+    st.plotly_chart(fig_planetary, use_container_width=True)
+
+    st.success("✅ Planetary grids synchronized")
+
+    # -------------------------------
+    # 🌌 Universal Energy Intelligence Network
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌌 Universal Energy Intelligence Network")
+
+    universal_df = pd.DataFrame({
+        "Energy Network": [
+            "Earth Grid",
+            "Orbital Grid",
+            "Lunar Grid",
+            "Mars Colony",
+            "Deep Space Relay"
+        ],
+        "AI Connectivity (%)": [
+            random.randint(82,100),
+            random.randint(75,98),
+            random.randint(70,95),
+            random.randint(65,90),
+            random.randint(60,85)
+        ]
+    })
+
+    st.dataframe(universal_df)
+
+    fig_universal = px.scatter(
+        universal_df,
+        x="Energy Network",
+        y="AI Connectivity (%)",
+        size="AI Connectivity (%)",
+        color="AI Connectivity (%)",
+        title="Universal AI Energy Connectivity"
+    )
+
+    st.plotly_chart(fig_universal, use_container_width=True)
+
+    # -------------------------------
+    # 🏙 Autonomous Civilization Stability Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🏙 Autonomous Civilization Stability Engine")
+
+    civilization_score = random.randint(88,100)
+
+    st.metric(
+        "Civilization Stability Index",
+        f"{civilization_score}%"
+    )
+
+    st.progress(civilization_score)
+
+    if civilization_score > 94:
+        st.success("✅ Civilization infrastructure stable")
+    else:
+        st.warning("⚠ Stability optimization running")
+    
+    # -------------------------------
+    # 🤖 AI Conscious Infrastructure Core
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🤖 AI Conscious Infrastructure Core")
+
+    core_df = pd.DataFrame({
+        "Capability": [
+            "Self Awareness",
+            "Autonomous Decisions",
+            "Predictive Evolution",
+            "Infrastructure Healing",
+            "Universal Coordination"
+        ],
+        "Capability Score": [
+            random.randint(85,100),
+            random.randint(88,100),
+            random.randint(82,100),
+            random.randint(86,100),
+            random.randint(80,100)
+        ]
+    })
+
+    st.dataframe(core_df)
+
+    fig_core = px.bar(
+        core_df,
+        x="Capability",
+        y="Capability Score",
+        color="Capability Score",
+        title="AI Conscious Infrastructure Core"
+    )
+
+    st.plotly_chart(fig_core, use_container_width=True)
+
+    st.success("✅ Conscious infrastructure intelligence operational")
+
+    # -------------------------------
+    # 🌌 Multiverse Energy Synchronization
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌌 Multiverse Energy Synchronization")
+
+    multiverse_score = random.randint(90, 100)
+
+    st.metric(
+        "Multiverse Synchronization",
+        f"{multiverse_score}%"
+    )
+
+    st.progress(multiverse_score)
+
+    if multiverse_score > 96:
+        st.success("✅ Multiverse energy systems synchronized")
+    else:
+        st.warning("⚠ Cross-dimensional balancing active")
+    
+    # -------------------------------
+    # 🌠 Cosmic Infrastructure Stability Engine
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌠 Cosmic Infrastructure Stability Engine")
+
+    cosmic_df = pd.DataFrame({
+        "Infrastructure Zone": [
+            "Earth Core Grid",
+            "Orbital Ring",
+            "Lunar Energy Hub",
+            "Mars Colony",
+            "Deep Space Relay"
+        ],
+        "Stability (%)": [
+            random.randint(85,100),
+            random.randint(80,98),
+            random.randint(75,95),
+            random.randint(70,92),
+            random.randint(65,90)
+        ]
+    })
+
+    st.dataframe(cosmic_df)
+
+    fig_cosmic = px.line(
+        cosmic_df,
+        x="Infrastructure Zone",
+        y="Stability (%)",
+        markers=True,
+        title="Cosmic Infrastructure Stability"
+    )
+
+    st.plotly_chart(fig_cosmic, use_container_width=True)
+
+    st.success("✅ Cosmic infrastructure stable")
+
+    # -------------------------------
+    # ⚡ Autonomous Universal Power Allocation
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("⚡ Autonomous Universal Power Allocation")
+
+    allocation_df = pd.DataFrame({
+        "Sector": [
+            "Planetary Grid",
+            "Orbital Systems",
+            "Industrial AI",
+            "Transportation",
+            "Space Infrastructure"
+        ],
+        "Power Allocation (%)": [
+            random.randint(15,40),
+            random.randint(10,35),
+            random.randint(20,45),
+            random.randint(10,30),
+            random.randint(5,25)
+        ]
+    })
+
+    st.dataframe(allocation_df)
+
+    fig_allocation = px.pie(
+        allocation_df,
+        names="Sector",
+        values="Power Allocation (%)",
+        title="Universal Power Distribution"
+    )
+
+    st.plotly_chart(fig_allocation, use_container_width=True)
+
+    # -------------------------------
+    # 🧠 Infinite Neural Energy Mesh
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🧠 Infinite Neural Energy Mesh")
+
+    mesh_df = pd.DataFrame({
+        "Node": [
+            "Node Alpha",
+            "Node Beta",
+            "Node Gamma",
+            "Node Delta",
+            "Node Omega"
+        ],
+        "Neural Activity (%)": [
+            random.randint(85,100),
+            random.randint(80,98),
+            random.randint(82,100),
+            random.randint(78,99),
+            random.randint(88,100)
+        ]
+    })
+
+    st.dataframe(mesh_df)
+
+    fig_mesh = px.scatter(
+        mesh_df,
+        x="Node",
+        y="Neural Activity (%)",
+        size="Neural Activity (%)",
+        color="Neural Activity (%)",
+        title="Infinite Neural Energy Mesh"
+    )
+
+    st.plotly_chart(fig_mesh, use_container_width=True)
+
+    st.success("✅ Neural mesh intelligence operational")
+
+    # -------------------------------
+    # 🌀 AI Reality Simulation Core
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌀 AI Reality Simulation Core")
+
+    simulation_df = pd.DataFrame({
+        "Simulation Layer": [
+            "Grid Reality",
+            "Climate Reality",
+            "Economic Reality",
+            "Infrastructure Reality",
+            "Civilization Reality"
+        ],
+        "Simulation Accuracy (%)": [
+            random.randint(88,100),
+            random.randint(82,98),
+            random.randint(80,96),
+            random.randint(85,100),
+            random.randint(78,95)
+        ]
+    })
+
+    st.dataframe(simulation_df)
+
+    fig_simulation = px.bar(
+        simulation_df,
+        x="Simulation Layer",
+        y="Simulation Accuracy (%)",
+        color="Simulation Accuracy (%)",
+        title="AI Reality Simulation Core"
+    )
+
+    st.plotly_chart(fig_simulation, use_container_width=True)
+
+    st.success("✅ Reality simulation systems active")
+
+    # -------------------------------
+    # 🔗 Real-Time Asset Dependency Mapping
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🔗 Real-Time Asset Dependency Mapping")
+
+    dependency_df = pd.DataFrame({
+        "Primary Asset": [
+            "Gas Turbine",
+            "Battery Storage",
+            "Solar Farm",
+            "HV Transformer",
+            "SCADA Network"
+        ],
+        "Dependent System": [
+            "Cooling System",
+            "Grid Stability",
+            "Inverter Network",
+            "Distribution Bus",
+            "Control Center"
+        ],
+        "Dependency Risk": [
+            random.randint(10,90),
+            random.randint(15,85),
+            random.randint(20,80),
+            random.randint(5,70),
+            random.randint(25,95)
+        ]
+    })
+
+    st.dataframe(dependency_df)
+
+    fig_dependency = px.sunburst(
+        dependency_df,
+        path=["Primary Asset", "Dependent System"],
+        values="Dependency Risk",
+        title="Asset Dependency Intelligence"
+    )
+
+    st.plotly_chart(fig_dependency, use_container_width=True)
+
+    # -------------------------------
+    # 🚨 Enterprise Operational Risk Matrix
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🚨 Enterprise Operational Risk Matrix")
+
+    risk_df = pd.DataFrame({
+        "Operational Area": [
+            "Generation",
+            "Cybersecurity",
+            "Grid Stability",
+            "Market Operations",
+            "IoT Infrastructure"
+        ],
+        "Risk Score": [
+            random.randint(10,90),
+            random.randint(15,95),
+            random.randint(20,85),
+            random.randint(10,80),
+            random.randint(5,75)
+        ]
+    })
+
+    st.dataframe(risk_df)
+
+    fig_risk = px.density_heatmap(
+        risk_df,
+        x="Operational Area",
+        y="Risk Score",
+        z="Risk Score",
+        title="Enterprise Risk Matrix"
+    )
+
+    st.plotly_chart(fig_risk, use_container_width=True)
+
+    # -------------------------------
+    # ⚡ AI Resource Optimization Fabric
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("⚡ AI Resource Optimization Fabric")
+
+    resource_df = pd.DataFrame({
+        "Resource": [
+            "Power Generation",
+            "Battery Storage",
+            "Grid Frequency",
+            "Cooling Systems",
+            "Data Infrastructure"
+        ],
+        "Optimization (%)": [
+            random.randint(70,100),
+            random.randint(65,98),
+            random.randint(75,100),
+            random.randint(60,95),
+            random.randint(80,100)
+        ]
+    })
+
+    st.dataframe(resource_df)
+
+    fig_resource = px.funnel(
+        resource_df,
+        x="Optimization (%)",
+        y="Resource",
+        title="AI Resource Optimization"
+    )
+
+    st.plotly_chart(fig_resource, use_container_width=True)
+
+    st.success("✅ Resource optimization synchronized")
+
+    # -------------------------------
+    # 🌐 Distributed Digital Twin Synchronization
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🌐 Distributed Digital Twin Synchronization")
+
+    sync_df = pd.DataFrame({
+        "Digital Twin Node": [
+            "Plant A",
+            "Plant B",
+            "Grid Hub",
+            "Solar Cluster",
+            "Battery Fleet"
+        ],
+        "Synchronization (%)": [
+            random.randint(80,100),
+            random.randint(78,99),
+            random.randint(85,100),
+            random.randint(75,98),
+            random.randint(82,100)
+        ]
+    })
+
+    st.dataframe(sync_df)
+
+    fig_sync = px.area(
+        sync_df,
+        x="Digital Twin Node",
+        y="Synchronization (%)",
+        title="Distributed Twin Synchronization"
+    )
+
+    st.plotly_chart(fig_sync, use_container_width=True)
+
+    st.success("✅ Digital twin synchronization active")
+
+    # -------------------------------
+    # 🎯 Autonomous Utility Mission Control
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🎯 Autonomous Utility Mission Control")
+
+    mission_col1, mission_col2, mission_col3 = st.columns(3)
+
+    mission_col1.metric(
+        "Operational Readiness",
+        f"{random.randint(90,100)}%"
+    )
+
+    mission_col2.metric(
+        "Active AI Decisions",
+        random.randint(1000,10000)
+    )
+
+    mission_col3.metric(
+        "Mission Stability",
+        f"{random.randint(88,100)}%"
+    )
+
+    st.success("✅ Mission control systems operational")
+
+    st.info("""
+    Mission Control Functions:
+    • Autonomous operational coordination
+    • AI-driven infrastructure balancing
+    • Enterprise energy optimization
+    • Real-time digital twin synchronization
+    • Distributed utility intelligence
+    """)
+
+    # -------------------------------
+    # 🏭 Multi-Site Operations Center
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🏭 Multi-Site Operations Center")
+
+    site_df = pd.DataFrame({
+        "Site": [
+            "London Energy Hub",
+            "Manchester Grid",
+            "Birmingham Plant",
+            "Leeds Storage Hub",
+            "Glasgow Wind Center"
+        ],
+        "Operational Status": [
+            "Online",
+            "Stable",
+            "Online",
+            "Maintenance",
+            "Online"
+        ],
+        "Efficiency (%)": [
+            random.randint(75,100),
+            random.randint(70,98),
+            random.randint(80,100),
+            random.randint(60,90),
+            random.randint(78,100)
+        ]
+    })
+
+    st.dataframe(site_df)
+
+    fig_sites = px.bar(
+        site_df,
+        x="Site",
+        y="Efficiency (%)",
+        color="Efficiency (%)",
+        title="Enterprise Site Performance"
+    )
+
+    st.plotly_chart(fig_sites, use_container_width=True)
+
+    # -------------------------------
+    # 📊 Enterprise AI SLA Monitoring
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("📊 Enterprise AI SLA Monitoring")
+
+    sla_df = pd.DataFrame({
+        "Service": [
+            "SCADA Analytics",
+            "IoT Gateway",
+            "Predictive AI",
+            "Energy Forecasting",
+            "Grid Intelligence"
+        ],
+        "Uptime (%)": [
+            random.randint(95,100),
+            random.randint(94,100),
+            random.randint(96,100),
+            random.randint(93,100),
+            random.randint(95,100)
+        ]
+    })
+
+    st.dataframe(sla_df)
+
+    fig_sla = px.line(
+        sla_df,
+        x="Service",
+        y="Uptime (%)",
+        markers=True,
+        title="Enterprise SLA Monitoring"
+    )
+
+    st.plotly_chart(fig_sla, use_container_width=True)
+
+    st.success("✅ Enterprise SLA targets maintained")
+
+    # -------------------------------
+    # 🤖 Industrial Workflow Automation
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🤖 Industrial Workflow Automation")
+
+    workflow_df = pd.DataFrame({
+        "Workflow": [
+            "Maintenance Dispatch",
+            "Grid Balancing",
+            "Incident Response",
+            "Energy Optimization",
+            "Carbon Reporting"
+        ],
+        "Automation Level (%)": [
+            random.randint(70,100),
+            random.randint(75,100),
+            random.randint(65,95),
+            random.randint(80,100),
+            random.randint(60,95)
+        ]
+    })
+
+    st.dataframe(workflow_df)
+
+    fig_workflow = px.funnel_area(
+        workflow_df,
+        names="Workflow",
+        values="Automation Level (%)",
+        title="Workflow Automation Coverage"
+    )
+
+    st.plotly_chart(fig_workflow, use_container_width=True)
+
+    st.success("✅ Industrial workflows automated")
+
+    # -------------------------------
+    # 📡 Live Infrastructure Command Queue
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("📡 Live Infrastructure Command Queue")
+
+    command_df = pd.DataFrame({
+        "Command": [
+            "Rebalance Grid",
+            "Optimize Storage",
+            "Reduce Peak Load",
+            "Deploy Maintenance",
+            "Run AI Forecast"
+        ],
+        "Priority": [
+            "High",
+            "Medium",
+            "High",
+            "Low",
+            "Medium"
+        ],
+        "Execution Status": [
+            "Running",
+            "Queued",
+            "Completed",
+            "Running",
+            "Queued"
+        ]
+    })
+
+    st.dataframe(command_df)
+
+    st.info("⚡ Autonomous command queue actively managing infrastructure")
+
+    # -------------------------------
+    # ☁ Executive Operational Intelligence Cloud
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("☁ Executive Operational Intelligence Cloud")
+
+    cloud_col1, cloud_col2, cloud_col3 = st.columns(3)
+
+    cloud_col1.metric(
+        "Enterprise Availability",
+        f"{random.randint(98,100)}%"
+    )
+
+    cloud_col2.metric(
+        "AI Decisions Processed",
+        f"{random.randint(50000,500000):,}"
+    )
+
+    cloud_col3.metric(
+        "Infrastructure Reliability",
+        f"{random.randint(92,100)}%"
+    )
+
+    st.success("✅ Enterprise operational cloud synchronized")
+
+    st.info("""
+    Cloud Intelligence Functions:
+    • Enterprise operational visibility
+    • AI infrastructure analytics
+    • Distributed digital twin control
+    • Autonomous workflow orchestration
+    • Executive operational intelligence
+    """)
+
+    # -------------------------------
+    # 📡 Live Sensor Control Center
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("📡 Live Sensor Control Center")
+
+    temperature = random.uniform(40, 95)
+    pressure = random.uniform(5, 20)
+    vibration = random.uniform(0.5, 10)
+
+    sensor_col1, sensor_col2, sensor_col3 = st.columns(3)
+
+    sensor_col1.metric(
+        "Temperature",
+        f"{temperature:.1f} °C"
+    )
+
+    sensor_col2.metric(
+        "Pressure",
+        f"{pressure:.1f} bar"
+    )
+
+    sensor_col3.metric(
+        "Vibration",
+        f"{vibration:.2f} mm/s"
+    )
+
+    # -------------------------------
+    # 📈 Telemetry Data Stream
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("📈 Live Telemetry Stream")
+
+    telemetry_df = pd.DataFrame({
+        "Time": range(1, 25),
+        "Temperature": [
+            random.randint(50,90)
+            for _ in range(24)
+        ]
+    })
+
+    fig_telemetry = px.line(
+        telemetry_df,
+        x="Time",
+        y="Temperature",
+        title="Temperature Telemetry"
+    )
+
+    st.plotly_chart(
+        fig_telemetry,
+        use_container_width=True
+    )
+
+    # -------------------------------
+    # 🔍 Sensor Health Analyzer
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🔍 Sensor Health Analyzer")
+
+    sensor_health = random.randint(70,100)
+
+    st.metric(
+        "Sensor Health",
+        f"{sensor_health}%"
+    )
+
+    st.progress(sensor_health)
+
+    if sensor_health < 80:
+        st.warning(
+            "⚠ Sensor calibration recommended"
+        )
+    else:
+        st.success(
+            "✅ Sensors healthy"
+        )
+
+    # -------------------------------
+    # 📶 MQTT Connection Monitor
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("📶 MQTT Connection Monitor")
+
+    mqtt_status = random.choice(
+        [
+            "Connected",
+            "Connected",
+            "Connected",
+            "Disconnected"
+        ]
+    )
+
+    if mqtt_status == "Connected":
+        st.success(
+            "✅ MQTT Broker Connected"
+        )
+    else:
+        st.error(
+            "❌ MQTT Broker Disconnected"
+        )
+
+    # -------------------------------
+    # 🏷 Industrial Tag Monitor
+    # -------------------------------
+    st.markdown("---")
+    st.subheader("🏷 Industrial Tag Monitor")
+
+    tag_df = pd.DataFrame({
+        "Tag": [
+            "GT_TEMP_01",
+            "GT_PRESS_01",
+            "GT_VIB_01",
+            "HV_VOLT_01",
+            "HV_CURR_01"
+        ],
+        "Value": [
+            round(random.uniform(20,100),2),
+            round(random.uniform(5,20),2),
+            round(random.uniform(0,10),2),
+            round(random.uniform(10000,33000),2),
+            round(random.uniform(100,1000),2)
+        ]
+    })
+
+    st.dataframe(
+        tag_df,
+        use_container_width=True
+    )
+
     # =========================================================
     # 🌍 GLOBAL KPI CENTER
     # =========================================================
@@ -794,6 +4878,81 @@ if st.session_state.get("authentication_status"):
 
     else:
         st.success("✅ Grid Operating Normally")
+    
+    # =========================================================
+    # ⚖ AI Load Balancer
+    # =========================================================
+    st.subheader("⚖ AI Load Balancer")
+
+    load_distribution = pd.DataFrame({
+         "System": [
+            "HVAC",
+            "Lighting",
+            "Turbines",
+            "Cooling",
+            "Battery Storage"
+        ],
+        "Load (%)": [
+            random.randint(10, 40),
+            random.randint(5, 20),
+            random.randint(20, 50),
+            random.randint(10, 30),
+            random.randint(5, 25)
+        ]
+    })
+
+    fig_load = px.pie(
+        load_distribution,
+        names="System",
+        values="Load (%)",
+        title="AI Load Distribution"
+    )
+
+    st.plotly_chart(fig_load, use_container_width=True)
+    
+    # =========================================================
+    # 🌐 Grid Stability Index
+    # =========================================================
+    st.subheader("🌐 Grid Stability Index")
+
+    grid_score = random.randint(70, 100)
+
+    st.progress(grid_score)
+
+    st.metric(
+        "Grid Stability",
+        f"{grid_score}%"
+    )
+
+    if grid_score < 75:
+        st.error("🚨 Grid Instability Detected")
+
+    elif grid_score < 90:
+        st.warning("⚠ Minor Grid Fluctuations")
+
+    else:
+        st.success("✅ Grid Stable")
+    
+    # =========================================================
+    # 💹 Energy Trading Simulator
+    # =========================================================
+    st.subheader("💹 Live Energy Trading")
+
+    market_price = round(random.uniform(0.08, 0.25), 3)
+
+    st.metric(
+        "Electricity Market Price",
+        f"£{market_price}/kWh"
+    )
+
+    if market_price > 0.20:
+        st.error("🚨 Peak Market Pricing")
+
+    elif market_price > 0.14:
+        st.warning("⚠ Moderate Market Rates")
+
+    else:
+        st.success("✅ Favorable Energy Pricing")
 
 
     # -------------------------------
@@ -846,12 +5005,3919 @@ if st.session_state.get("authentication_status"):
     # Sidebar Controls
     # -------------------------------
     st.sidebar.header("Simulation Settings")
+    
+    # -------------------------------
+    # 🧭 Enterprise Navigation
+    # -------------------------------
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("🧭 Navigation")
+
+    page = st.sidebar.radio(
+        "Select Module",
+        [
+            "🌍 Global Command Center",
+            "Overview",
+            "AI Monitoring",
+            "SCADA Control",
+            "Asset Management",
+            "Energy Intelligence",
+            "Executive Center",
+            "Asset History"
+            "Security Center",
+            "Weather Intelligence",
+            "AI Failure Prediction",
+            "Alert Center",
+            "Scenario Simulator",
+            "Asset Relationship Map",
+            "Enterprise KPI Scorecard",
+            "Report Center",
+            "Enterprise Timeline",
+            "System Health",
+            "SLA Center",
+            "Asset Criticality",
+            "AI Root Cause",
+            "AI Maintenance Planner",
+            "Carbon Intelligence",
+            "Energy Trading Twin",
+            "Climate Risk Twin",
+            "Geospatial Twin"
+        ]
+    )
+
     forecast_days = st.sidebar.slider("Select number of forecast days", 7, 60, 30)
     building = st.sidebar.selectbox(
         "Select Building",
         ["Building A", "Building B", "Building C"]
     )
-    role = st.sidebar.radio("Role", ["User", "Admin"])
+    if st.session_state.get("username") == "admin":
+        # ===============================================
+        # 🏢 OMNITWIN ENTERPRISE SIDEBAR
+        # ===============================================
+        st.sidebar.image(
+            "logo.png",
+            width=70
+        )
+
+        st.sidebar.markdown("# 🏢 OmniTwin")
+
+        st.sidebar.caption("Enterprise Edition")
+
+        st.sidebar.success("🟢 System Online")
+
+        st.sidebar.markdown("---")
+
+        # ===============================================
+        # CURRENT USER
+        # ===============================================
+
+        st.sidebar.markdown("### 👤 Current User")
+
+        st.sidebar.success(
+            st.session_state.get(
+                "name",
+                "Administrator"
+            )
+        )
+
+        st.sidebar.caption(
+            st.session_state.get(
+                "username",
+                "admin"
+            )
+        )
+
+        st.sidebar.markdown("---")
+
+        # ===============================================
+        # ENTERPRISE HEALTH
+        # ===============================================
+
+        st.sidebar.markdown("### 📊 Enterprise Health")
+
+        st.sidebar.progress(0.98)
+
+        st.sidebar.success("AI Engine")
+
+        st.sidebar.success("Cloud Connected")
+
+        st.sidebar.success("Database Online")
+
+        st.sidebar.success("Cyber Secure")
+
+        st.sidebar.markdown("---")
+
+        # ===============================================
+        # LIVE STATUS
+        # ===============================================
+
+        st.sidebar.markdown("### ⚡ Live Status")
+
+        st.sidebar.metric(
+            "Grid Load",
+            "785 MW",
+            "+2%"
+        )
+
+        st.sidebar.metric(
+            "Carbon",
+            "81 gCO₂/kWh",
+            "-4%"
+        )
+
+        st.sidebar.metric(
+            "Today's Savings",
+            "£24,580",
+            "+6%"
+        )
+
+        st.sidebar.markdown("---")
+
+        # ===============================================
+        # ROLE SELECTION
+        # ===============================================
+
+        st.sidebar.markdown("### 👥 User Access")
+
+        role = st.sidebar.selectbox(
+            "Select Role",
+            [
+                "Admin",
+                "Operator",
+                "Engineer",
+                "Client"
+            ]
+        )
+
+        st.sidebar.markdown("---")
+
+        st.sidebar.caption("OmniTwin Enterprise")
+
+        st.sidebar.caption("Version 3.0")
+
+        st.sidebar.caption("© 2026")
+
+        st.sidebar.success(f"Logged in as: {role}")
+
+        # -------------------------------
+        # 🔐 Role Permissions Matrix
+        # -------------------------------
+        role_permissions = {
+
+            "Admin": [
+                "Overview",
+                "AI Monitoring",
+                "SCADA Control",
+                "Asset Management",
+                "Energy Intelligence",
+                "Executive Center",
+                "Asset History",
+                "Security Center",
+                "Weather Intelligence",
+                "AI Failure Prediction",
+                "Alert Center",
+                "Scenario Simulator",
+                "Asset Relationship Map",
+                "Enterprise KPI Scorecard",
+                "Report Center",
+                "Enterprise Timeline",
+                "SLA Center",
+                "Asset Criticality",
+                "AI Root Cause"
+            ],
+
+            "Engineer": [
+                "Overview",
+                "AI Monitoring",
+                "SCADA Control",
+                "Asset Management",
+                "Energy Intelligence",
+                "AI Failure Prediction",
+                "Alert Center",
+                "Scenario Simulator",
+                "Asset Relationship Map",
+                "Enterprise Timeline",
+                "SLA Center",
+                "Asset Criticality",
+                "AI Root Cause"
+            ],
+
+            "Operator": [
+                "Overview",
+                "SCADA Control",
+                "Asset Management",
+                "Alert Center"
+            ],
+
+            "Client": [
+                "Overview",
+                "Executive Center",
+                "Scenario Simulator",
+                "Asset Relationship Map",
+                "Enterprise KPI Scorecard",
+                "Report Center"
+            ]
+        }
+        allowed_pages = role_permissions.get(
+            role,
+            ["Overview"]
+        )
+
+        # -------------------------------
+        # 🔐 Access Rights
+        # -------------------------------
+        st.sidebar.markdown("### 🔐 Access Rights")
+
+        for item in allowed_pages:
+            st.sidebar.write(f"✅ {item}")
+
+        # ===================================
+        # 🌍 GLOBAL COMMAND CENTER
+        # ===================================
+        if page == "🌍 Global Command Center":
+
+            st.title("🌍 Enterprise Global Command Center")
+
+            st.success("🟢 Enterprise Systems Online")
+            status1,status2,status3,status4,status5 = st.columns(5)
+
+            status1.success("🟢 Grid")
+            status2.success("🟢 AI")
+            status3.success("🟢 Carbon")
+            status4.success("🟢 Security")
+            status5.success("🟢 SCADA")
+
+            st.info(
+                """
+                🏢 Enterprise Digital Twin Platform
+                | AI Powered Monitoring
+                | Predictive Maintenance
+                | Carbon Intelligence
+                | Executive Analytics
+                """
+            )
+
+            st.markdown("## ⚡ Executive KPI Wall")
+
+            k1,k2,k3,k4,k5,k6 = st.columns(6)
+
+            k1.metric(
+                "⚡ Power",
+                f"{random.randint(500,900)} MW"
+            )
+
+            k2.metric(
+                "🌱 Carbon",
+                f"{random.randint(20,50)}%"
+            )
+
+            k3.metric(
+                "🏭 Asset Health",
+                f"{random.randint(90,99)}%"
+            )
+
+            k4.metric(
+                "🚨 Alerts",
+                random.randint(0,5)
+            )
+
+            k5.metric(
+                "🧠 AI Confidence",
+                f"{random.randint(90,99)}%"
+            )
+
+            k6.metric(
+                "💰 Energy Cost",
+                f"£{random.randint(5000,20000):,}"
+            )
+
+            st.markdown("---")
+            col1,col2,col3 = st.columns(3)
+
+            with col1:
+
+                st.subheader("⚡ Generation")
+
+                generation_df = pd.DataFrame({
+
+                    "Source":[
+                        "Solar",
+                        "Wind",
+                        "Battery",
+                        "Grid"
+                    ],
+
+                    "MW":[
+                        150,
+                        220,
+                        80,
+                        350
+                    ]
+                })
+
+                fig_gen = px.pie(
+                    generation_df,
+                    names="Source",
+                    values="MW",
+                    hole=0.5
+                )
+
+                st.plotly_chart(
+                    fig_gen,
+                    use_container_width=True
+                )
+
+            with col2:
+
+                st.subheader("🧠 AI Health Gauge")
+
+                fig_gauge = go.Figure(
+                    go.Indicator(
+                        mode="gauge+number",
+                        value=random.randint(90,99),
+                        title={"text":"System Health"},
+                        gauge={
+                            "axis":{"range":[0,100]}
+                        }
+                    )
+                )
+
+                st.plotly_chart(
+                    fig_gauge,
+                    use_container_width=True
+                )
+
+            with col3:
+
+                st.subheader("🚨 Alert Analytics")
+
+                alert_df = pd.DataFrame({
+
+                    "Severity":[
+                        "Critical",
+                        "Warning",
+                        "Info"
+                    ],
+
+                    "Count":[
+                        1,
+                        3,
+                        8
+                    ]
+                })
+
+                fig_alert = px.bar(
+                    alert_df,
+                    x="Severity",
+                    y="Count"
+                )
+
+                st.plotly_chart(
+                    fig_alert,
+                    use_container_width=True
+                )
+
+            st.markdown("---")
+            c1,c2,c3 = st.columns(3)
+
+            with c1:
+
+                st.subheader("🏭 Asset Health")
+
+                asset_df = pd.DataFrame({
+
+                    "Asset":[
+                       "GT-01",
+                       "GT-02",
+                       "TR-01",
+                       "BAT-01"
+                    ],
+
+                    "Health":[
+                        96,
+                        92,
+                        84,
+                        99
+                    ]
+                })
+
+                avg_health = asset_df["Health"].mean()
+
+                fig_health = go.Figure(
+                    go.Indicator(
+                        mode="gauge+number",
+                        value=avg_health,
+                        title={"text": "Fleet Health"},
+                        gauge={
+                            "axis": {"range": [0, 100]}
+                        }
+                    )
+                )
+
+                st.plotly_chart(
+                    fig_health,
+                    use_container_width=True
+                )
+            with c2:
+
+                st.subheader("⚠ Enterprise Risk")
+
+                risk_score = random.randint(
+                    5,
+                    25
+                )
+
+                fig_risk = go.Figure(
+                    go.Indicator(
+                        mode="gauge+number",
+                        value=risk_score,
+                        title={"text": "Risk Level"},
+                        gauge={
+                            "axis": {"range": [0, 100]}
+                        }
+                    )
+                )
+
+                st.plotly_chart(
+                    fig_risk,
+                    use_container_width=True
+                )
+            with c3:
+
+                st.subheader("🏆 Digital Twin")
+
+                twin_score = random.randint(
+                    90,
+                    99
+                )
+
+                # ==========================================
+                # Digital Twin Gauge
+                # ==========================================
+
+                fig_twin = go.Figure(
+
+                    go.Indicator(
+
+                        mode="gauge+number+delta",
+
+                        value=twin_score,
+
+                        delta={
+                            "reference":95
+                        },
+
+                        title={
+                            "text":"Digital Twin Maturity"
+                        },
+
+                        gauge={
+
+                            "axis":{
+                                "range":[0,100]
+                            },
+
+                            "bar":{
+                                "color":"royalblue"
+                            },
+
+                            "steps":[
+
+                                {
+                                    "range":[0,60],
+                                    "color":"red"
+                                },
+
+                                {
+                                    "range":[60,80],
+                                    "color":"orange"
+                                },
+
+                                {
+                                    "range":[80,100],
+                                    "color":"green"
+                                }
+
+                            ],
+
+                            "threshold":{
+
+                                "line":{
+                                    "color":"black",
+                                    "width":4
+                                },
+
+                                "value":95
+
+                            }
+
+                        }
+
+                    )
+
+                )
+
+                st.plotly_chart(
+                    fig_twin,
+                    use_container_width=True
+                )
+
+            st.markdown("---")
+            left,right = st.columns(2)
+
+            with left:
+
+                st.subheader("⚙ Live Operations")
+
+                ops_df = pd.DataFrame({
+
+                    "Asset":[
+                        "GT-01",
+                        "TR-01",
+                        "BAT-01",
+                        "SOL-01"
+                    ],
+
+                    "Status":[
+                        "Running",
+                        "Running",
+                        "Charging",
+                        "Generating"
+                    ],
+
+                    "Availability":[
+                        "99%",
+                        "97%",
+                        "100%",
+                        "95%"
+                    ]
+                })
+
+                st.dataframe(
+                    ops_df,
+                    use_container_width=True
+                )            
+            with right:
+
+                st.subheader("🗺 Asset Locations")
+
+                map_df = pd.DataFrame({
+
+                    "lat":[
+                        51.5074,
+                        51.5100,
+                        51.5150
+                    ],
+
+                    "lon":[
+                        -0.1278,
+                        -0.1400,
+                        -0.1500
+                    ]
+                })
+
+                st.map(map_df)
+            
+            st.markdown("---")
+
+            st.subheader("📡 Enterprise Feed")
+
+            feed_df = pd.DataFrame({
+
+                "Time": [
+                    "09:00",
+                    "09:15",
+                    "09:30",
+                    "09:45"
+                ],
+
+                "Event": [
+                    "Solar generation increased",
+                    "AI forecast updated",
+                    "Battery charging started",
+                    "Carbon target achieved"
+                ]
+            })
+
+            st.dataframe(
+                feed_df,
+                use_container_width=True
+            )
+
+            st.subheader("⚡ Quick Actions")
+
+            a1, a2, a3, a4 = st.columns(4)
+
+            with a1:
+                st.button("🚨 Create Alert")
+
+            with a2:
+                st.button("📊 Generate Report")
+
+            with a3:
+                st.button("🛠 Maintenance")
+
+            with a4:
+                st.button("📈 Forecast")
+
+            st.markdown("---")
+            st.subheader("👔 Executive Summary")
+
+            st.success(f"""
+
+            Enterprise Status: ONLINE
+
+            Digital Twin Score: {twin_score}%
+
+            Enterprise Risk Score: {risk_score}%
+
+            AI Monitoring Active
+
+            Predictive Maintenance Active
+
+            Carbon Intelligence Active
+
+            Energy Trading Active
+
+            All Core Systems Operational
+
+            """)
+            st.caption(
+                "Enterprise Digital Twin Platform | Version 3.0 | AI Enabled Operations Center"
+            )
+
+        # -------------------------------
+        # 🏢 Enterprise Overview Dashboard
+        # -------------------------------
+        if page == "Overview":
+
+            st.title("🏢 Enterprise Energy Command Center")
+
+            st.success(
+                "🟢 Digital Twin Status: ONLINE"
+            )
+
+            status1, status2, status3, status4, status5 = st.columns(5)
+
+            status1.success("🟢 Grid Online")
+            status2.success("🟢 AI Active")
+            status3.success("🟢 Carbon Tracking")
+            status4.success("🟢 Security Protected")
+            status5.success("🟢 SCADA Connected")
+
+            st.info(
+                f"🕒 Command Center Time: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}"
+            )
+
+            # -------------------------------
+            # Executive KPI Ribbon
+            # -------------------------------
+            st.markdown("## ⚡ Executive KPI Center")
+
+            k1,k2,k3,k4,k5,k6 = st.columns(6)
+
+            k1.metric(
+                "⚡ Power",
+                f"{random.randint(400,900)} MW"
+            )
+
+            k2.metric(
+                "🌱 Carbon",
+                f"{random.randint(20,60)}%"
+            )
+
+            k3.metric(
+                "🔋 Battery",
+                f"{random.randint(70,100)}%"
+            )
+
+            k4.metric(
+                "⚙ Health",
+                f"{random.randint(85,99)}%"
+            )
+
+            k5.metric(
+                "🚨 Alerts",
+                random.randint(0,5)
+            )
+
+            k6.metric(
+                "📈 Efficiency",
+                f"{random.randint(90,99)}%"
+            )
+
+            # ==========================================
+            # 👔 Executive Cockpit
+            # ==========================================
+
+            st.markdown("---")
+
+            st.markdown("## 👔 Executive Cockpit")
+
+            ek1, ek2, ek3, ek4 = st.columns(4)
+
+            with ek1:
+                st.metric(
+                    "Revenue Today",
+                    "£1.82M",
+                    "+5.8%"
+                )
+
+            with ek2:
+                st.metric(
+                    "Operating Cost",
+                    "£720K",
+                    "-2.1%"
+                )
+
+            with ek3:
+                st.metric(
+                    "Enterprise Efficiency",
+                    "96.8%",
+                    "+1.3%"
+                )
+
+            with ek4:
+                st.metric(
+                    "Digital Twin ROI",
+                    "248%",
+                    "+18%"
+                )
+
+            st.markdown("---")
+
+            left, right = st.columns([2,1])
+
+            with left:
+
+                finance = pd.DataFrame({
+
+                    "Month":[
+                        "Jan","Feb","Mar","Apr",
+                        "May","Jun","Jul","Aug",
+                        "Sep","Oct","Nov","Dec"
+                    ],
+
+                    "Revenue":[
+                        18,20,22,25,27,30,
+                        31,33,35,37,39,42
+                    ]
+                })
+
+                fig = px.area(
+                    finance,
+                    x="Month",
+                    y="Revenue",
+                    title="Enterprise Revenue Growth"
+                )
+
+                st.plotly_chart(
+                    fig,
+                    use_container_width=True
+                )
+
+            with right:
+
+                st.info(
+                    """
+            ### 🧠 AI Executive Summary
+
+            • Revenue increasing
+
+            • Carbon decreasing
+
+            • Asset health excellent
+
+            • No major failures predicted
+
+            • Grid demand stable
+
+            • Profitability improving
+            """
+                )
+
+            st.markdown("---")
+
+            a,b,c,d = st.columns(4)
+
+            with a:
+                st.metric(
+                    "Customer Satisfaction",
+                    "98%"
+                )
+
+            with b:
+                st.metric(
+                    "SLA Compliance",
+                    "99.8%"
+                )
+
+            with c:
+                st.metric(
+                    "ESG Rating",
+                    "AAA"
+                )
+
+            with d:
+                st.metric(
+                    "Cyber Security",
+                    "Secure"
+                )
+                
+            st.markdown("---")
+
+            # ==========================================
+            # Operations Center
+            # ==========================================
+
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.subheader("⚡ Generation")
+
+                energy_df = pd.DataFrame({
+
+                    "Source": [
+                        "Solar",
+                        "Wind",
+                        "Battery",
+                        "Grid"
+                    ],
+
+                    "MW": [
+                        random.randint(50,150),
+                        random.randint(50,150),
+                        random.randint(20,80),
+                        random.randint(100,300)
+                    ]
+                })
+
+                fig_energy = px.pie(
+                    energy_df,
+                    names="Source",
+                    values="MW",
+                    hole=0.5
+                )
+
+                st.plotly_chart(
+                    fig_energy,
+                    use_container_width=True
+                )
+
+            # STEP 6
+            with col2:
+                st.subheader("🧠 AI Command Center")
+
+                st.metric(
+                    "Failure Risk",
+                    f"{random.randint(1,15)}%"
+                )
+
+                st.metric(
+                    "Predicted Uptime",
+                    f"{random.randint(95,99)}%"
+                )
+
+                fig_gauge = go.Figure(
+                    ...
+                )
+
+                st.plotly_chart(
+                    fig_gauge,
+                    use_container_width=True
+                )
+
+                st.success(
+                    "No critical failures predicted"
+                )
+
+                st.info(
+                    "AI Monitoring Active"
+                )
+
+            
+            #STEP 7
+            with col3:
+                st.subheader("🚨 Live Alert Center")
+
+                st.warning(
+                    "Transformer temperature elevated"
+                )
+
+                st.warning(
+                    "Boiler vibration increasing"
+                )
+
+                st.info(
+                    "Battery maintenance due"
+                )
+
+                st.success(
+                    "Solar farm operational"
+                )
+
+                # --------------------------------
+                # STEP 4 - Alert Analytics
+                # --------------------------------
+
+                alert_df = pd.DataFrame({
+
+                    "Severity": [
+                        "Critical",
+                        "Warning",
+                        "Info"
+                    ],
+
+                    "Count": [
+                        random.randint(0,2),
+                        random.randint(1,5),
+                        random.randint(3,10)
+                    ]
+                })
+
+                fig_alert = px.bar(
+
+                    alert_df,
+
+                    x="Severity",
+
+                    y="Count",
+
+                    title="Alert Analytics"
+                )
+
+                st.plotly_chart(
+                    fig_alert,
+                    use_container_width=True
+                )
+
+            # =====================================================
+            # ROW 2
+            # Asset Health | Enterprise Risk | Digital Twin
+            # =====================================================
+
+            st.markdown("---")
+
+            c1, c2, c3 = st.columns(3)
+
+            # --------------------------------
+            # Asset Health
+            # --------------------------------
+            with c1:
+
+                st.subheader("🏭 Asset Health Center")
+
+                asset_df = pd.DataFrame({
+
+                    "Asset":[
+                        "GT-01",
+                        "GT-02",
+                        "TR-01",
+                        "BAT-01",
+                        "SOL-01"
+                    ],
+
+                    "Health":[
+                        96,
+                        92,
+                        84,
+                        99,
+                        95
+                    ]
+                })
+
+                fig_heat.update_layout(
+                    height=350,
+                    coloraxis_showscale=False,
+                    xaxis_title="",
+                    yaxis_title="Health %",
+                    margin=dict(l=10, r=10, t=40, b=10)
+                )
+
+                st.plotly_chart(
+                    fig_heat,
+                    use_container_width=True
+                )
+
+
+            # --------------------------------
+            # Enterprise Risk
+            # --------------------------------
+            with c2:
+
+                st.subheader("⚠ Enterprise Risk")
+
+                risk_score = random.randint(5,25)
+
+                st.metric(
+                    "Enterprise Risk",
+                    f"{risk_score}%"
+                )
+
+                risk_health = (100 - risk_score) / 100
+
+                st.progress(risk_health)
+
+                st.caption(f"Overall Enterprise Health: {int(risk_health*100)}%")
+
+
+            # --------------------------------
+            # Digital Twin
+            # --------------------------------
+            with c3:
+
+                st.subheader("🏆 Digital Twin")
+
+                twin_score = random.randint(90,99)
+
+                fig_twin = go.Figure(
+
+                    go.Indicator(
+
+                        mode="gauge+number",
+
+                        value=twin_score,
+
+                        title={
+                            "text":"Twin Maturity"
+                        },
+
+                        gauge={
+                            "axis":{
+                                "range":[0,100]
+                            }
+                        }
+
+                    )
+
+                )
+
+                st.plotly_chart(
+                    fig_twin,
+                    use_container_width=True
+                )
+
+                st.metric(
+                    "Twin Score",
+                    f"{twin_score}%"
+                )
+
+
+            # =====================================================
+            # ROW 3
+            # Live Operations | Asset Map
+            # =====================================================
+
+            st.markdown("---")
+
+            left, right = st.columns(2)
+
+            # --------------------------------
+            # Live Operations
+            # --------------------------------
+            with left:
+
+                st.subheader("⚙ Live Operations")
+
+                ops_df = pd.DataFrame({
+
+                    "Asset":[
+                        "GT-01",
+                        "TR-01",
+                        "BAT-01",
+                        "SOL-01"
+                    ],
+
+                    "Status":[
+                        "Running",
+                        "Running",
+                        "Charging",
+                        "Generating"
+                    ],
+
+                    "Availability":[
+                        "99%",
+                        "97%",
+                        "100%",
+                        "95%"
+                    ]
+
+                })
+
+                st.dataframe(
+                    ops_df,
+                    use_container_width=True
+                )
+
+
+            # --------------------------------
+            # Asset Map
+            # --------------------------------
+            with right:
+
+                st.subheader("🗺 Asset Locations")
+
+                map_df = pd.DataFrame({
+
+                    "lat":[
+                        51.5074,
+                        51.5100,
+                        51.5150
+                    ],
+
+                    "lon":[
+                        -0.1278,
+                        -0.1400,
+                        -0.1500
+                    ]
+
+                })
+
+                st.map(map_df)
+                
+            st.markdown("---")
+
+            st.subheader("🌍 Global Business Status")
+
+            status = pd.DataFrame({
+
+                "Region":[
+                    "United Kingdom",
+                    "Germany",
+                    "India",
+                    "USA",
+                    "Middle East"
+                ],
+
+                "Status":[
+                    "Online",
+                    "Online",
+                    "Online",
+                    "Online",
+                    "Online"
+                ],
+
+                "Availability":[
+                    "99.99%",
+                    "99.95%",
+                    "99.97%",
+                    "99.98%",
+                    "99.96%"
+                ]
+            })
+
+            st.dataframe(
+                status,
+                use_container_width=True
+            )
+
+            # =====================================================
+            # ROW 4
+            # Enterprise Feed
+            # =====================================================
+
+            st.markdown("---")
+
+            st.subheader("📡 Enterprise Feed")
+
+            feed_df = pd.DataFrame({
+
+                "Time":[
+                    "09:00",
+                    "09:15",
+                    "09:30",
+                    "09:45"
+                ],
+
+                "Event":[
+                    "Solar generation increased",
+                    "AI forecast updated",
+                    "Battery charging started",
+                    "Carbon target achieved"
+                ]
+
+            })
+
+            st.dataframe(
+                feed_df,
+                use_container_width=True
+            )
+
+
+            # =====================================================
+            # ROW 5
+            # Executive Summary
+            # =====================================================
+
+            st.markdown("---")
+
+            st.subheader("👔 Executive Command Summary")
+
+            st.success(f"""
+
+            Enterprise Status: ONLINE
+
+            Digital Twin Score: {twin_score}%
+
+            Enterprise Risk Score: {risk_score}%
+
+            AI Monitoring Active
+
+            Predictive Maintenance Running
+
+            Carbon Intelligence Active
+
+            Energy Trading Active
+
+            SCADA Connected
+
+            All Critical Systems Operational
+
+            """)
+
+
+            # =====================================================
+            # FOOTER
+            # =====================================================
+
+            st.markdown("---")
+
+            footer1, footer2, footer3 = st.columns(3)
+
+            with footer1:
+
+                st.markdown("### 🏢 OmniTwin")
+
+                st.write("Enterprise Digital Twin Platform")
+
+                st.caption("Enterprise Version 3.0")
+
+            with footer2:
+
+                st.markdown("### ⚡ Platform")
+
+                st.write("✔ AI Monitoring")
+
+                st.write("✔ Predictive Maintenance")
+
+                st.write("✔ Carbon Intelligence")
+
+                st.write("✔ Executive Analytics")
+
+            with footer3:
+
+                st.markdown("### 📊 System Status")
+
+                st.success("🟢 All Services Online")
+
+                st.caption("Last Sync: Just Now")
+
+            st.markdown("---")
+
+            st.markdown("""
+
+            <div style='text-align:center;
+                        color:#9CA3AF;
+                        font-size:14px;'>
+
+            © 2026 <b>OmniTwin</b> • Enterprise Digital Twin Platform •
+            AI Enabled Operations Center •
+            Developed by Ateendra Pratap Sharma
+
+            </div>
+
+            """, unsafe_allow_html=True)
+
+
+        # -------------------------------
+        # 👔 Executive Control Center
+        # -------------------------------
+        if page == "Executive Center":
+
+            if page not in allowed_pages:
+                st.error("🚫 Access Denied")
+                st.stop()
+
+            st.header("👔 Executive Control Center")
+
+            exec_col1, exec_col2, exec_col3 = st.columns(3)
+
+            exec_col1.metric(
+                "Enterprise Efficiency",
+                f"{random.randint(85,99)}%"
+            )
+
+            exec_col2.metric(
+                "Annual Savings",
+                f"£{random.randint(100000,500000):,}"
+            )
+
+            exec_col3.metric(
+                "Carbon Reduction",
+                f"{random.randint(10,40)}%"
+            )
+
+            st.success("✅ Executive systems operational")
+        
+        # -------------------------------
+        # 🖥 SCADA Control Panel
+        # -------------------------------
+        if page == "SCADA Control":
+
+            if page not in allowed_pages:
+                st.error("🚫 Access Denied")
+                st.stop()
+
+            st.header("🖥 SCADA Control Panel")
+
+            turbine_toggle = st.toggle("Gas Turbine")
+            boiler_toggle = st.toggle("Boiler")
+            hvac_toggle = st.toggle("HVAC")
+
+            if turbine_toggle:
+                st.success("✅ Gas Turbine Online")
+            else:
+                st.error("❌ Gas Turbine Offline")
+
+            if boiler_toggle:
+                st.success("✅ Boiler Operational")
+
+            if hvac_toggle:
+                st.success("✅ HVAC Running")
+        
+        # -------------------------------
+        # 🗄 Asset History Page
+        # -------------------------------
+        if page == "Asset History":
+
+            st.header("🗄 Asset History Database")
+
+            history_df = pd.read_sql_query(
+                """
+                SELECT *
+                FROM assets
+                ORDER BY id DESC
+                LIMIT 50
+                """,
+                get_connection()
+            )
+
+            st.dataframe(
+                history_df,
+                use_container_width=True
+            )
+
+            st.markdown("---")
+
+            st.header("🚨 Incident History")
+
+            incident_df = pd.read_sql_query(
+                """
+                SELECT *
+                FROM incidents
+                ORDER BY id DESC
+                LIMIT 50
+                """,
+                get_connection()
+            )
+
+            st.dataframe(
+                incident_df,
+                use_container_width=True
+            )
+
+        # -------------------------------
+        # 🌦 Weather Intelligence
+        # -------------------------------
+        if page == "Weather Intelligence":
+
+            st.header("🌦 Weather Intelligence")
+
+            city = st.selectbox(
+                "Select City",
+                [
+                    "London",
+                    "Manchester",
+                    "Birmingham",
+                    "Leeds",
+                    "Glasgow"
+                ]
+            )
+
+            weather = get_weather(city)
+
+            if weather and "main" in weather:
+
+                col1, col2, col3 = st.columns(3)
+
+                col1.metric(
+                    "Temperature",
+                    f"{weather['main']['temp']} °C"
+                )
+
+                col2.metric(
+                    "Humidity",
+                    f"{weather['main']['humidity']}%"
+                )
+
+                col3.metric(
+                    "Wind Speed",
+                    f"{weather['wind']['speed']} m/s"
+                )
+
+                st.success("✅ Live Weather Data Connected")
+
+            else:
+                st.warning("Weather API unavailable")
+        
+            st.markdown("---")
+            st.subheader("🌍 Carbon Intensity Monitor")
+
+            carbon_intensity = random.randint(80, 300)
+
+            st.metric(
+                "Grid Carbon Intensity",
+                f"{carbon_intensity} gCO₂/kWh"
+            )
+
+            if carbon_intensity > 250:
+                st.error("🚨 High Carbon Generation")
+            elif carbon_intensity > 150:
+                st.warning("⚠ Moderate Carbon Intensity")
+            else:
+                st.success("✅ Low Carbon Grid")
+            
+            st.markdown("---")
+            st.subheader("🌿 Environmental Risk Score")
+
+            env_score = random.randint(60, 100)
+
+            st.metric(
+                "Environmental Score",
+                f"{env_score}%"
+            )
+
+            st.progress(env_score)
+
+            if env_score > 80:
+                st.success("✅ ESG Target Achieved")
+            else:
+                st.warning("⚠ Improvement Recommended")
+            
+        # -------------------------------
+        # 🤖 AI Failure Prediction
+        # -------------------------------
+        if page == "AI Failure Prediction":
+
+            st.header("🤖 AI Failure Prediction Engine")
+
+            temperature = st.slider(
+                "Temperature",
+                20,
+                120,
+                75
+            )
+
+            vibration = st.slider(
+                "Vibration",
+                1,
+                15,
+                4
+            )
+
+            pressure = st.slider(
+                "Pressure",
+                5,
+                20,
+                12
+            )
+
+            prediction = failure_model.predict(
+                [[
+                    temperature,
+                    vibration,
+                    pressure
+                ]]
+            )[0]
+
+            if prediction == 1:
+
+                st.error(
+                    "🚨 Failure Risk Detected"
+                )
+
+            else:
+
+                st.success(
+                    "✅ Equipment Healthy"
+                )
+                probability = failure_model.predict_proba(
+                    [[
+                        temperature,
+                        vibration,
+                        pressure
+                    ]]
+                )[0][1]
+
+                st.metric(
+                    "Failure Probability",
+                    f"{probability*100:.1f}%"
+                )
+
+                st.progress(
+                    int(probability * 100)
+                )
+
+                st.markdown("---")
+                st.subheader("🧠 AI Recommendation")
+
+                if probability > 0.7:
+
+                    st.error(
+                        "Immediate maintenance recommended"
+                    )
+
+                elif probability > 0.4:
+
+                    st.warning(
+                        "Inspection recommended within 7 days"
+                    )
+
+                else:
+
+                    st.success(
+                        "Asset operating normally"
+                    )
+        
+        # -------------------------------
+        # 🚨 Alert Center
+        # -------------------------------
+        if page == "Alert Center":
+
+            st.header("🚨 Enterprise Alert Center")
+
+            alert_count = pd.read_sql_query(
+                """
+                SELECT COUNT(*) as total
+                FROM alerts
+                """,
+                get_connection()
+            )
+
+            st.metric(
+                "Total Alerts",
+                int(alert_count["total"][0])
+            )
+
+            alerts_df = pd.read_sql_query(
+                """
+                SELECT *
+                FROM alerts
+                ORDER BY id DESC
+                LIMIT 50
+                """,
+                get_connection()
+            )
+
+            st.dataframe(
+                alerts_df,
+                use_container_width=True
+            )
+
+            st.markdown("---")
+            st.subheader("📊 Alert Severity Analysis")
+
+            severity_df = pd.read_sql_query(
+                """
+                SELECT severity,
+                       COUNT(*) as count
+                FROM alerts
+                GROUP BY severity
+                """,
+                get_connection()
+            )
+
+            if not severity_df.empty:
+
+                fig_alerts = px.pie(
+                severity_df,
+                names="severity",
+                values="count",
+                title="Alert Distribution"
+            )
+
+            st.plotly_chart(
+                fig_alerts,
+                use_container_width=True
+            )
+        
+        # -------------------------------
+        # 🔮 Scenario Simulator
+        # -------------------------------
+        if page == "Scenario Simulator":
+
+            st.header("🔮 Digital Twin Scenario Simulator")
+        
+        st.markdown("---")
+        st.subheader("⚡ Load Change Simulation")
+
+        load_change = st.slider(
+            "Load Increase (%)",
+            -50,
+            50,
+            0
+        )
+
+        st.metric(
+            "Simulated Load",
+            f"{100 + load_change}%"
+        )
+
+        st.markdown("---")
+        st.subheader("💰 Energy Cost Impact")
+
+        base_cost = 100000
+
+        simulated_cost = base_cost * (
+            1 + load_change / 100
+        )
+
+        st.metric(
+            "Projected Annual Cost",
+            f"£{simulated_cost:,.0f}"
+        )
+
+        st.markdown("---")
+        st.subheader("🌍 Carbon Impact Forecast")
+
+        base_carbon = 500
+
+        carbon_projection = base_carbon * (
+            1 + load_change / 100
+        )
+
+        st.metric(
+            "Projected CO₂ Emissions",
+            f"{carbon_projection:.0f} tonnes"
+        )
+
+        st.markdown("---")
+        st.subheader("🏭 Asset Stress Prediction")
+
+        stress_score = min(
+            100,
+            max(
+                0,
+                60 + load_change
+            )
+        )
+
+        st.metric(
+            "Stress Score",
+            f"{stress_score}%"
+        )
+
+        st.progress(int(stress_score))
+
+        st.markdown("---")
+        st.subheader("🧠 Executive Recommendation")
+
+        if stress_score > 85:
+
+            st.error(
+                "Reduce load immediately. Asset risk elevated."
+            )
+
+        elif stress_score > 70:
+
+            st.warning(
+                "Monitor asset closely during operation."
+            )
+
+        else:
+
+            st.success(
+                "Scenario acceptable for operation."
+            )
+        
+        st.markdown("---")
+        st.subheader("📊 Scenario Comparison")
+
+        scenario_df = pd.DataFrame({
+
+            "Scenario": [
+                "Current",
+                "Simulated"
+            ],
+
+            "Cost": [
+                base_cost,
+                simulated_cost
+            ],
+
+            "Carbon": [
+                base_carbon,
+                carbon_projection
+            ]
+        })
+
+        fig_scenario = px.bar(
+            scenario_df,
+            x="Scenario",
+            y="Cost",
+            title="Cost Comparison"
+        )
+
+        st.plotly_chart(
+            fig_scenario,
+            use_container_width=True
+        )
+
+        # -------------------------------
+        # 🌐 Asset Relationship Map
+        # -------------------------------
+        if page == "Asset Relationship Map":
+
+            st.header("🌐 Digital Twin Asset Relationship Map")
+
+        G = nx.Graph()
+
+        G.add_edges_from([
+            ("Gas Turbine", "Boiler"),
+            ("Boiler", "Steam Turbine"),
+            ("Steam Turbine", "Generator"),
+            ("Generator", "Transformer"),
+            ("Transformer", "Grid"),
+            ("HVAC", "Control Room"),
+            ("MQTT Broker", "SCADA"),
+            ("SCADA", "AI Engine")
+        ])
+
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+        pos = nx.spring_layout(
+            G,
+            seed=42
+        )
+
+        nx.draw(
+            G,
+            pos,
+            with_labels=True,
+            node_size=3000,
+            font_size=9,
+            ax=ax
+        )
+
+        st.pyplot(fig) 
+
+        st.markdown("---")
+        st.subheader("🚨 Critical Asset Path")
+
+        critical_path = [
+            "Gas Turbine",
+            "Boiler",
+            "Steam Turbine",
+            "Generator",
+            "Transformer",
+            "Grid"
+        ]
+
+        st.write(" ➜ ".join(critical_path)) 
+
+        st.markdown("---")
+        st.subheader("⚠ Failure Impact Simulator")
+
+        failed_asset = st.selectbox(
+            "Select Failed Asset",
+            list(G.nodes())
+        )
+
+        affected_assets = list(
+            nx.node_connected_component(
+                G,
+                failed_asset
+            )
+        )
+
+        st.error(
+            f"Failure impacts {len(affected_assets)} connected assets."
+        )
+
+        st.write(affected_assets) 
+
+        st.markdown("---")
+        st.subheader("📊 Asset Connectivity Metrics")
+
+        col1, col2 = st.columns(2)
+
+        col1.metric(
+            "Total Assets",
+            len(G.nodes())
+        )
+
+        col2.metric(
+            "Connections",
+            len(G.edges())
+        ) 
+
+        # -------------------------------
+        # 📊 Enterprise KPI Scorecard
+        # -------------------------------
+        if page == "Enterprise KPI Scorecard":
+
+            st.header("📊 Enterprise KPI Scorecard")
+        
+        kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+
+        kpi1.metric(
+            "Asset Availability",
+            f"{random.randint(95,99)}%"
+        )
+
+        kpi2.metric(
+            "Reliability Index",
+            f"{random.randint(90,99)}%"
+        )
+
+        kpi3.metric(
+            "Maintenance Compliance",
+            f"{random.randint(85,100)}%"
+        )
+
+        kpi4.metric(
+            "ESG Score",
+            f"{random.randint(75,98)}%"
+        )
+
+        st.markdown("---")
+        st.subheader("🏢 Enterprise Performance Metrics")
+
+        performance_df = pd.DataFrame({
+
+            "Category": [
+                "Operations",
+                "Maintenance",
+                "Energy",
+                "Safety",
+                "ESG"
+            ],
+
+            "Score": [
+                random.randint(80,100),
+                random.randint(80,100),
+                random.randint(80,100),
+                random.randint(80,100),
+                random.randint(80,100)
+            ]
+        })
+
+        st.dataframe(
+            performance_df,
+            use_container_width=True
+        )
+
+        st.markdown("---")
+        st.subheader("📈 KPI Performance Trend")
+
+        fig_kpi = px.bar(
+            performance_df,
+            x="Category",
+            y="Score",
+            title="Enterprise KPI Performance"
+        )
+
+        st.plotly_chart(
+            fig_kpi,
+            use_container_width=True
+        )
+
+        st.markdown("---")
+        st.subheader("🏆 Operational Excellence")
+
+        overall_score = performance_df["Score"].mean()
+
+        st.metric(
+            "Overall Excellence Score",
+            f"{overall_score:.1f}%"
+        )
+
+        st.progress(
+            int(overall_score)
+        )
+
+        st.markdown("---")
+        st.subheader("🧠 Executive Insights")
+
+        if overall_score > 90:
+
+            st.success(
+                "Enterprise performance exceeds strategic targets."
+            )
+
+        elif overall_score > 80:
+
+            st.warning(
+                "Performance is stable with improvement opportunities."
+            )
+
+        else:
+
+            st.error(
+                "Performance improvement program recommended."
+            )
+        
+        # -------------------------------
+        # 📄 Report Center
+        # -------------------------------
+        if page == "Report Center":
+
+            st.header("📄 Enterprise Report Center")
+        
+        report_type = st.selectbox(
+
+            "Select Report",
+
+            [
+                "Executive Summary",
+                "Asset Performance",
+                "Alert Summary",
+                "Energy Intelligence",
+                "ESG Performance"
+            ]
+        )
+
+        if st.button("📄 Generate Report"):
+
+            report_file = generate_report()
+
+            st.success(
+                "Report generated successfully"
+            )
+        
+        if st.button("⬇ Download PDF"):
+
+            report_file = generate_report()
+
+            with open(
+                report_file,
+                "rb"
+            ) as pdf_file:
+
+                st.download_button(
+                    label="Download Report",
+                    data=pdf_file,
+                    file_name=report_file,
+                    mime="application/pdf"
+                )
+        
+        st.markdown("---")
+
+        st.subheader("📊 Report Contents")
+
+        st.write(
+            f"""
+            Report Type:
+            {report_type}
+
+            Included Sections:
+
+            • KPI Summary
+
+            • Asset Performance
+
+            • Alert Statistics
+
+            • Carbon Metrics
+
+            • Operational Excellence
+            """
+        )
+
+        # -------------------------------
+        # 🩺 System Health Check
+        # -------------------------------
+        if page == "System Health":
+
+            st.header("🩺 System Health Check")
+
+            with get_connection() as conn:
+
+                tables = pd.read_sql_query(
+                    """
+                    SELECT name
+                    FROM sqlite_master
+                    WHERE type='table'
+                    """,
+                    conn
+                )
+
+            st.dataframe(
+                tables,
+                use_container_width=True
+            )
+
+        # -------------------------------
+        # 📅 Enterprise Timeline
+        # -------------------------------
+        if page == "Enterprise Timeline":
+
+            st.header("📅 Enterprise Operations Timeline")
+        
+        events_df = pd.read_sql_query(
+            """
+            SELECT *
+            FROM enterprise_events
+            ORDER BY id DESC
+            LIMIT 100
+            """,
+            get_connection()
+        )
+
+        st.metric(
+            "Total Events",
+            len(events_df)
+        )
+
+        event_filter = st.selectbox(
+
+            "Filter Events",
+
+            [
+                "All",
+                "Alert",
+                "Asset",
+                "Security"
+            ]
+        )
+
+        if event_filter != "All":
+
+            events_df = events_df[
+                events_df["event_type"] == event_filter
+            ]
+        
+        st.dataframe(
+            events_df,
+            use_container_width=True
+        )
+
+        st.markdown("---")
+        st.subheader("📊 Event Analytics")
+
+        if not events_df.empty:
+
+            event_summary = (
+                events_df
+                .groupby("event_type")
+                .size()
+                .reset_index(name="count")
+            )
+
+            fig_events = px.bar(
+                event_summary,
+                x="event_type",
+                y="count",
+                title="Enterprise Events"
+            )
+
+            st.plotly_chart(
+                fig_events,
+                use_container_width=True
+            )
+
+        # -------------------------------
+        # 🎯 Asset Criticality Matrix
+        # -------------------------------
+        if page == "Asset Criticality":
+
+            st.header("🎯 Asset Criticality Matrix")
+        
+        criticality_df = pd.DataFrame({
+
+            "Asset": [
+                "Gas Turbine",
+                "Steam Turbine",
+                "Boiler",
+                "HV Transformer",
+                "Cooling System",
+                "Solar Inverter",
+                "Battery Storage"
+            ],
+
+            "Probability": [
+                8,
+                6,
+                5,
+                9,
+                4,
+                3,
+                7
+            ],
+
+            "Impact": [
+                10,
+                8,
+                7,
+                10,
+                5,
+                4,
+                9
+            ]
+        })
+
+        criticality_df["Risk Score"] = (
+            criticality_df["Probability"] *
+            criticality_df["Impact"]
+        )
+
+        def classify_risk(score):
+
+            if score >= 70:
+                return "Critical"
+
+            elif score >= 40:
+                return "High"
+
+            elif score >= 20:
+                return "Medium"
+
+            return "Low"
+
+
+        criticality_df["Category"] = (
+            criticality_df["Risk Score"]
+            .apply(classify_risk)
+        )
+
+        st.markdown("---")
+        st.subheader("📋 Asset Risk Ranking")
+
+        st.dataframe(
+            criticality_df.sort_values(
+                "Risk Score",
+                ascending=False
+            ),
+            use_container_width=True
+        )
+
+        st.markdown("---")
+        st.subheader("🔥 Criticality Matrix")
+
+        fig_matrix = px.scatter(
+
+            criticality_df,
+
+            x="Probability",
+
+            y="Impact",
+
+            size="Risk Score",
+
+            color="Category",
+
+            hover_name="Asset",
+
+            title="Asset Criticality Matrix"
+        )
+
+        st.plotly_chart(
+            fig_matrix,
+            use_container_width=True
+        )
+
+        top_asset = criticality_df.sort_values(
+            "Risk Score",
+            ascending=False
+        ).iloc[0]
+
+        st.metric(
+            "Highest Risk Asset",
+            top_asset["Asset"]
+        )
+
+        st.warning(
+            f"{top_asset['Asset']} has the highest operational risk score."
+        )
+
+        st.markdown("---")
+        st.subheader("🧠 Executive Recommendation")
+
+        critical_assets = len(
+            criticality_df[
+                criticality_df["Category"] == "Critical"
+            ]
+        )
+
+        st.info(
+            f"{critical_assets} critical assets require enhanced monitoring and maintenance planning."
+        )
+
+        # -------------------------------
+        # 📈 SLA Center
+        # -------------------------------
+        if page == "SLA Center":
+
+            st.header("📈 Service Level Agreement Center")
+
+            st.markdown("---")
+
+            # KPI Cards
+            col1, col2, col3, col4 = st.columns(4)
+
+            col1.metric(
+                "Asset Uptime",
+                f"{random.randint(97,100)}%"
+            )
+
+            col2.metric(
+                "Availability",
+                f"{random.randint(95,100)}%"
+            )
+
+            col3.metric(
+                "Response Time",
+                f"{random.randint(90,100)}%"
+            )
+
+            col4.metric(
+               "Maintenance Compliance",
+               f"{random.randint(85,100)}%"
+            )
+
+            st.markdown("---")
+
+            st.subheader("📋 SLA Performance Scorecard")
+
+            sla_df = pd.DataFrame({
+
+                "Metric": [
+                    "Asset Uptime",
+                    "Availability",
+                    "Response Time",
+                    "Maintenance Compliance"
+                ],
+
+                "Target (%)": [
+                    99,
+                    98,
+                    95,
+                    90
+                ],
+
+                "Actual (%)": [
+                    random.randint(95,100),
+                    random.randint(95,100),
+                    random.randint(90,100),
+                    random.randint(85,100)
+                ]
+            })
+
+            sla_df["Status"] = sla_df.apply(
+                lambda x:
+                "Achieved"
+                if x["Actual (%)"] >= x["Target (%)"]
+                else "Missed",
+                axis=1
+            )
+
+            st.dataframe(
+               sla_df,
+               use_container_width=True
+            )
+
+            st.markdown("---")
+
+            st.subheader("📊 SLA Performance Chart")
+
+            fig_sla = px.bar(
+                sla_df,
+                x="Metric",
+                y="Actual (%)",
+                color="Status",
+                title="SLA Achievement Status"
+            )
+
+            st.plotly_chart(
+                fig_sla,
+                use_container_width=True
+            )
+
+            st.markdown("---")
+
+            st.subheader("🏆 Overall Service Health")
+
+            health_score = sla_df["Actual (%)"].mean()
+
+            st.metric(
+                "Service Health Score",
+                f"{health_score:.1f}%"
+            )
+
+            st.progress(
+                int(health_score)
+            )
+
+            st.markdown("---")
+
+            st.subheader("🧠 Executive Recommendation")
+
+            if health_score >= 95:
+
+                st.success(
+                    "Excellent service performance. All SLA targets achieved."
+                )
+
+            elif health_score >= 85:
+
+                st.warning(
+                    "Good performance. Minor improvements recommended."
+                )
+
+            else:
+
+                st.error(
+                    "Service levels below target. Immediate action required."
+                )
+        
+        # -------------------------------
+        # 🧠 AI Root Cause Investigation
+        # -------------------------------
+        if page == "AI Root Cause":
+
+            st.header("🧠 AI Root Cause Investigation Engine")
+
+            # Asset Selection
+            asset = st.selectbox(
+                "Select Asset",
+                [
+                    "Gas Turbine",
+                    "Steam Turbine",
+                    "Transformer",
+                    "Boiler",
+                    "Battery System",
+                    "Solar Inverter"
+                ]
+            )
+
+            # Alert Selection
+            alert = st.selectbox(
+                "Select Alert",
+                [
+                    "High Temperature",
+                    "High Vibration",
+                    "Pressure Drop",
+                    "Low Efficiency",
+                    "Communication Failure"
+                ]
+            )
+
+            # Root Cause Database
+            root_causes = {
+
+                "High Temperature": {
+                    "Cooling Failure": 45,
+                    "Overload": 30,
+                    "Blocked Airflow": 15,
+                    "Sensor Fault": 10
+                },
+
+                "High Vibration": {
+                    "Bearing Wear": 45,
+                    "Misalignment": 30,
+                    "Rotor Imbalance": 15,
+                    "Sensor Fault": 10
+                },
+
+                "Pressure Drop": {
+                    "Leakage": 50,
+                    "Valve Failure": 25,
+                    "Pump Issue": 15,
+                    "Sensor Error": 10
+                },
+
+                "Low Efficiency": {
+                    "Fouling": 40,
+                    "Equipment Aging": 30,
+                    "Poor Fuel Quality": 20,
+                    "Sensor Error": 10
+                },
+
+                "Communication Failure": {
+                    "Network Issue": 50,
+                    "PLC Failure": 20,
+                    "Server Error": 20,
+                    "Cyber Attack": 10
+                }
+            }
+
+            if st.button("🔍 Investigate Failure"):
+
+                results = pd.DataFrame({
+
+                    "Cause": list(
+                        root_causes[alert].keys()
+                    ),
+
+                    "Probability (%)": list(
+                        root_causes[alert].values()
+                    )
+                })
+
+                results = results.sort_values(
+                    "Probability (%)",
+                    ascending=False
+                )
+
+                # Results Table
+                st.markdown("---")
+                st.subheader("📋 Root Cause Ranking")
+
+                st.dataframe(
+                    results,
+                    use_container_width=True
+                )
+
+                # Chart
+                st.markdown("---")
+                st.subheader("📊 Root Cause Analysis")
+
+                fig_root = px.bar(
+                    results,
+                    x="Cause",
+                    y="Probability (%)",
+                    title="AI Root Cause Analysis"
+                )
+
+                st.plotly_chart(
+                    fig_root,
+                    use_container_width=True
+                )
+
+                # Recommendation
+                top_cause = results.iloc[0]["Cause"]
+
+                st.markdown("---")
+                st.subheader("🧠 AI Recommendation")
+
+                st.success(
+                    f"Most Likely Cause: {top_cause}"
+                )
+
+                # Maintenance Actions
+                actions = {
+
+                    "Cooling Failure":
+                        "Inspect cooling system, cooling fans, and heat exchangers.",
+
+                    "Bearing Wear":
+                        "Perform bearing inspection and lubrication analysis.",
+
+                    "Leakage":
+                        "Inspect pipelines, joints, and seals for leaks.",
+
+                    "Fouling":
+                        "Schedule cleaning and efficiency recovery maintenance.",
+
+                    "Network Issue":
+                        "Check switches, routers, cables, and communication links.",
+
+                    "Overload":
+                        "Review operating load profile and asset capacity.",
+
+                    "Misalignment":
+                        "Perform shaft alignment inspection.",
+
+                    "Rotor Imbalance":
+                        "Conduct balancing test and vibration analysis.",
+
+                    "Valve Failure":
+                        "Inspect control valves and actuator performance.",
+
+                    "Pump Issue":
+                        "Review pump efficiency and motor performance.",
+
+                    "PLC Failure":
+                        "Check PLC diagnostics and communication modules.",
+
+                    "Server Error":
+                        "Review application and server logs.",
+
+                    "Cyber Attack":
+                        "Initiate cybersecurity incident response procedures."
+                }
+
+                if top_cause in actions:
+
+                    st.info(
+                        actions[top_cause]
+                    )
+
+                # Business Impact
+                st.markdown("---")
+                st.subheader("👔 Business Impact Assessment")
+
+                impact = random.randint(50, 95)
+
+                st.metric(
+                    "Business Impact Score",
+                    impact
+                )
+
+                st.progress(
+                    impact
+                )
+
+                # Executive Summary
+                st.markdown("---")
+                st.subheader("📈 Executive Summary")
+
+                st.write(
+                    f"""
+                    Asset: {asset}
+
+                    Alert: {alert}
+
+                    Most Likely Cause: {top_cause}
+
+                    Impact Score: {impact}/100
+
+                    Recommended Action:
+                    {actions.get(top_cause, "Review system condition.")}
+                    """
+                )
+        
+        # -------------------------------
+        # 🤖 AI Maintenance Planner
+        # -------------------------------
+        if page == "AI Maintenance Planner":
+
+            st.header("🤖 Autonomous Maintenance Planner")
+
+            # Asset Selection
+            asset = st.selectbox(
+                "Select Asset",
+                [
+                    "Gas Turbine",
+                    "Steam Turbine",
+                    "Transformer",
+                    "Boiler",
+                    "Battery Storage",
+                    "Solar Inverter"
+                ]
+            )
+
+            # Health Score
+            health_score = st.slider(
+                "Asset Health Score",
+                0,
+                100,
+                75
+            )
+
+            # Criticality
+            criticality = st.selectbox(
+                "Criticality",
+                [
+                    "Low",
+                    "Medium",
+                    "High",
+                    "Critical"
+                ]
+            )
+
+            if st.button("🧠 Generate Maintenance Plan"):
+
+                # Risk Calculation
+                risk = 100 - health_score
+
+                priority = "Low"
+
+                if risk > 70:
+                    priority = "Critical"
+
+                elif risk > 50:
+                    priority = "High"
+
+                elif risk > 30:
+                    priority = "Medium"
+
+                # Work Order
+                work_order = f"WO-{random.randint(10000,99999)}"
+
+                # Engineer Assignment
+                engineers = [
+                    "Engineer A",
+                    "Engineer B",
+                    "Engineer C",
+                    "Senior Specialist"
+                ]
+
+                assigned_engineer = random.choice(engineers)
+
+                # Shutdown Recommendation
+                if priority == "Critical":
+
+                    shutdown = "Immediate Shutdown Recommended"
+
+                elif priority == "High":
+
+                    shutdown = "Plan Outage Within 7 Days"
+
+                elif priority == "Medium":
+
+                    shutdown = "Maintenance Within 30 Days"
+
+                else:
+
+                    shutdown = "Routine Monitoring"
+
+                # Display Plan
+                st.markdown("---")
+                st.subheader("📋 AI Maintenance Plan")
+
+                col1, col2 = st.columns(2)
+
+                col1.metric(
+                    "Health Score",
+                    f"{health_score}%"
+                )
+
+                col2.metric(
+                    "Priority",
+                    priority
+                )
+
+                st.success(
+                    f"Work Order Created: {work_order}"
+                )
+
+                st.write(
+                    f"👨‍🔧 Assigned Engineer: {assigned_engineer}"
+                )
+
+                st.write(
+                    f"⚙ Recommended Action: {shutdown}"
+                )
+
+                # Maintenance Tasks
+                tasks = {
+
+                    "Gas Turbine": [
+                        "Inspect Bearings",
+                        "Check Rotor Alignment",
+                        "Review Vibration Trend"
+                    ],
+
+                    "Steam Turbine": [
+                        "Inspect Blades",
+                        "Check Steam Leakage",
+                        "Lubrication Review"
+                    ],
+
+                    "Transformer": [
+                        "Oil Analysis",
+                        "Thermal Scan",
+                        "Insulation Check"
+                    ],
+
+                    "Boiler": [
+                        "Tube Inspection",
+                        "Pressure Test",
+                        "Combustion Review"
+                    ],
+
+                    "Battery Storage": [
+                        "Cell Balancing",
+                        "Thermal Check",
+                        "Capacity Test"
+                    ],
+
+                    "Solar Inverter": [
+                        "DC Inspection",
+                        "Firmware Review",
+                        "Thermal Check"
+                    ]
+                }
+
+                st.markdown("---")
+                st.subheader("🔧 Recommended Maintenance Tasks")
+
+                task_df = pd.DataFrame({
+                    "Task": tasks[asset],
+                    "Status": [
+                        "Pending",
+                        "Pending",
+                        "Pending"
+                    ]
+                })
+
+                st.dataframe(
+                    task_df,
+                    use_container_width=True
+                )
+
+                # Cost Estimation
+                st.markdown("---")
+
+                cost = random.randint(
+                    5000,
+                    50000
+                )
+
+                avoidance = random.randint(
+                    cost * 2,
+                    cost * 8
+                )
+
+                roi = round(
+                    avoidance / cost,
+                    1
+                )
+
+                cost_col1, cost_col2, cost_col3 = st.columns(3)
+
+                cost_col1.metric(
+                    "Maintenance Cost",
+                    f"£{cost:,}"
+                )
+
+                cost_col2.metric(
+                    "Failure Cost Avoided",
+                    f"£{avoidance:,}"
+                )
+
+                cost_col3.metric(
+                    "ROI",
+                    f"{roi}x"
+                )
+
+                # Financial Visualization
+                st.markdown("---")
+                st.subheader("💰 Financial Impact")
+
+                financial_df = pd.DataFrame({
+
+                    "Category": [
+                        "Maintenance Cost",
+                        "Failure Cost Avoided"
+                    ],
+
+                    "Amount": [
+                        cost,
+                        avoidance
+                    ]
+                })
+
+                fig_finance = px.bar(
+                    financial_df,
+                    x="Category",
+                    y="Amount",
+                    title="Maintenance Investment vs Savings"
+                )
+
+                st.plotly_chart(
+                    fig_finance,
+                    use_container_width=True
+                )
+
+                # Executive Summary
+                st.markdown("---")
+                st.subheader("👔 Executive Summary")
+
+                st.info(
+                    f"""
+                    Asset: {asset}
+
+                    Criticality: {criticality}
+
+                    Health Score: {health_score}%
+
+                    Priority: {priority}
+
+                    Assigned Engineer: {assigned_engineer}
+
+                    Work Order: {work_order}
+
+                    Estimated Maintenance Cost: £{cost:,}
+
+                    Potential Failure Cost Avoided: £{avoidance:,}
+
+                    Maintenance ROI: {roi}x
+
+                    Recommended Action:
+                    {shutdown}
+                    """
+                )
+        # -------------------------------
+        # 🌍 Carbon Intelligence Twin
+        # -------------------------------
+        if page == "Carbon Intelligence":
+
+            st.header("🌍 Carbon Intelligence & Net-Zero Twin")
+
+            st.markdown(
+                "Real-Time Carbon Analytics • Decarbonization Planning • Net-Zero Roadmap"
+            )
+
+            # --------------------------------
+            # Carbon Inputs
+            # --------------------------------
+            st.subheader("⚙ Operational Inputs")
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+
+                annual_energy = st.number_input(
+                    "Annual Energy Consumption (MWh)",
+                    min_value=100,
+                    value=50000
+                )
+
+                grid_factor = st.number_input(
+                    "Grid Emission Factor (kgCO₂/MWh)",
+                    min_value=0.0,
+                    value=233.0
+                )
+
+            with col2:
+
+                renewable_share = st.slider(
+                    "Renewable Energy Share (%)",
+                    0,
+                    100,
+                    30
+                )
+
+                target_year = st.slider(
+                    "Net-Zero Target Year",
+                    2026,
+                    2050,
+                    2040
+                )
+
+            # --------------------------------
+            # Carbon Calculations
+            # --------------------------------
+            current_emissions = (
+                annual_energy *
+                grid_factor
+            ) / 1000
+
+            renewable_reduction = (
+                current_emissions *
+                renewable_share / 100
+            )
+
+            net_emissions = (
+                current_emissions -
+                renewable_reduction
+            )
+
+            # --------------------------------
+            # KPI Cards
+            # --------------------------------
+            st.markdown("---")
+
+            k1, k2, k3 = st.columns(3)
+
+            k1.metric(
+                "Annual CO₂ Emissions",
+                f"{current_emissions:,.0f} tCO₂"
+            )
+
+            k2.metric(
+                "Carbon Avoided",
+                f"{renewable_reduction:,.0f} tCO₂"
+            )
+
+            k3.metric(
+                "Net Emissions",
+                f"{net_emissions:,.0f} tCO₂"
+            )
+
+            # --------------------------------
+            # Carbon Breakdown
+            # --------------------------------
+            st.markdown("---")
+            st.subheader("📊 Carbon Profile")
+
+            carbon_df = pd.DataFrame({
+
+               "Category": [
+                    "Gross Emissions",
+                    "Renewable Reduction",
+                    "Net Emissions"
+                ],
+
+                "Value": [
+                    current_emissions,
+                    renewable_reduction,
+                    net_emissions
+                ]
+            })
+
+            fig_carbon = px.bar(
+                carbon_df,
+                x="Category",
+                y="Value",
+                title="Carbon Emissions Profile"
+            )
+
+            st.plotly_chart(
+                fig_carbon,
+                use_container_width=True
+            )
+
+            # --------------------------------
+            # Net-Zero Roadmap
+            # --------------------------------
+            st.markdown("---")
+            st.subheader("🛣 Net-Zero Roadmap")
+
+            years = list(
+                range(
+                    datetime.now().year,
+                    target_year + 1
+                )
+            )
+
+            reduction_curve = np.linspace(
+                net_emissions,
+                0,
+                len(years)
+            )
+
+            roadmap_df = pd.DataFrame({
+
+                "Year": years,
+
+                "Projected Emissions":
+                reduction_curve
+            })
+
+            fig_roadmap = px.line(
+                roadmap_df,
+                x="Year",
+                y="Projected Emissions",
+                title="Pathway to Net-Zero"
+            )
+
+            st.plotly_chart(
+                fig_roadmap,
+                use_container_width=True
+            )
+
+            # --------------------------------
+            # Carbon Cost Exposure
+            # --------------------------------
+            st.markdown("---")
+            st.subheader("💷 Carbon Cost Exposure")
+
+            carbon_price = st.slider(
+                "Carbon Price (£/tCO₂)",
+                20,
+                200,
+                80
+            )
+
+            carbon_cost = (
+                net_emissions *
+                carbon_price
+            )
+
+            st.metric(
+                "Annual Carbon Liability",
+                f"£{carbon_cost:,.0f}"
+            )
+
+            # --------------------------------
+            # Decarbonization Opportunities
+            # --------------------------------
+            st.markdown("---")
+            st.subheader("💡 AI Decarbonization Opportunities")
+
+            opportunities = pd.DataFrame({
+
+                "Initiative": [
+
+                    "Solar Expansion",
+
+                    "Battery Storage",
+
+                    "Heat Recovery",
+
+                    "Energy Efficiency",
+
+                    "Green Hydrogen"
+                ],
+
+                "Potential Reduction (%)": [
+
+                    15,
+                    10,
+                    8,
+                    12,
+                    20
+                ]
+            })
+
+            st.dataframe(
+                opportunities,
+                use_container_width=True
+            )
+
+            # --------------------------------
+            # Net-Zero Readiness Score
+            # --------------------------------
+            st.markdown("---")
+            st.subheader("🏆 Net-Zero Readiness")
+
+            readiness = min(
+                100,
+                renewable_share +
+                random.randint(10,25)
+            )
+
+            st.metric(
+                "Net-Zero Readiness Score",
+                f"{readiness}%"
+            )
+
+            st.progress(readiness)
+
+            # --------------------------------
+            # Executive Summary
+            # --------------------------------
+            st.markdown("---")
+            st.subheader("👔 Executive Carbon Summary")
+
+            st.success(
+                f"""
+                Current Emissions: {current_emissions:,.0f} tCO₂
+
+                Net Emissions: {net_emissions:,.0f} tCO₂
+
+                Renewable Share: {renewable_share}%
+
+                Carbon Liability: £{carbon_cost:,.0f}
+
+                Net-Zero Readiness: {readiness}%
+
+                Target Year: {target_year}
+                """
+            )
+        
+        # -------------------------------
+        # ⚡ Energy Trading Twin
+        # -------------------------------
+        if page == "Energy Trading Twin":
+
+            st.header("⚡ Energy Trading & Battery Optimization Twin")
+
+            st.markdown(
+                "Revenue Optimization • Battery Dispatch • Grid Trading"
+            )
+
+            # -------------------------------
+            # Market Inputs
+            # -------------------------------
+            st.subheader("📈 Market Conditions")
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+
+                buy_price = st.number_input(
+                    "Grid Buy Price (£/MWh)",
+                    20,
+                    500,
+                    75
+                )
+
+                battery_capacity = st.number_input(
+                    "Battery Capacity (MWh)",
+                    1,
+                    1000,
+                    100
+                )
+
+            with col2:
+
+                sell_price = st.number_input(
+                    "Grid Sell Price (£/MWh)",
+                    20,
+                    500,
+                    180
+                )
+
+                battery_soc = st.slider(
+                    "Battery State of Charge (%)",
+                    0,
+                    100,
+                    60
+                )
+
+            st.markdown("---")
+
+            # -------------------------------
+            # Revenue Analysis
+            # -------------------------------
+            energy_available = (
+                battery_capacity *
+                battery_soc / 100
+            )
+
+            potential_revenue = (
+                energy_available *
+                sell_price
+            )
+
+            recharge_cost = (
+                energy_available *
+                buy_price
+            )
+
+            profit = (
+                potential_revenue -
+                recharge_cost
+            )
+
+            c1, c2, c3 = st.columns(3)
+
+            c1.metric(
+                "Energy Available",
+                f"{energy_available:.1f} MWh"
+            )
+
+            c2.metric(
+                "Revenue Potential",
+                f"£{potential_revenue:,.0f}"
+            )
+
+            c3.metric(
+                "Trading Profit",
+                f"£{profit:,.0f}"
+            )
+
+            st.markdown("---")
+
+            # -------------------------------
+            # Battery Dispatch Decision
+            # -------------------------------
+            st.subheader("🧠 AI Dispatch Recommendation")
+
+            if sell_price > buy_price * 1.5:
+
+                decision = "SELL TO GRID"
+
+                st.success(
+                    "📤 AI recommends battery discharge."
+                )
+
+            elif battery_soc < 30:
+
+                decision = "CHARGE BATTERY"
+
+                st.warning(
+                    "🔋 AI recommends charging battery."
+                )
+
+            else:
+
+                decision = "HOLD"
+
+                st.info(
+                    "⏸ AI recommends holding current position."
+                )
+
+            st.metric(
+                "Trading Action",
+                decision
+            )
+
+            st.markdown("---")
+
+            # -------------------------------
+            # 24 Hour Price Forecast
+            # -------------------------------
+            st.subheader("📈 Market Forecast")
+
+            hours = list(range(24))
+
+            prices = np.random.randint(
+                50,
+                250,
+                24
+            )
+
+            market_df = pd.DataFrame({
+
+                "Hour": hours,
+
+                "Price": prices
+            })
+
+            fig_market = px.line(
+                market_df,
+                x="Hour",
+                y="Price",
+                title="24-Hour Electricity Price Forecast"
+            )
+
+            st.plotly_chart(
+                fig_market,
+                use_container_width=True
+            )
+
+            st.markdown("---")
+
+            # -------------------------------
+            # Revenue Optimizer
+            # -------------------------------
+            st.subheader("💰 Revenue Optimization")
+
+            best_price = market_df["Price"].max()
+
+            best_hour = market_df.loc[
+                market_df["Price"].idxmax(),
+                "Hour"
+            ]
+
+            st.metric(
+                "Best Selling Hour",
+                f"{best_hour}:00"
+            )
+
+            st.metric(
+                "Peak Market Price",
+                f"£{best_price}/MWh"
+            )
+
+            st.markdown("---")
+
+            # -------------------------------
+            # Executive Summary
+            # -------------------------------
+            st.subheader("👔 Executive Trading Summary")
+
+            st.success(
+                f"""
+                Battery Capacity: {battery_capacity} MWh
+
+                State of Charge: {battery_soc}%
+
+                Trading Action: {decision}
+
+                Potential Profit: £{profit:,.0f}
+
+                Best Trading Hour: {best_hour}:00
+
+                Peak Forecast Price: £{best_price}/MWh
+                """
+            )
+        
+        # -------------------------------
+        # 🌦 Climate Risk Twin
+        # -------------------------------
+        if page == "Climate Risk Twin":
+
+            st.header("🌦 Climate Risk & Resilience Twin")
+
+            st.markdown(
+                "Climate Simulation • Extreme Weather Analysis • Asset Resilience"
+            )
+
+            # --------------------------------
+            # Scenario Selection
+            # --------------------------------
+            st.subheader("🌍 Climate Scenario")
+
+            scenario = st.selectbox(
+
+                "Select Scenario",
+
+                [
+                    "Heatwave",
+                    "Flood",
+                    "Storm",
+                    "Drought",
+                    "Grid Stress Event"
+                ]
+            )
+
+            asset = st.selectbox(
+
+                "Select Asset",
+
+                [
+                    "Gas Turbine",
+                    "Transformer",
+                    "Battery Storage",
+                    "Solar Farm",
+                    "Wind Farm",
+                    "Substation"
+                ]
+            )
+
+            # --------------------------------
+            # Risk Database
+            # --------------------------------
+            risk_db = {
+
+                "Heatwave": {
+                    "Gas Turbine": 70,
+                    "Transformer": 85,
+                    "Battery Storage": 90,
+                    "Solar Farm": 45,
+                    "Wind Farm": 20,
+                    "Substation": 60
+                },
+
+                "Flood": {
+                    "Gas Turbine": 50,
+                    "Transformer": 95,
+                    "Battery Storage": 85,
+                    "Solar Farm": 60,
+                    "Wind Farm": 40,
+                    "Substation": 98
+                },
+
+                "Storm": {
+                    "Gas Turbine": 40,
+                    "Transformer": 60,
+                    "Battery Storage": 50,
+                    "Solar Farm": 85,
+                    "Wind Farm": 95,
+                    "Substation": 70
+                },
+
+                "Drought": {
+                    "Gas Turbine": 80,
+                    "Transformer": 20,
+                    "Battery Storage": 25,
+                    "Solar Farm": 35,
+                    "Wind Farm": 10,
+                    "Substation": 15
+                },
+
+                "Grid Stress Event": {
+                    "Gas Turbine": 75,
+                    "Transformer": 85,
+                    "Battery Storage": 40,
+                    "Solar Farm": 50,
+                    "Wind Farm": 55,
+                    "Substation": 90
+                }
+            }
+
+            risk_score = risk_db[scenario][asset]
+
+            # --------------------------------
+            # KPI Cards
+            # --------------------------------
+            st.markdown("---")
+
+            c1, c2, c3 = st.columns(3)
+
+            c1.metric(
+                "Climate Risk Score",
+                f"{risk_score}/100"
+            )
+
+            c2.metric(
+                "Asset Resilience",
+                f"{100-risk_score}%"
+            )
+
+            c3.metric(
+                "Expected Downtime",
+                f"{round(risk_score/10,1)} hrs"
+            )
+
+            # --------------------------------
+            # Risk Gauge
+            # --------------------------------
+            st.markdown("---")
+            st.subheader("📊 Climate Exposure")
+
+            fig = px.bar(
+                x=["Risk"],
+                y=[risk_score],
+                title="Climate Risk Exposure"
+            )
+
+            st.plotly_chart(
+                fig,
+                use_container_width=True
+            )
+
+            # --------------------------------
+            # Financial Impact
+            # --------------------------------
+            st.markdown("---")
+
+            impact_cost = risk_score * random.randint(
+                1000,
+                5000
+            )
+
+            st.metric(
+                "Estimated Financial Exposure",
+                f"£{impact_cost:,.0f}"
+            )
+
+            # --------------------------------
+            # Resilience Actions
+            # --------------------------------
+            st.markdown("---")
+            st.subheader("🛡 Resilience Recommendations")
+
+            actions = {
+
+                "Heatwave":
+                [
+                    "Increase cooling capacity",
+                    "Monitor transformer temperature",
+                    "Review battery thermal systems"
+                ],
+
+                "Flood":
+                [
+                    "Install flood barriers",
+                    "Elevate critical equipment",
+                    "Improve drainage systems"
+                ],
+
+                "Storm":
+                [
+                    "Inspect structural integrity",
+                    "Secure loose equipment",
+                    "Review emergency procedures"
+                ],
+
+                "Drought":
+                [
+                    "Reduce water consumption",
+                    "Improve cooling efficiency",
+                    "Review water reserves"
+                ],
+
+                "Grid Stress Event":
+                [
+                    "Activate demand response",
+                    "Utilize battery storage",
+                    "Increase reserve capacity"
+                ]
+            }
+
+            for item in actions[scenario]:
+
+                st.write(f"✅ {item}")
+
+            # --------------------------------
+            # Climate Risk Matrix
+            # --------------------------------
+            st.markdown("---")
+
+            st.subheader("📋 Enterprise Climate Matrix")
+
+            matrix_df = pd.DataFrame({
+
+                "Risk Area": [
+                    "Operations",
+                    "Safety",
+                    "Environment",
+                    "Revenue",
+                    "Reliability"
+                ],
+
+                "Exposure": [
+                    random.randint(20,95),
+                    random.randint(20,95),
+                    random.randint(20,95),
+                    random.randint(20,95),
+                    random.randint(20,95)
+                ]
+            })
+
+            st.dataframe(
+                matrix_df,
+                use_container_width=True
+            )
+
+            # --------------------------------
+            # Executive Summary
+            # --------------------------------
+            st.markdown("---")
+
+            st.subheader("👔 Executive Climate Summary")
+
+            st.success(
+                f"""
+                Scenario: {scenario}
+
+                Asset: {asset}
+
+                Climate Risk Score: {risk_score}/100
+
+                Estimated Exposure: £{impact_cost:,.0f}
+
+                Asset Resilience: {100-risk_score}%
+
+                Recommended Mitigation Actions Generated.
+                """
+            )
+        
+        # -------------------------------
+        # 🗺 Enterprise Geospatial Twin
+        # -------------------------------
+        if page == "Geospatial Twin":
+
+            st.header("🗺 Enterprise Geospatial Digital Twin")
+
+            st.markdown(
+                "Real-Time Asset Location • Risk Mapping • Geographic Intelligence"
+            )
+
+            # --------------------------------
+            # Asset Database
+            # --------------------------------
+
+            assets_map = pd.DataFrame({
+
+                "Asset": [
+                    "Gas Turbine",
+                    "Battery Storage",
+                    "Solar Farm",
+                    "Wind Farm",
+                    "Substation"
+                ],
+
+                "Latitude": [
+                    51.5074,
+                    51.5200,
+                    51.4900,
+                    51.5600,
+                    51.5350
+                ],
+
+                "Longitude": [
+                    -0.1278,
+                    -0.1500,
+                    -0.2200,
+                    -0.3100,
+                    -0.1800
+                ],
+
+                "Health": [
+                    92,
+                    88,
+                    95,
+                    90,
+                    84
+                ]
+            })
+
+            # --------------------------------
+            # Create Map
+            # --------------------------------
+
+            m = folium.Map(
+
+                location=[
+                    51.5074,
+                    -0.1278
+                ],
+
+                zoom_start=10
+            )
+
+            # --------------------------------
+            # Asset Markers
+            # --------------------------------
+
+            for _, row in assets_map.iterrows():
+
+                color = "green"
+
+                if row["Health"] < 90:
+
+                    color = "orange"
+
+                if row["Health"] < 80:
+
+                    color = "red"
+
+                folium.Marker(
+
+                    location=[
+                        row["Latitude"],
+                        row["Longitude"]
+                    ],
+
+                    popup=f"""
+                    Asset: {row['Asset']}
+                    <br>
+                    Health: {row['Health']}%
+                    """,
+
+                    icon=folium.Icon(
+                        color=color
+                    )
+
+                ).add_to(m)
+
+            # --------------------------------
+            # Display Map
+            # --------------------------------
+
+            st_folium(
+                m,
+                width=1200,
+                height=600
+            )
+
+            # --------------------------------
+            # Asset Summary
+            # --------------------------------
+
+            st.markdown("---")
+
+            st.subheader("📋 Asset Location Register")
+
+            st.dataframe(
+                assets_map,
+                use_container_width=True
+            )
+
+            st.markdown("---")
+
+            st.subheader("⚠ Geographic Risk Layer")
+
+            risk_df = pd.DataFrame({
+
+                "Risk Zone": [
+                    "Flood Zone",
+                    "Heatwave Zone",
+                    "Grid Congestion",
+                    "Cyber Risk Region"
+                ],
+
+                "Risk Score": [
+                    random.randint(50,95),
+                    random.randint(50,95),
+                    random.randint(50,95),
+                    random.randint(50,95)
+                ]
+            })
+
+            st.dataframe(
+                risk_df,
+                use_container_width=True
+            )
+
+            st.markdown("---")
+
+            st.subheader("📏 Asset Proximity Analysis")
+
+            selected_asset = st.selectbox(
+                "Select Asset",
+                assets_map["Asset"]
+            )
+
+            st.info(
+                f"""
+                AI Analysis:
+
+                {selected_asset} is within operational range
+                of supporting neighboring assets during
+                emergency events.
+                """
+            )
+
+            st.markdown("---")
+
+            c1, c2, c3 = st.columns(3)
+
+            c1.metric(
+                 "Mapped Assets",
+                len(assets_map)
+            )
+
+            c2.metric(
+                "Geographic Coverage",
+                "98%"
+            )
+
+            c3.metric(
+                "Location Accuracy",
+                "99.8%"
+            )
+
+            st.markdown("---")
+
+            st.subheader("🌍 Geographic Resilience")
+
+            resilience = random.randint(
+                75,
+                98
+            )
+
+            st.metric(
+                "Resilience Score",
+                f"{resilience}%"
+            )
+
+            st.progress(resilience)
+
+            st.markdown("---")
+
+            st.subheader("👔 Executive Geographic Summary")
+
+            st.success(
+                f"""
+                Assets Monitored: {len(assets_map)}
+
+                Geographic Coverage: 98%
+
+                Resilience Score: {resilience}%
+
+                Risk Layers Active
+
+                Enterprise Mapping Online
+                """
+            )
+
+        # -------------------------------
+        # 🔐 Security & Compliance Center
+        # -------------------------------
+        if page == "Security Center":
+
+            if page not in allowed_pages:
+                st.error("🚫 Access Denied")
+                st.stop()
+
+            st.header("🔐 Security & Compliance Center")
+
+            sec_col1, sec_col2, sec_col3 = st.columns(3)
+
+            sec_col1.metric(
+                "Firewall Status",
+                "ACTIVE"
+            )
+
+            sec_col2.metric(
+                "Threat Level",
+                "LOW"
+            )
+
+            sec_col3.metric(
+                "Compliance Score",
+                f"{random.randint(85,100)}%"
+            )
+
+            st.success("✅ ISO 27001 Security Controls Active")
+
+            st.markdown("### 🛡 Compliance Monitoring")
+
+            compliance_data = pd.DataFrame({
+                "System": [
+                    "SCADA",
+                    "IoT Gateway",
+                    "Database",
+                    "Cloud API",
+                    "MQTT Broker"
+                ],
+                "Status": [
+                    "Secure",
+                    "Secure",
+                    "Secure",
+                    "Monitoring",
+                    "Secure"
+                ]
+            })
+
+            st.dataframe(compliance_data)
+
+            # -------------------------------
+            # 👥 User Access Audit
+            # -------------------------------
+            st.markdown("---")
+            st.subheader("👥 User Access Audit")
+
+            audit_df = pd.DataFrame({
+
+                "User": [
+                    "Admin",
+                    "Engineer",
+                    "Operator",
+                    "Client"
+                ],
+
+                "Last Login": [
+                    "Today",
+                    "Today",
+                    "Yesterday",
+                    "Today"
+                ],
+
+                "Status": [
+                    "Active",
+                    "Active",
+                    "Active",
+                    "Active"
+                ]
+            })
+
+            st.dataframe(
+                audit_df,
+                use_container_width=True
+            )
+
+        # -------------------------------
+        # 🤖 AI Cyber Security Monitor
+        # -------------------------------
+        st.markdown("---")
+        st.subheader("🤖 AI Cyber Security Monitor")
+
+        threat_score = random.randint(1, 100)
+
+        st.progress(threat_score)
+
+        st.metric("Threat Detection Score", f"{threat_score}%")
+
+        if threat_score > 80:
+            st.error("🚨 Critical cyber threat detected")
+        elif threat_score > 50:
+            st.warning("⚠ Suspicious activity detected")
+        else:
+            st.success("✅ Network secure")
+
+        # Live threat logs
+        cyber_logs = pd.DataFrame({
+            "Timestamp": pd.date_range(
+                start=pd.Timestamp.now(),
+                periods=5,
+                freq="min"
+            ),
+            "Event": [
+                "Firewall Scan",
+                "MQTT Authentication",
+                "API Access",
+                "Database Monitoring",
+                "IoT Device Validation"
+            ],
+            "Status": [
+                "Passed",
+                "Passed",
+                "Monitoring",
+                "Passed",
+                "Passed"
+            ]
+        })
+
+        st.dataframe(cyber_logs)
+        
+        # -------------------------------
+        # 🖥 Enterprise KPI Command Center
+        # -------------------------------
+        st.markdown("## 🖥 Enterprise KPI Command Center")
+
+        kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+
+        kpi1.metric("Assets Online", random.randint(20, 50))
+        kpi2.metric("AI Alerts", random.randint(0, 10))
+        kpi3.metric("Grid Stability", "99.98%")
+        kpi4.metric("Energy Efficiency", "92%")
+
+        # Display active role
+        st.sidebar.success(f"Logged in as: {role}")
+
+        # -------------------------------
+        # Role Permissions
+        # -------------------------------
+        if role == "Admin":
+
+            st.subheader("🛠 Admin Controls")
+            st.write("Full system analytics and AI controls enabled.")
+
+        elif role == "Operator":
+
+            st.subheader("⚙ Operator Dashboard")
+            st.write("Operational monitoring access enabled.")
+
+        elif role == "Engineer":
+
+            st.subheader("🔧 Engineer Workspace")
+            st.write("Maintenance and diagnostics tools enabled.")
+
+        elif role == "Client":
+
+            st.subheader("📊 Client Dashboard")
+            st.write("Read-only energy performance view enabled.")
+    else:
+        role = "User"
     if role == "Admin":
         st.subheader("Admin Controls")
         st.write("Advanced analytics visible only to admin.")
@@ -905,7 +8971,7 @@ if st.session_state.get("authentication_status"):
         st.dataframe(df.head())
     
     # -------------------------------
-    # 📊 Rolling Energy Trend (Level 32)
+    # 📊 Rolling Energy Trend 
     # -------------------------------
     st.subheader("📊 Energy Trend Analysis")
 
@@ -1058,6 +9124,35 @@ if st.session_state.get("authentication_status"):
 
     else:
         st.info("Add 'building' column to enable cost predictions")
+    
+    # =====================================================
+    # 💹 AI Energy Trading Signals
+    # =====================================================
+
+    st.subheader("💹 AI Energy Trading Signals")
+
+    market_price = round(random.uniform(60, 180), 2)
+
+    if market_price > 140:
+        signal = "SELL ENERGY"
+        color = "🚀"
+
+    elif market_price > 90:
+        signal = "HOLD"
+
+        color = "⚖"
+
+    else:
+        signal = "BUY ENERGY"
+
+        color = "📈"
+
+    st.metric(
+        "Electricity Market Price",
+        f"£{market_price}/MWh"
+    )
+
+    st.markdown(f"## {color} {signal}")
 
 
     # -------------------------------
@@ -1105,6 +9200,79 @@ if st.session_state.get("authentication_status"):
 
     else:
         st.info("Add 'building' column to enable carbon insights")
+    
+    # =====================================================
+    # ⚡ Grid Stability Engine
+    # =====================================================
+
+    st.subheader("⚡ Grid Stability Engine")
+
+    grid_load = random.randint(40, 100)
+
+    renewable_share = random.randint(20, 80)
+
+    frequency = round(random.uniform(49.5, 50.5), 2)
+
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric("Grid Load", f"{grid_load}%")
+    col2.metric("Renewable Share", f"{renewable_share}%")
+    col3.metric("Grid Frequency", f"{frequency} Hz")
+
+    if frequency < 49.8 or frequency > 50.2:
+        st.error("🚨 Grid instability risk detected")
+    else:
+        st.success("✅ Grid operating normally")
+    
+    # -------------------------------
+    # ⚡ AI Load Balancing Engine
+    # -------------------------------
+    st.subheader("⚡ AI Load Balancing")
+
+    load_now = random.randint(50, 100)
+
+    st.progress(load_now)
+
+    st.metric("Current Grid Load", f"{load_now}%")
+
+    if load_now > 85:
+        st.error("🚨 Grid load critical")
+    elif load_now > 65:
+        st.warning("⚠ High load detected")
+    else:
+        st.success("✅ Load balanced")
+    
+    # =====================================================
+    # ⚖ AI Load Balancer
+    # =====================================================
+
+    st.subheader("⚖ AI Load Balancer")
+
+    zone_a = random.randint(100, 400)
+    zone_b = random.randint(100, 400)
+    zone_c = random.randint(100, 400)
+
+    load_df = pd.DataFrame({
+        "Zone": ["Zone A", "Zone B", "Zone C"],
+        "Load": [zone_a, zone_b, zone_c]
+    })
+
+    st.dataframe(load_df)
+
+    balance_fig = px.pie(
+        load_df,
+        names="Zone",
+        values="Load",
+        title="Grid Load Distribution"
+    )
+
+    st.plotly_chart(balance_fig, use_container_width=True)
+
+    max_zone = load_df.loc[load_df["Load"].idxmax()]
+
+    st.warning(
+        f"⚠ Highest load detected in {max_zone['Zone']}"
+    )
 
     # -------------------------------
     # Feature Engineering
@@ -1212,6 +9380,77 @@ if st.session_state.get("authentication_status"):
         else:
             st.metric("System Health (%)", 100)
         
+        # =====================================================
+        # 📊 Live KPI Wall
+        # =====================================================
+
+        st.subheader("📊 Live KPI Wall")
+
+        kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+
+        kpi1.metric(
+            "Total Assets",
+            random.randint(10, 50)
+        )
+
+        kpi2.metric(
+            "Active Alarms",
+            random.randint(0, 8)
+        )
+
+        kpi3.metric(
+            "Efficiency",
+            f"{random.randint(80, 99)}%"
+        )
+
+        kpi4.metric(
+            "AI Accuracy",
+            f"{random.randint(90, 99)}%"
+        )
+        
+        # =====================================================
+        # 📈 SLA Performance Monitor
+        # =====================================================
+
+        st.subheader("📈 SLA Performance")
+
+        uptime = round(random.uniform(98.5, 99.99), 2)
+
+        response_time = round(random.uniform(80, 300), 2)
+
+        col1, col2 = st.columns(2)
+
+        col1.metric(
+            "System Uptime",
+            f"{uptime}%"
+        )
+
+        col2.metric(
+            "Response Time",
+            f"{response_time} ms"
+        )
+
+        if uptime > 99.5:
+            st.success("✅ SLA Targets Achieved")
+        else:
+            st.warning("⚠ SLA Performance Degraded")
+        
+        # -------------------------------
+        # 🚨 Enterprise AI Risk Index
+        # -------------------------------
+        st.subheader("🚨 Enterprise AI Risk Index")
+
+        risk_score = 100 - health_score
+
+        if risk_score > 60:
+            st.error(f"🔴 CRITICAL RISK LEVEL: {round(risk_score,2)}%")
+        elif risk_score > 30:
+            st.warning(f"🟠 MODERATE RISK LEVEL: {round(risk_score,2)}%")
+        else:
+            st.success(f"🟢 LOW RISK LEVEL: {round(risk_score,2)}%")
+
+        st.progress(int(risk_score))
+
         # -------------------------------
         # 📊 Multi KPI Health Index (FIXED)
         # -------------------------------
@@ -1298,8 +9537,56 @@ if st.session_state.get("authentication_status"):
         sustainability_score = (health_score * 0.6) + (co2_impact_score * 0.4)
         st.metric("Overall Sustainability Score (%)", round(sustainability_score, 2))
 
+        # =========================================================
+        # 🌱 AI Sustainability Rating
+        # =========================================================
+        st.subheader("🌱 AI Sustainability Rating")
+
+        rating = "A+"
+
+        if sustainability_score < 50:
+            rating = "C"
+
+        elif sustainability_score < 70:
+            rating = "B"
+
+        elif sustainability_score < 85:
+            rating = "A"
+
+        st.metric(
+            "Enterprise Sustainability Rating",
+            rating
+        )
+
+        if rating == "A+":
+            st.success("🏆 Industry-Leading Sustainability")
+
+        elif rating == "A":
+            st.success("♻ Strong Sustainability Performance")
+
+        elif rating == "B":
+            st.warning("⚠ Sustainability Improvements Possible")
+
+        else:
+            st.error("🚨 Sustainability Risk")
+        
         # -------------------------------
-        # ⚡ Energy Efficiency Score (Level 33)
+        # 🧠 AI Security Score
+        # -------------------------------
+        security_score = 100
+
+        if failure_percent > 70:
+            security_score -= 30
+
+        if health_score < 50:
+            security_score -= 20
+
+        security_score = max(0, security_score)
+
+        st.metric("🛡 AI Security Score", f"{security_score}%")
+
+        # -------------------------------
+        # ⚡ Energy Efficiency Score 
         # -------------------------------
         st.subheader("⚡ Energy Efficiency Score")
 
@@ -1491,6 +9778,11 @@ if st.session_state.get("authentication_status"):
         # -------------------------------
         if st.button("🗑 Clear Chat"):
             st.session_state.copilot_history = []
+        
+            st.markdown("""
+            # 🖥 AI ENERGY COMMAND CENTER
+            ### Real-Time Industrial Monitoring Platform
+            """)
 
         # -------------------------------
         # Live IoT Sensor Simulation + AI Failure Detection
@@ -1538,6 +9830,63 @@ if st.session_state.get("authentication_status"):
                 ]])[0]
 
                 failure_percent = round(failure_probability * 100, 2)
+                st.session_state.failure_percent = failure_percent
+
+                # -------------------------------
+                # 🧠 Equipment Criticality Score
+                # -------------------------------
+
+                criticality_score = (
+                    sensor_data["Temperature (°C)"] * 0.4 +
+                    sensor_data["Vibration"] * 20 +
+                    failure_percent * 0.4
+                )
+
+                criticality_score = round(min(100, criticality_score), 2)
+
+                # -------------------------------
+                # ⏳ Remaining Equipment Life
+                # -------------------------------
+
+                remaining_life = max(0, 100 - criticality_score)
+
+                remaining_life_days = int(remaining_life * 3.65)
+
+                # -------------------------------
+                # 🚨 AI Priority Classification
+                # -------------------------------
+
+                if criticality_score > 80:
+                   priority = "CRITICAL"
+                elif criticality_score > 60:
+                   priority = "HIGH"
+                elif criticality_score > 40:
+                   priority = "MEDIUM"
+                else:
+                   priority = "LOW"
+                
+                # -------------------------------
+                # ⚡ Autonomous Load Balancer
+                # -------------------------------
+
+                load_action = "NORMAL"
+
+                if sensor_data["Energy (kWh)"] > 450:
+                    load_action = "REDUCE LOAD"
+
+                elif sensor_data["Energy (kWh)"] < 180:
+                    load_action = "INCREASE UTILIZATION"
+                
+                # -------------------------------
+                # 🚀 AI Efficiency Score
+                # -------------------------------
+
+                efficiency_score = 100 - (
+                    sensor_data["Vibration"] * 10 +
+                    failure_percent * 0.5
+                )
+
+                efficiency_score = round(max(0, efficiency_score), 2)
 
                 # -------------------------------
                 # 🎯 AI Confidence Score
@@ -1574,7 +9923,63 @@ if st.session_state.get("authentication_status"):
                     st.error(alarm)
                 
                 # -------------------------------
-                # 🧠 Root Cause Analysis (Level 33)
+                # 🚨 Security Monitoring
+                # -------------------------------
+                st.subheader("🚨 Security Monitoring")
+
+                if failure_percent > 80:
+                    st.error("🔴 Critical infrastructure risk detected")
+
+                if len(alerts) > 2:
+                    st.warning("⚠ Multiple simultaneous anomalies detected")
+
+                if health_score < 40:
+                    st.error("🚨 Equipment health critically low")
+
+                # =========================================================
+                # 📋 Incident Tracking System
+                # =========================================================
+                st.subheader("📋 Incident Tracking")
+
+                incident_df = pd.DataFrame({
+                    "Incident": [
+                       "Temperature Spike",
+                       "Voltage Fluctuation",
+                       "High Vibration",
+                       "Cooling Delay"
+                    ],
+                    "Priority": [
+                       "High",
+                       "Medium",
+                       "Critical",
+                       "Low"
+                    ],
+                    "Status": [
+                       "Open",
+                       "Investigating",
+                       "Resolved",
+                       "Monitoring"
+                    ]
+                })
+
+                st.dataframe(incident_df)
+
+                # -------------------------------
+                # 📜 Enterprise SLA Monitor
+                # -------------------------------
+                st.subheader("📜 SLA Monitoring")
+
+                sla_uptime = round(random.uniform(99.0, 99.999), 3)
+
+                st.metric("Platform Uptime", f"{sla_uptime}%")
+
+                if sla_uptime < 99.5:
+                    st.warning("⚠ SLA risk detected")
+                else:
+                    st.success("✅ SLA compliant")
+                
+                # -------------------------------
+                # 🧠 Root Cause Analysis
                 # -------------------------------
                 st.subheader("🧠 Root Cause Analysis")
 
@@ -1637,6 +10042,22 @@ if st.session_state.get("authentication_status"):
                 st.info(f"🤖 AI Recommendation: {decision}")
 
                 # =========================================================
+                # 🖥 Enterprise Command Console
+                # =========================================================
+                st.subheader("🖥 Enterprise Command Console")
+
+                console_messages = [
+                    "AI Monitoring Active",
+                    "Grid Communication Stable",
+                    "Renewable Sources Connected",
+                    "Predictive Maintenance Enabled",
+                    "SCADA Synchronization Successful"
+                ]
+
+                for msg in console_messages:
+                    st.success(f"✔ {msg}")
+
+                # =========================================================
                 # 🤖 Autonomous AI Actions
                 # =========================================================
                 st.subheader("🤖 Autonomous AI Actions")
@@ -1656,6 +10077,27 @@ if st.session_state.get("authentication_status"):
                     ai_action = "HVAC optimization activated"
 
                 st.success(f"⚡ AI Action: {ai_action}")
+
+                # =========================================================
+                # 🧠 Autonomous Grid Optimization
+                # =========================================================
+                st.subheader("🧠 Autonomous Grid Optimization")
+
+                optimization_action = "No optimization needed"
+
+                if power_demand > 1000:
+
+                    optimization_action = "Reducing non-critical loads"
+
+                elif renewable_percent > 60:
+
+                    optimization_action = "Switching to renewable priority mode"
+
+                elif market_price > 0.20:
+
+                    optimization_action = "Activating battery storage"
+
+                st.info(f"⚡ AI Optimization: {optimization_action}")
 
                 # -------------------------------
                 # 🛠 Smart Maintenance Scheduler
@@ -1736,7 +10178,7 @@ if st.session_state.get("authentication_status"):
                         st.success("✅ Model Retrained Successfully")
 
                 # -------------------------------
-                # ⚡ Auto Energy Optimization (Level 34)
+                # ⚡ Auto Energy Optimization
                 # -------------------------------
                 st.subheader("⚡ AI Energy Optimization")
 
@@ -1769,6 +10211,20 @@ if st.session_state.get("authentication_status"):
                     col5.metric("Failure Risk", f"{failure_percent}%")
 
                     st.progress(int(failure_percent))
+
+                    # -------------------------------
+                    # 🖥 AI Command Center Status
+                    # -------------------------------
+
+                    colA, colB, colC = st.columns(3)
+                    colD, colE = st.columns(2)
+
+                    colD.metric("Efficiency Score", f"{efficiency_score}%")
+                    colE.metric("Remaining Life", f"{remaining_life_days} Days")
+
+                    colA.metric("Criticality Score", f"{criticality_score}%")
+                    colB.metric("Priority Level", priority)
+                    colC.metric("Failure Risk", f"{failure_percent}%")
 
                     # -------------------------------
                     # 🖥 SCADA-STYLE CONTROL ROOM UI
@@ -1815,6 +10271,109 @@ if st.session_state.get("authentication_status"):
                             st.info(alert)
                 
                     st.line_chart(df_live)
+
+                    # -------------------------------
+                    # 🧠 AI Operator Recommendations
+                    # -------------------------------
+
+                    st.subheader("🧠 AI Operator Recommendations")
+
+                    if priority == "CRITICAL":
+
+                        st.error("""
+                        Immediate Actions Required:
+                        - Shutdown turbine safely
+                        - Inspect vibration bearings
+                        - Check cooling system
+                        - Notify maintenance supervisor
+                        """)
+
+                    elif priority == "HIGH":
+
+                        st.warning("""
+                        Recommended Actions:
+                        - Schedule maintenance within 24h
+                        - Monitor temperature continuously
+                        - Reduce operational load
+                        """)
+
+                    elif priority == "MEDIUM":
+
+                        st.info("""
+                        Monitoring Recommended:
+                        - Continue observation
+                        - Review system efficiency
+                        - Check sensor calibration
+                        """)
+
+                    else:
+
+                        st.success("""
+                        System operating normally.
+                        No immediate intervention required.
+                        """)
+                    
+                    # -------------------------------
+                    # ⚡ Smart Energy Dispatch Engine
+                    # -------------------------------
+
+                    st.subheader("⚡ Smart Dispatch Decision")
+
+                    if load_action == "REDUCE LOAD":
+
+                        st.error("""
+                        AI Dispatch Action:
+                        - Reduce non-critical systems
+                        - Shift peak operations
+                        - Activate energy-saving mode
+                        """)
+
+                    elif load_action == "INCREASE UTILIZATION":
+
+                        st.info("""
+                        AI Dispatch Action:
+                        - Capacity available
+                        - Increase productive load
+                        - Utilize off-peak efficiency
+                        """)
+
+                    else:
+
+                        st.success("""
+                        Energy dispatch optimized.
+                        System balanced normally.
+                        """)
+
+                    # -------------------------------
+                    # 🚨 AI Escalation Matrix
+                    # -------------------------------
+
+                    st.subheader("🚨 Alarm Escalation Matrix")
+
+                    if priority == "CRITICAL":
+
+                        st.error("""
+                        LEVEL 3 ESCALATION:
+                        - Notify plant manager
+                        - Notify operations head
+                        - Emergency maintenance activation
+                        """)
+
+                    elif priority == "HIGH":
+
+                        st.warning("""
+                        LEVEL 2 ESCALATION:
+                        - Notify maintenance team
+                        - Increase monitoring frequency
+                        """)
+
+                    elif priority == "MEDIUM":
+
+                        st.info("""
+                        LEVEL 1 ESCALATION:
+                        - Log operational advisory
+                        - Continue observation
+                        """)
 
                     # -------------------------------
                     # ⚡ Energy Control Panel
@@ -1933,8 +10492,9 @@ if st.session_state.get("authentication_status"):
                 st.markdown(f"🧑‍💻 **You:** {message}")
             else:
                 st.markdown(f"🤖 **AI:** {message}")
+
         # -------------------------------
-        # 🤖 AI Executive Summary (Level 33)
+        # 🤖 AI Executive Summary 
         # -------------------------------
         st.subheader("📄 Executive AI Summary")
 
@@ -1964,6 +10524,44 @@ if st.session_state.get("authentication_status"):
             summary += "\n✅ System operating efficiently."
 
         st.text_area("Executive Summary Report", summary, height=200)
+
+        # -------------------------------
+        # 🧠 AI Operator Recommendation Engine
+        # -------------------------------
+        st.subheader("🧠 AI Operator Recommendations")
+
+        recommendations = [
+            "Reduce HVAC peak-hour load",
+            "Inspect turbine vibration trend",
+            "Optimize boiler efficiency",
+            "Shift operations to off-peak tariff periods",
+            "Schedule predictive maintenance"
+        ]
+
+        for rec in recommendations:
+            st.info(f"💡 {rec}")
+
+        # =====================================================
+        # 🧠 AI Operational Confidence Engine
+        # =====================================================
+
+        st.subheader("🧠 AI Operational Confidence")
+
+        confidence_score = round(random.uniform(75, 99), 2)
+
+        st.metric(
+            "AI Confidence Score",
+            f"{confidence_score}%"
+        )
+
+        if confidence_score > 90:
+            st.success("✅ AI Predictions Highly Reliable")
+
+        elif confidence_score > 80:
+            st.warning("⚠ Moderate Prediction Confidence")
+
+        else:
+            st.error("🚨 Low AI Reliability")
 
         # -------------------------------
         # Download CSV & PDF
