@@ -6388,23 +6388,161 @@ if st.session_state.get("authentication_status"):
 
                 st.subheader("🗺 Asset Locations")
 
-                map_df = pd.DataFrame({
+                world_df = pd.DataFrame({
+
+                    "City":[
+                        "London",
+                        "Berlin",
+                        "Mumbai",
+                        "New York",
+                        "Dubai"
+                    ],
+
+                    "Country":[
+                        "United Kingdom",
+                        "Germany",
+                        "India",
+                        "USA",
+                        "UAE"
+                    ],
 
                     "lat":[
                         51.5074,
-                        51.5100,
-                        51.5150
+                        52.5200,
+                        19.0760,
+                        40.7128,
+                        25.2048
                     ],
 
                     "lon":[
                         -0.1278,
-                        -0.1400,
-                        -0.1500
+                        13.4050,
+                        72.8777,
+                        -74.0060,
+                        55.2708
+                    ],
+
+                    "Plant":[
+                        "Solar Farm",
+                        "Wind Farm",
+                        "Thermal Plant",
+                        "Battery Hub",
+                        "Hybrid Plant"
+                    ],
+
+                    "Health":[
+                        97,
+                        95,
+                        92,
+                        99,
+                        96
+                    ],
+
+                    "Power":[
+                        620,
+                        540,
+                        890,
+                        430,
+                        710
+                    ],
+
+                    "Carbon":[
+                        28,
+                        20,
+                        54,
+                        24,
+                        31
+                    ],
+
+                    "Status":[
+                        "Online",
+                        "Online",
+                        "Online",
+                        "Online",
+                        "Online"
                     ]
 
                 })
 
-                st.map(map_df)
+                fig_world = px.scatter_geo(
+
+                    world_df,
+
+                    lat="lat",
+
+                    lon="lon",
+
+                    hover_name="City",
+
+                    hover_data={
+
+                        "Country":True,
+
+                        "Plant":True,
+
+                        "Health":True,
+
+                        "Power":True,
+
+                        "Carbon":True,
+
+                        "Status":True,
+
+                        "lat":False,
+
+                        "lon":False
+
+                    },
+
+                    color="Health",
+
+                    size="Power",
+
+                    projection="natural earth",
+
+                    color_continuous_scale="Viridis",
+
+                    title="🌍 Global Enterprise Assets"
+
+                )
+
+                fig_world.update_layout(
+
+                    height=520,
+
+                    paper_bgcolor="#08111F",
+
+                    plot_bgcolor="#08111F",
+
+                    font_color="white",
+
+                    geo=dict(
+
+                        bgcolor="#08111F",
+
+                        showland=True,
+
+                        landcolor="#1F2937",
+
+                        showcountries=True,
+
+                        countrycolor="gray",
+
+                        showocean=True,
+
+                        oceancolor="#102A43"
+
+                    )
+
+                )
+
+                st.plotly_chart(
+
+                    fig_world,
+
+                    use_container_width=True
+
+                )
                 
             st.markdown("---")
 
