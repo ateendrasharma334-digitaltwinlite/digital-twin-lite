@@ -5814,7 +5814,41 @@ if st.session_state.get("authentication_status"):
             # -------------------------------
             st.markdown("## ⚡ Executive KPI Center")
 
+            power = random.randint(500,900)
+            carbon = random.randint(20,60)
+            health = random.randint(90,99)
+            alerts = random.randint(0,5)
+            ai = random.randint(90,99)
+            cost = random.randint(6000,15000)
+
             k1, k2, k3, k4, k5, k6 = st.columns(6)
+
+            cards = [
+                ("⚡ Enterprise Power", f"{power} MW", "+5.2%"),
+                ("🌱 Carbon", f"{carbon}%", "-3.1%"),
+                ("🏭 Asset Health", f"{health}%", "+1.4%"),
+                ("🚨 Alerts", alerts, "-1"),
+                ("🧠 AI Confidence", f"{ai}%", "+0.8%"),
+                ("💰 Energy Cost", f"£{cost:,}", "-4.2%"),
+            ]
+
+            for col, (title, value, change) in zip(
+                    [k1, k2, k3, k4, k5, k6],
+                    cards):
+
+                with col:
+                    st.markdown(
+                        f"""
+                        <div class="glass-card">
+                            <h5>{title}</h5>
+                            <h2>{value}</h2>
+                            <p style="color:#22C55E;">
+                                ▲ {change}
+                            </p>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
 
             with k1:
 
