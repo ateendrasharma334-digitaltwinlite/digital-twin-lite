@@ -73,6 +73,74 @@ st.set_page_config(
 st.markdown("""
 <style>
 
+.glass-card{
+
+background:rgba(20,30,48,0.75);
+
+backdrop-filter:blur(12px);
+
+border:1px solid rgba(255,255,255,0.15);
+
+border-radius:18px;
+
+padding:18px;
+
+box-shadow:0px 8px 20px rgba(0,229,255,0.20);
+
+transition:0.3s;
+
+text-align:center;
+
+height:170px;
+
+}
+
+.glass-card:hover{
+
+transform:translateY(-6px);
+
+box-shadow:0px 12px 30px rgba(0,229,255,0.45);
+
+border:1px solid #00E5FF;
+
+}
+
+.glass-title{
+
+font-size:16px;
+
+color:#9CA3AF;
+
+margin-bottom:10px;
+
+}
+
+.glass-value{
+
+font-size:34px;
+
+font-weight:bold;
+
+color:white;
+
+}
+
+.glass-change{
+
+font-size:15px;
+
+color:#22C55E;
+
+margin-top:10px;
+
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+<style>
+
 /* Hide Streamlit Header */
 header {
     visibility: hidden;
@@ -5673,37 +5741,134 @@ if st.session_state.get("authentication_status"):
             # -------------------------------
             st.markdown("## ⚡ Executive KPI Center")
 
-            k1,k2,k3,k4,k5,k6 = st.columns(6)
+            k1, k2, k3, k4, k5, k6 = st.columns(6)
 
-            k1.metric(
-                "⚡ Power",
-                f"{random.randint(400,900)} MW"
-            )
+            with k1:
 
-            k2.metric(
-                "🌱 Carbon",
-                f"{random.randint(20,60)}%"
-            )
+                st.markdown(f"""
+                <div class="glass-card">
 
-            k3.metric(
-                "🔋 Battery",
-                f"{random.randint(70,100)}%"
-            )
+                    <div class="glass-title">
+                    ⚡ Enterprise Power
+                    </div>
 
-            k4.metric(
-                "⚙ Health",
-                f"{random.randint(85,99)}%"
-            )
+                    <div class="glass-value">
+                    {random.randint(400,900)} MW
+                    </div>
 
-            k5.metric(
-                "🚨 Alerts",
-                random.randint(0,5)
-            )
+                    <div class="glass-change">
+                    ▲ +5.2%
+                    </div>
 
-            k6.metric(
-                "📈 Efficiency",
-                f"{random.randint(90,99)}%"
-            )
+                </div>
+                """, unsafe_allow_html=True)
+
+
+            with k2:
+
+                st.markdown(f"""
+                <div class="glass-card">
+
+                    <div class="glass-title">
+                    🌱 Carbon
+                    </div>
+
+                    <div class="glass-value">
+                    {random.randint(20,60)}%
+                    </div>
+
+                    <div class="glass-change">
+                    ▼ -3.8%
+                    </div>
+
+                </div>
+                """, unsafe_allow_html=True)
+
+
+            with k3:
+
+                st.markdown(f"""
+                <div class="glass-card">
+
+                    <div class="glass-title">
+                    🔋 Battery
+                    </div>
+
+                    <div class="glass-value">
+                    {random.randint(70,100)}%
+                    </div>
+
+                    <div class="glass-change">
+                    ▲ Healthy
+                    </div>
+
+                </div>
+                """, unsafe_allow_html=True)
+
+
+            with k4:
+
+                st.markdown(f"""
+                <div class="glass-card">
+
+                    <div class="glass-title">
+                    ⚙ Asset Health
+                    </div>
+
+                    <div class="glass-value">
+                    {random.randint(85,99)}%
+                    </div>
+
+                    <div class="glass-change">
+                    Excellent
+                    </div>
+
+                </div>
+                """, unsafe_allow_html=True)
+
+
+            with k5:
+
+                alerts = random.randint(0,5)
+
+                st.markdown(f"""
+                <div class="glass-card">
+
+                    <div class="glass-title">
+                    🚨 Active Alerts
+                    </div>
+
+                    <div class="glass-value">
+                    {alerts}
+                    </div>
+
+                    <div class="glass-change">
+                    Live
+                    </div>
+
+                </div>
+                """, unsafe_allow_html=True)
+
+
+            with k6:
+
+                st.markdown(f"""
+                <div class="glass-card">
+
+                    <div class="glass-title">
+                    📈 Efficiency
+                    </div>
+
+                    <div class="glass-value">
+                    {random.randint(90,99)}%
+                    </div>
+
+                    <div class="glass-change">
+                    ▲ Optimized
+                    </div>
+
+                </div>
+                """, unsafe_allow_html=True)
 
             # ==========================================
             # 👔 Executive Cockpit
@@ -6249,7 +6414,7 @@ if st.session_state.get("authentication_status"):
 
                 st.write("Enterprise Digital Twin Platform")
 
-                st.write("Version 3.0")
+                st.caption("Enterprise Version 3.0")
 
             with footer2:
 
