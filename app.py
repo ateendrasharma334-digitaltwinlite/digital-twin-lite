@@ -5793,6 +5793,60 @@ if st.session_state.get("authentication_status"):
 
             st.title("🏢 Enterprise Energy Command Center")
 
+            # =====================================================
+            # UPGRADE 7 — LIVE NOTIFICATION RIBBON
+            # =====================================================
+
+            st.markdown("""
+            <div class="notification-ribbon">
+                <span>🟢 AI ACTIVE</span>
+                <span>⚡ Transformer Stable</span>
+                <span>📈 Revenue ↑ 5.8%</span>
+                <span>🌱 Carbon ↓ 3.2%</span>
+                <span>🔋 Battery Charging</span>
+                <span>🌐 Grid Connected</span>
+                <span>🟢 No Critical Alerts</span>
+            </div>
+
+            <style>
+
+            .notification-ribbon {
+                width: 100%;
+                overflow: hidden;
+                white-space: nowrap;
+                background: linear-gradient(
+                    90deg,
+                    #08111F,
+                    #111827,
+                    #08111F
+                );
+                border: 1px solid #00E5FF;
+                border-radius: 8px;
+                padding: 10px 0;
+                margin: 10px 0 25px 0;
+                color: #F8FAFC;
+                font-size: 14px;
+                font-weight: 600;
+            }
+
+            .notification-ribbon span {
+                display: inline-block;
+                margin-right: 45px;
+                animation: ticker 18s linear infinite;
+            }
+
+            @keyframes ticker {
+                from {
+                    transform: translateX(100%);
+                }
+                to {
+                    transform: translateX(-100%);
+                }
+            }
+
+            </style>
+            """, unsafe_allow_html=True)
+
             st.success(
                 "🟢 Digital Twin Status: ONLINE"
             )
