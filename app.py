@@ -6386,6 +6386,132 @@ if st.session_state.get("authentication_status"):
                     "Twin Score",
                     f"{twin_score}%"
                 )
+            
+            # =====================================================
+            # UPGRADE 5 — SCADA LIVE GAUGES
+            # =====================================================
+
+            st.markdown("---")
+
+            st.subheader("📡 SCADA Live Operations")
+
+            g1, g2, g3, g4, g5 = st.columns(5)
+
+
+            def create_scada_gauge(title, value):
+
+                fig = go.Figure(
+                    go.Indicator(
+                        mode="gauge+number",
+                        value=value,
+                        title={
+                            "text": title
+                        },
+                        gauge={
+                            "axis": {
+                                "range": [0, 100]
+                            },
+                            "bar": {
+                                "color": "#00E5FF"
+                            },
+                            "steps": [
+                                {
+                                    "range": [0, 60],
+                                    "color": "#1F2937"
+                                },
+                                {
+                                    "range": [60, 80],
+                                    "color": "#374151"
+                                },
+                                {
+                                    "range": [80, 100],
+                                    "color": "#14532D"
+                                }
+                            ]
+                        }
+                    )
+                )
+
+                fig.update_layout(
+                    height=250,
+                    margin=dict(
+                        l=10,
+                        r=10,
+                        t=50,
+                        b=10
+                    ),
+                    paper_bgcolor="#08111F",
+                    font={
+                        "color": "#F8FAFC"
+                    }
+                )
+
+                return fig
+
+
+            with g1:
+
+                battery_score = random.randint(85, 99)
+
+                st.plotly_chart(
+                    create_scada_gauge(
+                        "🔋 Battery",
+                        battery_score
+                    ),
+                    use_container_width=True
+                )
+
+
+            with g2:
+
+                carbon_score = random.randint(70, 95)
+
+                st.plotly_chart(
+                    create_scada_gauge(
+                        "🌱 Carbon",
+                        carbon_score
+                    ),
+                    use_container_width=True
+                )
+
+
+            with g3:
+
+                ai_confidence = random.randint(90, 99)
+
+                st.plotly_chart(
+                    create_scada_gauge(
+                        "🧠 AI Confidence",
+                        ai_confidence
+                    ),
+                    use_container_width=True
+                )
+
+
+            with g4:
+
+                network_score = random.randint(95, 100)
+
+                st.plotly_chart(
+                    create_scada_gauge(
+                        "🌐 Network",
+                        network_score
+                    ),
+                    use_container_width=True
+                )
+
+
+            with g5:
+
+                cyber_score = random.randint(96, 100)
+
+                st.plotly_chart(
+                    create_scada_gauge(
+                        "🔐 Cyber Security",
+                        cyber_score
+                    ),
+                    use_container_width=True
+                )
 
 
             # =====================================================
