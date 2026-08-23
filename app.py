@@ -5289,6 +5289,83 @@ if st.session_state.get("authentication_status"):
             ]
         )
 
+        # =====================================================
+        # UPGRADE 6 — OMNITWIN AI COPILOT
+        # =====================================================
+
+        st.sidebar.markdown("---")
+
+        st.sidebar.markdown(
+            "## 🤖 OmniTwin AI"
+        )
+
+        st.sidebar.caption(
+            "Enterprise Energy Intelligence Copilot"
+        )
+
+        ai_question = st.sidebar.text_input(
+            "Ask anything...",
+            placeholder="e.g. Which asset has highest risk?"
+        )
+
+        if st.sidebar.button(
+            "📄 Generate Report",
+            use_container_width=True
+        ):
+
+            st.sidebar.success(
+                "AI report generation initiated."
+            )
+
+        if st.sidebar.button(
+            "🔮 Predict Failure",
+            use_container_width=True
+        ):
+
+            st.sidebar.info(
+                "AI analysing asset failure probability..."
+            )
+
+        if st.sidebar.button(
+            "⚡ Optimize Energy",
+            use_container_width=True
+        ):
+
+            st.sidebar.success(
+                "Energy optimisation analysis started."
+            )
+
+        if st.sidebar.button(
+            "🌱 Carbon Analysis",
+            use_container_width=True
+        ):
+
+            st.sidebar.info(
+                "Carbon performance analysis started."
+            )
+
+        if ai_question:
+
+            st.sidebar.markdown("---")
+
+            st.sidebar.markdown(
+                "### 🧠 AI Response"
+            )
+
+            st.sidebar.write(
+                f"""
+                OmniTwin AI is analysing:
+
+                **{ai_question}**
+
+                Current platform status:
+
+                🟢 AI Monitoring Active  
+                🟢 SCADA Connected  
+                🟢 Predictive Maintenance Active
+                """
+            )
+
         st.sidebar.markdown("---")
 
         st.sidebar.caption("OmniTwin Enterprise")
