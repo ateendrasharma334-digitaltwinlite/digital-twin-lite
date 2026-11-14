@@ -1281,23 +1281,36 @@ if st.session_state.get("authentication_status"):
     # Insert into DB safely
     insert_sensor_data(temp_value, vibration_value, pressure_value)
 
-    # -------------------------------
-    # 🏭 Asset Registry
-    # -------------------------------
-    st.subheader("🏭 Industrial Asset Registry")
+    
+    # -----------------------------------------
+    # OMNITWIN MULTI-ASSET REGISTRY
+    # -----------------------------------------
+
+    st.subheader("🏭 OmniTwin Multi-Asset Registry")
+
+    asset_options = {
+        "Gas Turbine GT-01": "Gas Turbine",
+        "Steam Turbine ST-02": "Steam Turbine",
+        "Transformer TX-01": "Transformer",
+        "Boiler BLR-01": "Boiler",
+        "Wind Turbine WT-01": "Wind Turbine",
+        "Solar PV PV-01": "Solar PV",
+        "Battery Energy Storage System BESS-01": "BESS"
+    }
 
     asset_name = st.selectbox(
-        "Select Asset",
-        [
-            "Gas Turbine GT-01",
-            "Steam Turbine ST-02",
-            "Transformer TX-01",
-            "Boiler BLR-01",
-            "Wind Turbine WT-01"
-        ]
+        "Select Energy Asset",
+        list(asset_options.keys()),
+        key="omnitwin_asset_selector"
     )
 
-    asset_type = asset_name.split()[0]
+    asset_type = asset_options[asset_name]
+
+    st.info(
+        f"Selected asset: {asset_name} | "
+        f"Asset category: {asset_type}"
+    )
+
 
     # -------------------------------
     # Predictive Maintenance Call
