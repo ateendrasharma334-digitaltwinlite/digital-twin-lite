@@ -1319,6 +1319,116 @@ if st.session_state.get("authentication_status"):
         temp_value, vibration_value, pressure_value
     )
 
+
+    # -----------------------------------------
+    # OMNITWIN SOLAR PV ENGINEERING MODEL
+    # -----------------------------------------
+
+    if asset_type == "Solar PV":
+
+        st.subheader("☀️ Solar PV Performance Model")
+
+        st.caption(
+            "Physics-based PV output estimate using "
+            "irradiance, module temperature and system performance."
+        )
+
+        pv_col1, pv_col2 = st.columns(2)
+
+        with pv_col1:
+
+            pv_capacity = st.number_input(
+                "Installed Capacity (kWp)",
+                min_value=1.0,
+                max_value=100000.0,
+                value=100.0,
+                step=5.0,
+                key="pv_capacity"
+            )
+
+            solar_irradiance = st.number_input(
+                "Solar Irradiance (W/m²)",
+                min_value=0.0,
+                max_value=1500.0,
+                value=800.0,
+                step=50.0,
+                key="pv_irradiance"
+            )
+
+        with pv_col2:
+
+            module_temperature = st.number_input(
+                "PV Module Temperature (°C)",
+                min_value=-20.0,
+                max_value=100.0,
+                value=45.0,
+                step=1.0,
+                key="pv_temperature"
+            )
+
+            performance_ratio = st.number_input(
+                "System Performance Ratio",
+                min_value=0.10,
+                max_value=1.00,
+                value=0.80,
+                step=0.05,
+                key="pv_performance_ratio"
+            )
+
+        # Approximate PV module temperature coefficient
+        temperature_coefficient = -0.004
+
+        temperature_factor = max(
+            0.0,
+            1 + temperature_coefficient *
+            (module_temperature - 25)
+        )
+
+        # Estimated AC power output
+        estimated_pv_output = (
+            pv_capacity
+            * (solar_irradiance / 1000)
+            * temperature_factor
+            * performance_ratio
+        )
+
+        pv_capacity_factor = (
+            estimated_pv_output / pv_capacity
+        ) * 100
+
+        st.divider()
+
+        pv_metric1, pv_metric2, pv_metric3 = st.columns(3)
+
+        pv_metric1.metric(
+            "Estimated Power Output",
+            f"{estimated_pv_output:.2f} kW"
+        )
+
+        pv_metric2.metric(
+            "Temperature Correction",
+            f"{temperature_factor:.3f}"
+        )
+
+        pv_metric3.metric(
+            "Output / Installed Capacity",
+            f"{pv_capacity_factor:.1f}%"
+        )
+
+        st.info(
+            "This is an approximate engineering estimate. "
+            "It is not a measured inverter output or a validated "
+            "plant performance guarantee."
+        )
+
+    else:
+
+        st.info(
+            f"Engineering model for {asset_type} "
+            "will be added in the next development stage."
+        )
+
+
     st.metric("Machine Health Score", f"{health_score:.2f}")
 
     # -------------------------------
