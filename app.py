@@ -1159,12 +1159,113 @@ if st.session_state.get("authentication_status"):
     if "copilot_history" not in st.session_state:
         st.session_state.copilot_history = []
 
-    # -------------------------------
-    # Generate Sensor Data
-    # -------------------------------
-    temp_value = random.uniform(20, 80)
-    vibration_value = random.uniform(0.1, 5.0)
-    pressure_value = random.uniform(10, 50)
+    
+    # -----------------------------------------
+    # OMNITWIN SENSOR DATA INGESTION
+    # -----------------------------------------
+
+    st.subheader("📡 Sensor Data Acquisition")
+
+    sensor_source = st.sidebar.selectbox(
+        "Select Sensor Data Source",
+        [
+            "Simulation Mode",
+            "MQTT Live Sensor Mode"
+        ]
+    )
+
+    if sensor_source == "Simulation Mode":
+
+        # Demonstration data only
+        temp_value = round(random.uniform(40, 80), 2)
+        vibration_value = round(random.uniform(0.1, 5.0), 2)
+        pressure_value = round(random.uniform(10, 50), 2)
+
+        st.info(
+            "Simulation mode active. "
+            "These readings are not from physical equipment."
+        )
+
+    else:
+
+        # Expected MQTT JSON:
+        # {"temperature": 65.2,
+        #  "vibration": 2.1,
+        #  "pressure": 15.4}
+
+        sensor_payload = mqtt_data.copy()
+
+        required_fields = [
+            "temperature",
+            "vibration",
+            "pressure"
+        ]
+
+        if not all(
+            field in sensor_payload
+            for field in required_fields
+        ):
+            st.warning(
+                "Waiting for valid MQTT sensor readings. "
+                "Check your sensor connection and payload."
+            )
+            st.stop()
+
+        try:
+            temp_value = float(
+                sensor_payload["temperature"]
+            )
+
+            vibration_value = float(
+                sensor_payload["vibration"]
+            )
+
+            pressure_value = float(
+                sensor_payload["pressure"]
+            )
+
+            readings = [
+                temp_value,
+                vibration_value,
+                pressure_value
+            ]
+
+            if not all(np.isfinite(x) for x in readings):
+                raise ValueError("Sensor readings must be finite numbers.")
+
+        except (TypeError, ValueError):
+            st.error("Invalid MQTT sensor data received.")
+            st.stop()
+
+        st.success("MQTT sensor data received.")
+
+    # Display sensor measurements
+
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric(
+        "Temperature",
+        f"{temp_value:.2f} °C"
+    )
+
+    col2.metric(
+        "Vibration",
+        f"{vibration_value:.2f} mm/s"
+    )
+
+    col3.metric(
+        "Pressure",
+        f"{pressure_value:.2f} bar"
+    )
+
+    # Store validated readings
+
+    insert_sensor_data(
+        temp_value,
+        vibration_value,
+        pressure_value
+    )
+
 
     # -------------------------------
     # 🔧 Turbine Sensor Dashboard
