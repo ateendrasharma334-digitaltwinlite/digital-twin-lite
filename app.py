@@ -1422,11 +1422,144 @@ if st.session_state.get("authentication_status"):
         )
 
     else:
+    
+    elif asset_type == "Wind Turbine":
+
+        # -----------------------------------------
+        # OMNITWIN WIND TURBINE ENGINEERING MODEL
+        # -----------------------------------------
+
+        st.subheader("🌬️ Wind Turbine Performance Model")
+
+        st.caption(
+            "Simplified aerodynamic power estimate based on "
+            "wind speed, rotor swept area and turbine efficiency."
+        )
+
+        wind_col1, wind_col2 = st.columns(2)
+
+        with wind_col1:
+
+            rated_capacity = st.number_input(
+                "Rated Turbine Capacity (kW)",
+                min_value=10.0,
+                max_value=200000.0,
+                value=2000.0,
+                step=100.0,
+                key="wind_rated_capacity"
+            )
+
+            rotor_diameter = st.number_input(
+                "Rotor Diameter (m)",
+                min_value=1.0,
+                max_value=250.0,
+                value=100.0,
+                step=5.0,
+                key="wind_rotor_diameter"
+            )
+
+            wind_speed = st.number_input(
+                "Wind Speed (m/s)",
+                min_value=0.0,
+                max_value=50.0,
+                value=8.0,
+                step=0.5,
+                key="wind_speed"
+            )
+
+        with wind_col2:
+
+            air_density = st.number_input(
+                "Air Density (kg/m³)",
+                min_value=0.5,
+                max_value=1.5,
+                value=1.225,
+                step=0.025,
+                key="wind_air_density"
+            )
+
+            power_coefficient = st.number_input(
+                "Power Coefficient (Cp)",
+                min_value=0.05,
+                max_value=0.593,
+                value=0.40,
+                step=0.01,
+                key="wind_cp"
+            )
+
+            drivetrain_efficiency = st.number_input(
+                "Drivetrain Efficiency",
+                min_value=0.10,
+                max_value=1.00,
+                value=0.95,
+                step=0.01,
+                key="wind_efficiency"
+            )
+
+        # Wind turbine operating limits
+        cut_in_speed = 3.0
+        cut_out_speed = 25.0
+
+        # Rotor swept area
+        rotor_area = 3.14159265359 * (rotor_diameter / 2) ** 2
+
+        # Simplified aerodynamic power equation
+        theoretical_power = (
+            0.5
+            * air_density
+            * rotor_area
+            * (wind_speed ** 3)
+            * power_coefficient
+            * drivetrain_efficiency
+            / 1000
+        )
+
+        # Apply operating limits and rated capacity
+        if wind_speed < cut_in_speed or wind_speed >= cut_out_speed:
+            estimated_wind_output = 0.0
+        else:
+            estimated_wind_output = min(
+                theoretical_power,
+                rated_capacity
+            )
+
+        wind_capacity_factor = (
+            estimated_wind_output / rated_capacity
+        ) * 100
+
+        st.divider()
+
+        wind_metric1, wind_metric2, wind_metric3 = st.columns(3)
+
+        wind_metric1.metric(
+            "Estimated Power Output",
+            f"{estimated_wind_output:.2f} kW"
+        )
+
+        wind_metric2.metric(
+            "Rotor Swept Area",
+            f"{rotor_area:.1f} m²"
+        )
+
+        wind_metric3.metric(
+            "Output / Rated Capacity",
+            f"{wind_capacity_factor:.1f}%"
+        )
+
+        st.info(
+            "This is a simplified steady-state aerodynamic estimate. "
+            "It does not represent a manufacturer's validated power curve "
+            "or measured turbine output. Actual output depends on turbine "
+            "control, operating conditions and the manufacturer's power curve."
+        )
+
+    else:
 
         st.info(
             f"Engineering model for {asset_type} "
             "will be added in the next development stage."
         )
+
 
 
     st.metric("Machine Health Score", f"{health_score:.2f}")
