@@ -2504,7 +2504,12 @@ if st.session_state.get("authentication_status"):
     vibration_value,
     pressure_value,
     asset_type
-)
+    )
+
+    maintenance_recommendation = get_maintenance_recommendation(
+        asset_type,
+        status
+    )
 
 
 
