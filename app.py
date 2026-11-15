@@ -1421,7 +1421,8 @@ if st.session_state.get("authentication_status"):
             "plant performance guarantee."
         )
 
-    else:
+        
+
     
     elif asset_type == "Wind Turbine":
 
