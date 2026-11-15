@@ -805,6 +805,61 @@ def predictive_maintenance(
 
 
 # -------------------------------
+# ASSET-SPECIFIC MAINTENANCE RECOMMENDATIONS
+# -------------------------------
+def get_maintenance_recommendation(asset_type, status):
+
+    recommendations = {
+        "Gas Turbine": {
+            "Healthy": "Continue routine monitoring of exhaust temperature, vibration and fuel performance.",
+            "Warning": "Review vibration trends, exhaust temperature spread and combustion performance. Arrange an inspection if abnormal trends persist.",
+            "Critical": "Escalate to the responsible operations and maintenance team. Assess the need for a controlled load reduction or shutdown under approved site procedures."
+        },
+        "Steam Turbine": {
+            "Healthy": "Continue monitoring bearing vibration, steam conditions and turbine performance.",
+            "Warning": "Review bearing vibration, steam temperature, pressure and condenser vacuum trends.",
+            "Critical": "Escalate to the turbine maintenance team. Assess operating conditions and follow approved protection and shutdown procedures."
+        },
+        "Transformer": {
+            "Healthy": "Continue routine monitoring of winding temperature, loading and transformer condition.",
+            "Warning": "Review loading, cooling system operation, temperature trends and available oil-condition test results.",
+            "Critical": "Escalate to the electrical maintenance team. Assess transformer condition and follow approved protection procedures."
+        },
+        "Boiler": {
+            "Healthy": "Continue monitoring steam pressure, furnace temperature and combustion performance.",
+            "Warning": "Review combustion conditions, feedwater quality, steam pressure and boiler temperature trends.",
+            "Critical": "Escalate to the boiler operations team. Follow approved boiler safety and operating procedures."
+        },
+        "Wind Turbine": {
+            "Healthy": "Continue monitoring gearbox, generator, bearing temperatures and vibration trends.",
+            "Warning": "Review drivetrain vibration, gearbox temperature, lubrication and operating conditions.",
+            "Critical": "Escalate to the wind turbine maintenance team. Assess safe operation using approved turbine procedures."
+        },
+        "Solar PV": {
+            "Healthy": "Continue monitoring module temperature, inverter performance and energy yield.",
+            "Warning": "Review inverter alarms, module temperature, string performance and possible shading or soiling.",
+            "Critical": "Arrange an inspection of the affected PV system and inverter. Follow electrical isolation procedures where required."
+        },
+        "BESS": {
+            "Healthy": "Continue monitoring battery temperature, state of charge and battery management system alarms.",
+            "Warning": "Review cell temperature differences, state of charge, battery management system alarms and cooling performance.",
+            "Critical": "Escalate immediately to the qualified battery operations team. Follow the manufacturer's emergency response and isolation procedures."
+        }
+    }
+
+    asset_recommendations = recommendations.get(
+        asset_type,
+        recommendations["Gas Turbine"]
+    )
+
+    return asset_recommendations.get(
+        status,
+        "Review asset condition indicators and follow approved maintenance procedures."
+    )
+
+
+
+# -------------------------------
 # AI Fault Detection
 # -------------------------------
 def detect_faults(temp, vibration, energy):
