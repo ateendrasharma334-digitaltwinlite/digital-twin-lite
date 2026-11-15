@@ -862,20 +862,77 @@ def get_maintenance_recommendation(asset_type, status):
 # -------------------------------
 # AI Fault Detection
 # -------------------------------
-def detect_faults(temp, vibration, energy):
+
+def detect_faults(temp, vibration, energy, asset_type="Gas Turbine"):
 
     alerts = []
 
-    if temp > 70:
-        alerts.append(("🔥 Overheating detected", "critical"))
+    # Illustrative demonstration thresholds only.
+    # These must be validated against asset-specific OEM limits.
 
-    if vibration > 4:
-        alerts.append(("⚠ High vibration detected", "medium"))
+    fault_limits = {
+        "Gas Turbine": {
+            "temperature": 90,
+            "vibration": 7.1,
+            "energy": 450
+        },
+        "Steam Turbine": {
+            "temperature": 100,
+            "vibration": 7.1,
+            "energy": 450
+        },
+        "Transformer": {
+            "temperature": 85,
+            "vibration": 5,
+            "energy": 450
+        },
+        "Boiler": {
+            "temperature": 100,
+            "vibration": 7,
+            "energy": 450
+        },
+        "Wind Turbine": {
+            "temperature": 85,
+            "vibration": 7.1,
+            "energy": 450
+        },
+        "Solar PV": {
+            "temperature": 85,
+            "vibration": 5,
+            "energy": 450
+        },
+        "BESS": {
+            "temperature": 45,
+            "vibration": 5,
+            "energy": 450
+        }
+    }
 
-    if energy > 450:
-        alerts.append(("⚡ Energy spike detected", "medium"))
+    limits = fault_limits.get(
+        asset_type,
+        fault_limits["Gas Turbine"]
+    )
+
+    if temp > limits["temperature"]:
+        alerts.append((
+            f"High temperature detected for {asset_type}",
+            "critical"
+        ))
+
+    if vibration > limits["vibration"]:
+        alerts.append((
+            f"Abnormal vibration detected for {asset_type}",
+            "high"
+        ))
+
+    if energy > limits["energy"]:
+        alerts.append((
+            f"Energy consumption above demonstration threshold for {asset_type}",
+            "medium"
+        ))
 
     return alerts
+
 
 # -------------------------------
 # KPI calculations (SAFE VERSION)
