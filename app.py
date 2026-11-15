@@ -11954,6 +11954,15 @@ if st.session_state.get("authentication_status"):
                 st.write("DEBUG - Selected Asset:", asset_type)
                 st.write("DEBUG - Fault Alerts:", alerts)
 
+                test_alerts = detect_faults(
+                    120,
+                    10,
+                    600,
+                    "Gas Turbine"
+                )
+
+                st.write("TEST - Forced Fault Alerts:", test_alerts)
+
 
                 # -------------------------------
                 # AI Failure Prediction
