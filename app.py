@@ -715,20 +715,94 @@ def get_live_energy_price():
 
     return None
 
-# -------------------------------
-# Predictive Maintenance Function
-# -------------------------------
-def predictive_maintenance(temp, vibration, pressure):
-    health_score = 100 - (temp * 0.2 + vibration * 5 + pressure * 0.1)
 
-    if health_score > 70:
+# -------------------------------
+# ASSET-SPECIFIC PREDICTIVE MAINTENANCE
+# -------------------------------
+def predictive_maintenance(
+    temp,
+    vibration,
+    pressure,
+    asset_type="Gas Turbine"
+):
+
+    # Default condition limits for the demonstration model.
+    # These are illustrative limits, NOT OEM-approved alarm settings.
+
+    asset_limits = {
+        "Gas Turbine": {
+            "temperature": 90,
+            "vibration": 7.1,
+            "pressure": 25
+        },
+        "Steam Turbine": {
+            "temperature": 100,
+            "vibration": 7.1,
+            "pressure": 20
+        },
+        "Transformer": {
+            "temperature": 85,
+            "vibration": 5,
+            "pressure": 10
+        },
+        "Boiler": {
+            "temperature": 100,
+            "vibration": 7,
+            "pressure": 20
+        },
+        "Wind Turbine": {
+            "temperature": 85,
+            "vibration": 7.1,
+            "pressure": 15
+        },
+        "Solar PV": {
+            "temperature": 85,
+            "vibration": 5,
+            "pressure": 10
+        },
+        "BESS": {
+            "temperature": 45,
+            "vibration": 5,
+            "pressure": 10
+        }
+    }
+
+    limits = asset_limits.get(
+        asset_type,
+        asset_limits["Gas Turbine"]
+    )
+
+    # Calculate condition indicators against illustrative limits.
+    temperature_risk = max(
+        0, min(100, temp / limits["temperature"] * 100)
+    )
+
+    vibration_risk = max(
+        0, min(100, vibration / limits["vibration"] * 100)
+    )
+
+    pressure_risk = max(
+        0, min(100, pressure / limits["pressure"] * 100)
+    )
+
+    # Weighted condition score.
+    risk_score = (
+        temperature_risk * 0.40
+        + vibration_risk * 0.35
+        + pressure_risk * 0.25
+    )
+
+    health_score = max(0, min(100, 100 - risk_score))
+
+    if health_score >= 75:
         status = "Healthy"
-    elif health_score > 40:
+    elif health_score >= 50:
         status = "Warning"
     else:
         status = "Critical"
 
-    return health_score, status
+    return round(health_score, 2), status
+
 
 # -------------------------------
 # AI Fault Detection
@@ -2371,9 +2445,11 @@ if st.session_state.get("authentication_status"):
     # Predictive Maintenance Call
     # -------------------------------
     health_score, status = predictive_maintenance(
-        temp_value, vibration_value, pressure_value
-    )
-
+    temp_value,
+    vibration_value,
+    pressure_value,
+    asset_type
+)
 
 
 
