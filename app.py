@@ -2410,8 +2410,6 @@ if st.session_state.get("authentication_status"):
 
     fleet_model_count = 7
 
-    ]
-
     # Identify the currently selected asset
     for fleet_asset in fleet_assets:
         fleet_asset["Selected"] = (
