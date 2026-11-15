@@ -1731,9 +1731,158 @@ if st.session_state.get("authentication_status"):
             "model battery degradation, temperature effects, "
             "voltage limits or manufacturer-specific operating constraints."
         )
+    
 
+    elif asset_type == "Transformer":
 
+        # -----------------------------------------
+        # OMNITWIN TRANSFORMER ENGINEERING MODEL
+        # -----------------------------------------
 
+        st.subheader("⚡ Transformer Performance Model")
+
+        st.caption(
+            "Three-phase transformer loading, current, "
+            "power output and estimated losses."
+        )
+
+        transformer_col1, transformer_col2 = st.columns(2)
+
+        with transformer_col1:
+
+            transformer_capacity = st.number_input(
+                "Rated Transformer Capacity (kVA)",
+                min_value=10.0,
+                max_value=1000000.0,
+                value=2500.0,
+                step=100.0,
+                key="transformer_capacity"
+            )
+
+            secondary_voltage = st.number_input(
+                "Secondary Line Voltage (V)",
+                min_value=100.0,
+                max_value=66000.0,
+                value=11000.0,
+                step=100.0,
+                key="transformer_voltage"
+            )
+
+            transformer_loading = st.slider(
+                "Transformer Loading (%)",
+                min_value=0.0,
+                max_value=150.0,
+                value=75.0,
+                step=1.0,
+                key="transformer_loading"
+            )
+
+        with transformer_col2:
+
+            power_factor = st.number_input(
+                "Load Power Factor",
+                min_value=0.10,
+                max_value=1.00,
+                value=0.90,
+                step=0.01,
+                key="transformer_pf"
+            )
+
+            transformer_efficiency = st.number_input(
+                "Transformer Efficiency (%)",
+                min_value=80.0,
+                max_value=100.0,
+                value=98.5,
+                step=0.1,
+                key="transformer_efficiency"
+            )
+
+        # Three-phase transformer calculations
+        apparent_power = (
+            transformer_capacity
+            * transformer_loading / 100
+        )
+
+        real_power_output = (
+            apparent_power * power_factor
+        )
+
+        secondary_current = (
+            apparent_power * 1000
+            / (3 ** 0.5 * secondary_voltage)
+        )
+
+        efficiency_decimal = (
+            transformer_efficiency / 100
+        )
+
+        estimated_input_power = (
+            real_power_output / efficiency_decimal
+            if real_power_output > 0
+            else 0.0
+        )
+
+        estimated_losses = (
+            estimated_input_power - real_power_output
+        )
+
+        st.divider()
+
+        transformer_metric1, transformer_metric2 = st.columns(2)
+
+        transformer_metric1.metric(
+            "Apparent Power",
+            f"{apparent_power:.2f} kVA"
+        )
+
+        transformer_metric2.metric(
+            "Real Power Output",
+            f"{real_power_output:.2f} kW"
+        )
+
+        transformer_metric3, transformer_metric4 = st.columns(2)
+
+        transformer_metric3.metric(
+            "Secondary Line Current",
+            f"{secondary_current:.2f} A"
+        )
+
+        transformer_metric4.metric(
+            "Estimated Power Losses",
+            f"{estimated_losses:.2f} kW"
+        )
+
+        st.write(
+            f"**Estimated input power:** "
+            f"{estimated_input_power:.2f} kW"
+        )
+
+        st.write(
+            f"**Transformer efficiency:** "
+            f"{transformer_efficiency:.1f}%"
+        )
+
+        if transformer_loading > 100:
+            st.warning(
+                "Transformer loading exceeds 100% of rated capacity. "
+                "Check the manufacturer's permissible overload limits."
+            )
+        elif transformer_loading >= 90:
+            st.warning(
+                "Transformer loading is high. Monitor temperature "
+                "and loading conditions."
+            )
+        else:
+            st.success(
+                "Transformer loading is within the selected rated capacity."
+            )
+
+        st.info(
+            "This is a simplified three-phase steady-state model. "
+            "Losses are estimated from the user-entered efficiency. "
+            "It does not calculate winding temperature, impedance, "
+            "voltage regulation or manufacturer-specific losses."
+        )
 
     st.metric("Machine Health Score", f"{health_score:.2f}")
 
