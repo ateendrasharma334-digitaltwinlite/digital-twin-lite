@@ -11951,6 +11951,9 @@ if st.session_state.get("authentication_status"):
                     asset_type
                 )
 
+                st.write("DEBUG - Selected Asset:", asset_type)
+                st.write("DEBUG - Fault Alerts:", alerts)
+
 
                 # -------------------------------
                 # AI Failure Prediction
