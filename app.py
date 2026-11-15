@@ -11940,14 +11940,17 @@ if st.session_state.get("authentication_status"):
                 sensor_data = mqtt_data if mqtt_data else generate_sensor_data()
                 st.session_state.live_data_records.append(sensor_data)
 
+                
                 # -------------------------------
-                # Fault Detection (RULE-BASED)
+                # Fault Detection (ASSET-SPECIFIC)
                 # -------------------------------
                 alerts = detect_faults(
                     sensor_data["Temperature (°C)"],
                     sensor_data["Vibration"],
-                    sensor_data["Energy (kWh)"]
+                    sensor_data["Energy (kWh)"],
+                    asset_type
                 )
+
 
                 # -------------------------------
                 # AI Failure Prediction
