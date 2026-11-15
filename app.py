@@ -1312,14 +1312,6 @@ if st.session_state.get("authentication_status"):
     )
 
 
-    # -------------------------------
-    # Predictive Maintenance Call
-    # -------------------------------
-    health_score, status = predictive_maintenance(
-        temp_value, vibration_value, pressure_value
-    )
-
-
     # -----------------------------------------
     # OMNITWIN SOLAR PV ENGINEERING MODEL
     # -----------------------------------------
@@ -2027,6 +2019,115 @@ if st.session_state.get("authentication_status"):
                 "radiation losses, combustion chemistry or "
                 "manufacturer-specific boiler performance."
             )
+    
+    # -------------------------------
+    # Predictive Maintenance Call
+    # -------------------------------
+    health_score, status = predictive_maintenance(
+        temp_value, vibration_value, pressure_value
+    )
+
+
+
+
+    # -----------------------------------------
+    # OMNITWIN UNIFIED FLEET DASHBOARD
+    # -----------------------------------------
+
+    st.divider()
+
+    st.subheader("🏭 OmniTwin Unified Fleet Dashboard")
+
+    st.caption(
+        "Centralised overview of registered energy assets "
+        "and engineering model development status."
+    )
+
+    fleet_assets = [
+        {
+            "Asset ID": "GT-01",
+            "Asset": "Gas Turbine",
+            "Model Status": "Common monitoring only"
+        },
+        {
+            "Asset ID": "ST-02",
+            "Asset": "Steam Turbine",
+            "Model Status": "Common monitoring only"
+        },
+        {
+            "Asset ID": "TX-01",
+            "Asset": "Transformer",
+            "Model Status": "Engineering model available"
+        },
+        {
+            "Asset ID": "BLR-01",
+            "Asset": "Boiler",
+            "Model Status": "Engineering model available"
+        },
+        {
+            "Asset ID": "WT-01",
+            "Asset": "Wind Turbine",
+            "Model Status": "Engineering model available"
+        },
+        {
+            "Asset ID": "PV-01",
+            "Asset": "Solar PV",
+            "Model Status": "Engineering model available"
+        },
+        {
+            "Asset ID": "BESS-01",
+            "Asset": "Battery Energy Storage",
+            "Model Status": "Engineering model available"
+        }
+    ]
+
+    # Identify the currently selected asset
+    for fleet_asset in fleet_assets:
+        fleet_asset["Selected"] = (
+            fleet_asset["Asset ID"]
+            == asset_name.split()[-1]
+        )
+
+    fleet_total = len(fleet_assets)
+
+    fleet_model_count = sum(
+        1 for item in fleet_assets
+        if item["Model Status"] == "Engineering model available"
+    )
+
+    fleet_col1, fleet_col2, fleet_col3 = st.columns(3)
+
+    fleet_col1.metric(
+        "Registered Asset Categories",
+        fleet_total
+    )
+
+    fleet_col2.metric(
+        "Engineering Models Available",
+        fleet_model_count
+    )
+
+    fleet_col3.metric(
+        "Models Awaiting Development",
+        fleet_total - fleet_model_count
+    )
+
+    st.divider()
+
+    st.markdown("**Asset Model Coverage**")
+
+    st.dataframe(
+        fleet_assets,
+        use_container_width=True,
+        hide_index=True
+    )
+
+    st.info(
+        "This dashboard displays asset registration and model "
+        "development coverage. It does not represent verified "
+        "live fleet health, availability or operational performance."
+    )
+
 
 
     st.metric("Machine Health Score", f"{health_score:.2f}")
