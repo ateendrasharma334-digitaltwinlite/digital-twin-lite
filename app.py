@@ -1883,6 +1883,151 @@ if st.session_state.get("authentication_status"):
             "It does not calculate winding temperature, impedance, "
             "voltage regulation or manufacturer-specific losses."
         )
+    
+
+    elif asset_type == "Boiler":
+
+        # -----------------------------------------
+        # OMNITWIN BOILER ENGINEERING MODEL
+        # -----------------------------------------
+
+        st.subheader("🔥 Industrial Boiler Performance Model")
+
+        st.caption(
+            "Thermal energy balance using fuel consumption, "
+            "calorific value, boiler efficiency and steam enthalpy."
+        )
+
+        boiler_col1, boiler_col2 = st.columns(2)
+
+        with boiler_col1:
+
+            fuel_flow = st.number_input(
+                "Fuel Consumption (kg/hour)",
+                min_value=0.0,
+                max_value=1000000.0,
+                value=1000.0,
+                step=50.0,
+                key="boiler_fuel_flow"
+            )
+
+            calorific_value = st.number_input(
+                "Fuel Calorific Value (kJ/kg)",
+                min_value=1000.0,
+                max_value=60000.0,
+                value=42000.0,
+                step=500.0,
+                key="boiler_calorific_value"
+            )
+
+            boiler_efficiency = st.number_input(
+                "Boiler Thermal Efficiency (%)",
+                min_value=1.0,
+                max_value=100.0,
+                value=85.0,
+                step=1.0,
+                key="boiler_efficiency"
+            )
+
+        with boiler_col2:
+
+            steam_enthalpy = st.number_input(
+                "Steam Enthalpy (kJ/kg)",
+                min_value=100.0,
+                max_value=4000.0,
+                value=2800.0,
+                step=50.0,
+                key="boiler_steam_enthalpy"
+            )
+
+            feedwater_enthalpy = st.number_input(
+                "Feedwater Enthalpy (kJ/kg)",
+                min_value=0.0,
+                max_value=2000.0,
+                value=800.0,
+                step=50.0,
+                key="boiler_feedwater_enthalpy"
+            )
+
+        # Fuel thermal input
+        fuel_thermal_input = (
+            fuel_flow * calorific_value / 3600
+        )
+
+        # Useful heat transferred to steam
+        useful_heat_output = (
+            fuel_thermal_input
+            * boiler_efficiency / 100
+        )
+
+        # Estimated boiler heat losses
+        estimated_heat_losses = (
+            fuel_thermal_input - useful_heat_output
+        )
+
+        # Enthalpy rise across the boiler
+        enthalpy_difference = (
+            steam_enthalpy - feedwater_enthalpy
+        )
+
+        if enthalpy_difference <= 0:
+            st.error(
+                "Steam enthalpy must be greater than "
+                "feedwater enthalpy. Please correct the inputs."
+            )
+
+        else:
+
+            # Estimated steam generation
+            steam_generation = (
+                useful_heat_output * 3600
+                / enthalpy_difference
+            )
+
+            st.divider()
+
+            boiler_metric1, boiler_metric2 = st.columns(2)
+
+            boiler_metric1.metric(
+                "Fuel Thermal Input",
+                f"{fuel_thermal_input:,.2f} kW"
+            )
+
+            boiler_metric2.metric(
+                "Useful Heat Output",
+                f"{useful_heat_output:,.2f} kW"
+            )
+
+            boiler_metric3, boiler_metric4 = st.columns(2)
+
+            boiler_metric3.metric(
+                "Estimated Steam Generation",
+                f"{steam_generation:,.2f} kg/hour"
+            )
+
+            boiler_metric4.metric(
+                "Estimated Heat Losses",
+                f"{estimated_heat_losses:,.2f} kW"
+            )
+
+            st.write(
+                f"**Boiler thermal efficiency:** "
+                f"{boiler_efficiency:.1f}%"
+            )
+
+            st.write(
+                f"**Steam enthalpy rise:** "
+                f"{enthalpy_difference:.2f} kJ/kg"
+            )
+
+            st.info(
+                "This is a simplified boiler energy-balance model. "
+                "It assumes steady-state operation and does not "
+                "separately calculate flue-gas losses, blowdown, "
+                "radiation losses, combustion chemistry or "
+                "manufacturer-specific boiler performance."
+            )
+
 
     st.metric("Machine Health Score", f"{health_score:.2f}")
 
