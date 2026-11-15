@@ -1877,6 +1877,162 @@ if st.session_state.get("authentication_status"):
         )
     
 
+
+    elif asset_type == "Gas Turbine":
+
+        # -----------------------------------------
+        # OMNITWIN GAS TURBINE ENGINEERING MODEL
+        # -----------------------------------------
+
+        st.subheader("🔥 Gas Turbine Performance Model")
+
+        st.caption(
+            "Simplified fuel-energy balance for estimating "
+            "gas turbine electrical output and heat rate."
+        )
+
+        gt_col1, gt_col2 = st.columns(2)
+
+        with gt_col1:
+
+            gt_rated_capacity = st.number_input(
+                "Rated Electrical Capacity (MW)",
+                min_value=1.0,
+                max_value=1000.0,
+                value=250.0,
+                step=10.0,
+                key="gt_rated_capacity"
+            )
+
+            gt_fuel_flow = st.number_input(
+                "Fuel Mass Flow (kg/s)",
+                min_value=0.0,
+                max_value=500.0,
+                value=12.0,
+                step=0.5,
+                key="gt_fuel_flow"
+            )
+
+            gt_calorific_value = st.number_input(
+                "Fuel Lower Heating Value (MJ/kg)",
+                min_value=1.0,
+                max_value=60.0,
+                value=50.0,
+                step=1.0,
+                key="gt_calorific_value"
+            )
+
+        with gt_col2:
+
+            gt_efficiency = st.number_input(
+                "Electrical Efficiency (%)",
+                min_value=1.0,
+                max_value=65.0,
+                value=38.0,
+                step=1.0,
+                key="gt_efficiency"
+            )
+
+            gt_auxiliary_load = st.number_input(
+                "Auxiliary Load (%)",
+                min_value=0.0,
+                max_value=20.0,
+                value=2.0,
+                step=0.5,
+                key="gt_auxiliary_load"
+            )
+
+        # Fuel thermal input in MW
+        gt_thermal_input = (
+            gt_fuel_flow * gt_calorific_value
+        )
+
+        # Gross electrical power before auxiliary consumption
+        gt_gross_power = (
+            gt_thermal_input * gt_efficiency / 100
+        )
+
+        # Apply rated generating capacity
+        gt_limited_gross_power = min(
+            gt_gross_power,
+            gt_rated_capacity
+        )
+
+        # Net electrical output after auxiliary consumption
+        gt_net_power = (
+            gt_limited_gross_power
+            * (1 - gt_auxiliary_load / 100)
+        )
+
+        # Estimated net electrical efficiency
+        gt_net_efficiency = (
+            gt_net_power / gt_thermal_input * 100
+            if gt_thermal_input > 0
+            else 0.0
+        )
+
+        # Net heat rate in kJ/kWh
+        gt_heat_rate = (
+            3600 / (gt_net_efficiency / 100)
+            if gt_net_efficiency > 0
+            else 0.0
+        )
+
+        st.divider()
+
+        gt_metric1, gt_metric2, gt_metric3 = st.columns(3)
+
+        gt_metric1.metric(
+            "Fuel Thermal Input",
+            f"{gt_thermal_input:.2f} MW"
+        )
+
+        gt_metric2.metric(
+            "Gross Electrical Output",
+            f"{gt_limited_gross_power:.2f} MW"
+        )
+
+        gt_metric3.metric(
+            "Net Electrical Output",
+            f"{gt_net_power:.2f} MW"
+        )
+
+        gt_metric4, gt_metric5 = st.columns(2)
+
+        gt_metric4.metric(
+            "Net Electrical Efficiency",
+            f"{gt_net_efficiency:.2f}%"
+        )
+
+        gt_metric5.metric(
+            "Net Heat Rate",
+            f"{gt_heat_rate:,.2f} kJ/kWh"
+        )
+
+        if gt_gross_power > gt_rated_capacity:
+            st.warning(
+                "Calculated gross power exceeds rated capacity. "
+                "Output has been limited to the rated capacity."
+            )
+        elif gt_thermal_input == 0:
+            st.warning(
+                "Fuel input is zero. No electrical output is estimated."
+            )
+        else:
+            st.success(
+                "Estimated output is within the selected rated capacity."
+            )
+
+        st.info(
+            "This is a simplified fuel-energy balance model. "
+            "It does not calculate compressor and turbine stage "
+            "performance, exhaust temperature, pressure ratio, "
+            "ambient derating, degradation or a manufacturer-specific "
+            "gas turbine performance map."
+        )
+
+    
+
     elif asset_type == "Boiler":
 
         # -----------------------------------------
