@@ -2392,25 +2392,18 @@ if st.session_state.get("authentication_status"):
 
     
     fleet_assets = [
-        
         {"Asset ID": "GT-01", "Asset": "Gas Turbine",
          "Model Status": "Engineering model available"},
-
         {"Asset ID": "ST-02", "Asset": "Steam Turbine",
          "Model Status": "Engineering model available"},
-
         {"Asset ID": "TX-01", "Asset": "Transformer",
          "Model Status": "Engineering model available"},
-
         {"Asset ID": "BLR-01", "Asset": "Boiler",
          "Model Status": "Engineering model available"},
-
         {"Asset ID": "WT-01", "Asset": "Wind Turbine",
          "Model Status": "Engineering model available"},
-
         {"Asset ID": "PV-01", "Asset": "Solar PV",
          "Model Status": "Engineering model available"},
-
         {"Asset ID": "BESS-01", "Asset": "Battery Energy Storage",
          "Model Status": "Engineering model available"}
     ]
