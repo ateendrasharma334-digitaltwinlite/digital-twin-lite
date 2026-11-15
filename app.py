@@ -2597,6 +2597,21 @@ if st.session_state.get("authentication_status"):
 
     st.metric("Machine Health Score", f"{health_score:.2f}")
 
+    st.write("Status:", status)
+
+    st.subheader("🛠️ Maintenance Recommendation")
+
+    st.write(f"**Selected Asset:** {asset_name}")
+    st.write(f"**Condition Status:** {status}")
+
+    st.info(maintenance_recommendation)
+
+    st.caption(
+        "Recommendations are demonstration guidance, "
+        "not automatic maintenance instructions or safety decisions."
+    )
+
+
     # -------------------------------
     # 🚨 Asset Criticality Engine
     # -------------------------------
