@@ -1421,7 +1421,7 @@ if st.session_state.get("authentication_status"):
             "plant performance guarantee."
         )
 
-        
+
 
     
     elif asset_type == "Wind Turbine":
@@ -1554,12 +1554,184 @@ if st.session_state.get("authentication_status"):
             "control, operating conditions and the manufacturer's power curve."
         )
 
-    else:
+    
+    elif asset_type == "BESS":
+
+        # -----------------------------------------
+        # OMNITWIN BATTERY ENERGY STORAGE MODEL
+        # -----------------------------------------
+
+        st.subheader("🔋 Battery Energy Storage System Model")
+
+        st.caption(
+            "Battery charging and discharging simulation "
+            "with energy limits and efficiency calculations."
+        )
+
+        bess_col1, bess_col2 = st.columns(2)
+
+        with bess_col1:
+
+            battery_capacity = st.number_input(
+                "Installed Battery Capacity (kWh)",
+                min_value=10.0,
+                max_value=1000000.0,
+                value=2000.0,
+                step=100.0,
+                key="bess_capacity"
+            )
+
+            battery_power = st.number_input(
+                "Maximum Charge / Discharge Power (kW)",
+                min_value=1.0,
+                max_value=500000.0,
+                value=500.0,
+                step=50.0,
+                key="bess_power"
+            )
+
+            current_soc = st.number_input(
+                "Current State of Charge (%)",
+                min_value=0.0,
+                max_value=100.0,
+                value=50.0,
+                step=5.0,
+                key="bess_soc"
+            )
+
+        with bess_col2:
+
+            round_trip_efficiency = st.number_input(
+                "Round-trip Efficiency (%)",
+                min_value=50.0,
+                max_value=100.0,
+                value=90.0,
+                step=1.0,
+                key="bess_rte"
+            )
+
+            operating_mode = st.selectbox(
+                "Operating Mode",
+                ["Charging", "Discharging", "Idle"],
+                key="bess_mode"
+            )
+
+            operating_hours = st.number_input(
+                "Operating Duration (hours)",
+                min_value=0.1,
+                max_value=24.0,
+                value=1.0,
+                step=0.5,
+                key="bess_duration"
+            )
+
+        # Split round-trip efficiency equally between
+        # charging and discharging for this simplified model.
+        one_way_efficiency = (
+            round_trip_efficiency / 100
+        ) ** 0.5
+
+        available_energy = (
+            battery_capacity * current_soc / 100
+        )
+
+        remaining_capacity = (
+            battery_capacity - available_energy
+        )
+
+        energy_transferred = 0.0
+        final_soc = current_soc
+        operating_power = 0.0
+
+        if operating_mode == "Charging":
+
+            maximum_grid_input = min(
+                battery_power,
+                remaining_capacity
+                / (operating_hours * one_way_efficiency)
+            )
+
+            operating_power = maximum_grid_input
+
+            energy_transferred = (
+                operating_power
+                * operating_hours
+                * one_way_efficiency
+            )
+
+            final_soc = (
+                current_soc
+                + (energy_transferred / battery_capacity) * 100
+            )
+
+        elif operating_mode == "Discharging":
+
+            maximum_output_power = min(
+                battery_power,
+                available_energy
+                * one_way_efficiency
+                / operating_hours
+            )
+
+            operating_power = maximum_output_power
+
+            energy_transferred = (
+                operating_power
+                * operating_hours
+            )
+
+            battery_energy_used = (
+                energy_transferred / one_way_efficiency
+            )
+
+            final_soc = (
+                current_soc
+                - (battery_energy_used / battery_capacity) * 100
+            )
+
+        st.divider()
+
+        bess_metric1, bess_metric2, bess_metric3 = st.columns(3)
+
+        bess_metric1.metric(
+            "Operating Power",
+            f"{operating_power:.2f} kW"
+        )
+
+        bess_metric2.metric(
+            "Energy Transferred",
+            f"{energy_transferred:.2f} kWh"
+        )
+
+        bess_metric3.metric(
+            "Final State of Charge",
+            f"{final_soc:.2f}%"
+        )
+
+        st.progress(
+            min(1.0, max(0.0, final_soc / 100))
+        )
+
+        st.write(
+            f"**Operating mode:** {operating_mode}"
+        )
+
+        st.write(
+            f"**Initial stored energy:** {available_energy:.2f} kWh"
+        )
+
+        st.write(
+            f"**Remaining battery capacity before operation:** "
+            f"{remaining_capacity:.2f} kWh"
+        )
 
         st.info(
-            f"Engineering model for {asset_type} "
-            "will be added in the next development stage."
+            "This is a simplified battery energy model. "
+            "It assumes constant efficiency and does not yet "
+            "model battery degradation, temperature effects, "
+            "voltage limits or manufacturer-specific operating constraints."
         )
+
 
 
 
