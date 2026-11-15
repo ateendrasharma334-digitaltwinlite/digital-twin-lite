@@ -2030,6 +2030,197 @@ if st.session_state.get("authentication_status"):
             "ambient derating, degradation or a manufacturer-specific "
             "gas turbine performance map."
         )
+    
+
+
+    elif asset_type == "Steam Turbine":
+
+        # -----------------------------------------
+        # OMNITWIN STEAM TURBINE ENGINEERING MODEL
+        # -----------------------------------------
+
+        st.subheader("⚙️ Steam Turbine Performance Model")
+
+        st.caption(
+            "Simplified steam expansion and electrical "
+            "power estimation using steam mass flow and enthalpy drop."
+        )
+
+        st_col1, st_col2 = st.columns(2)
+
+        with st_col1:
+
+            st_rated_capacity = st.number_input(
+                "Rated Electrical Capacity (MW)",
+                min_value=1.0,
+                max_value=1000.0,
+                value=100.0,
+                step=5.0,
+                key="st_rated_capacity"
+            )
+
+            steam_mass_flow = st.number_input(
+                "Steam Mass Flow (kg/s)",
+                min_value=0.0,
+                max_value=2000.0,
+                value=100.0,
+                step=5.0,
+                key="st_mass_flow"
+            )
+
+            inlet_enthalpy = st.number_input(
+                "Steam Inlet Enthalpy (kJ/kg)",
+                min_value=100.0,
+                max_value=4500.0,
+                value=3400.0,
+                step=50.0,
+                key="st_inlet_enthalpy"
+            )
+
+        with st_col2:
+
+            exhaust_enthalpy = st.number_input(
+                "Exhaust Steam Enthalpy (kJ/kg)",
+                min_value=0.0,
+                max_value=3500.0,
+                value=2400.0,
+                step=50.0,
+                key="st_exhaust_enthalpy"
+            )
+
+            turbine_efficiency = st.number_input(
+                "Turbine Isentropic Efficiency (%)",
+                min_value=1.0,
+                max_value=100.0,
+                value=85.0,
+                step=1.0,
+                key="st_turbine_efficiency"
+            )
+
+            generator_efficiency = st.number_input(
+                "Generator Efficiency (%)",
+                min_value=50.0,
+                max_value=100.0,
+                value=98.0,
+                step=0.5,
+                key="st_generator_efficiency"
+            )
+
+            auxiliary_load = st.number_input(
+                "Auxiliary Load (%)",
+                min_value=0.0,
+                max_value=20.0,
+                value=2.0,
+                step=0.5,
+                key="st_auxiliary_load"
+            )
+
+        # Calculate available steam enthalpy drop
+        enthalpy_drop = (
+            inlet_enthalpy - exhaust_enthalpy
+        )
+
+        if enthalpy_drop <= 0:
+
+            st.error(
+                "Inlet enthalpy must be greater than "
+                "exhaust enthalpy. Please correct the inputs."
+            )
+
+        else:
+
+            # Ideal thermal power available from steam expansion
+            ideal_steam_power = (
+                steam_mass_flow * enthalpy_drop / 1000
+            )
+
+            # Turbine shaft power after isentropic losses
+            turbine_shaft_power = (
+                ideal_steam_power
+                * turbine_efficiency / 100
+            )
+
+            # Gross electrical power after generator losses
+            theoretical_gross_power = (
+                turbine_shaft_power
+                * generator_efficiency / 100
+            )
+
+            # Apply rated generating capacity
+            gross_electrical_power = min(
+                theoretical_gross_power,
+                st_rated_capacity
+            )
+
+            # Net output after auxiliary consumption
+            net_electrical_power = (
+                gross_electrical_power
+                * (1 - auxiliary_load / 100)
+            )
+
+            # Specific steam consumption based on gross output
+            specific_steam_consumption = (
+                steam_mass_flow * 3600
+                / (gross_electrical_power * 1000)
+                if gross_electrical_power > 0
+                else 0.0
+            )
+
+            st.divider()
+
+            st_metric1, st_metric2, st_metric3 = st.columns(3)
+
+            st_metric1.metric(
+                "Ideal Steam Power",
+                f"{ideal_steam_power:.2f} MW"
+            )
+
+            st_metric2.metric(
+                "Turbine Shaft Power",
+                f"{turbine_shaft_power:.2f} MW"
+            )
+
+            st_metric3.metric(
+                "Gross Electrical Output",
+                f"{gross_electrical_power:.2f} MW"
+            )
+
+            st_metric4, st_metric5 = st.columns(2)
+
+            st_metric4.metric(
+                "Net Electrical Output",
+                f"{net_electrical_power:.2f} MW"
+            )
+
+            st_metric5.metric(
+                "Specific Steam Consumption",
+                f"{specific_steam_consumption:.2f} kg/kWh"
+            )
+
+            if theoretical_gross_power > st_rated_capacity:
+
+                st.warning(
+                    "Theoretical output exceeds rated capacity. "
+                    "Electrical output has been limited to the "
+                    "selected rated capacity."
+                )
+
+            else:
+
+                st.success(
+                    "Estimated gross electrical output is within "
+                    "the selected rated capacity."
+                )
+
+            st.info(
+                "This is a simplified steady-state steam expansion "
+                "model. Enthalpy inputs must come from appropriate "
+                "steam tables or validated thermodynamic calculations. "
+                "It does not model extraction stages, moisture content, "
+                "condenser back pressure, reheat, leakage or "
+                "manufacturer-specific turbine performance maps."
+            )
+
 
     
 
