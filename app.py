@@ -11941,6 +11941,7 @@ if st.session_state.get("authentication_status"):
                 st.session_state.live_data_records.append(sensor_data)
 
                 
+                
                 # -------------------------------
                 # Fault Detection (ASSET-SPECIFIC)
                 # -------------------------------
@@ -11951,9 +11952,9 @@ if st.session_state.get("authentication_status"):
                     asset_type
                 )
 
-                st.write("DEBUG - Selected Asset:", asset_type)
-                st.write("DEBUG - Fault Alerts:", alerts)
-
+                # -------------------------------
+                # TEMPORARY FAULT TEST
+                # -------------------------------
                 test_alerts = detect_faults(
                     120,
                     10,
@@ -11961,7 +11962,41 @@ if st.session_state.get("authentication_status"):
                     "Gas Turbine"
                 )
 
-                st.write("TEST - Forced Fault Alerts:", test_alerts)
+                # -------------------------------
+                # OMNITWIN FAULT ALERT DASHBOARD
+                # -------------------------------
+                st.subheader("🚨 OmniTwin Fault Alert Dashboard")
+
+                st.write("Selected Asset:", asset_name)
+
+                if alerts:
+                    st.error(f"{len(alerts)} fault alert(s) detected")
+
+                    for alert_message, severity in alerts:
+
+                        if severity == "critical":
+                            st.error(f"🔴 CRITICAL: {alert_message}")
+
+                        elif severity == "high":
+                            st.warning(f"🟠 HIGH: {alert_message}")
+
+                        else:
+                            st.info(f"🔵 MEDIUM: {alert_message}")
+
+                else:
+                    st.success(
+                        "No faults detected for the selected sensor readings."
+                    )
+
+                with st.expander("Developer Test Results"):
+                    st.write("Selected Asset Type:", asset_type)
+                    st.write("Live Sensor Alerts:", alerts)
+                    st.write("Forced Gas Turbine Test:", test_alerts)
+
+                st.caption(
+                    "Demonstration fault thresholds only. "
+                    "Not a certified protection or safety system."
+                )
 
 
                 # -------------------------------
