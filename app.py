@@ -352,7 +352,7 @@ def generate_sensor_data():
 # -------------------------------
 # Database Utilities
 # -------------------------------
-DB_PATH = "digital_twin.db"
+DB_PATH = "omnitwin.db"
 
 def get_connection():
     return sqlite3.connect(DB_PATH, check_same_thread=False, timeout=30)
@@ -932,6 +932,7 @@ def detect_faults(temp, vibration, energy, asset_type="Gas Turbine"):
         ))
 
     return alerts
+
 
 
 
