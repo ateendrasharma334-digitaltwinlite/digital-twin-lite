@@ -11955,6 +11955,9 @@ if st.session_state.get("authentication_status"):
                     asset_type
                 )
 
+                # Keep the latest alerts for the dashboard
+                st.session_state.latest_fault_alerts = alerts
+
                 # -------------------------------
                 # TEMPORARY FAULT TEST
                 # -------------------------------
@@ -12532,7 +12535,7 @@ if st.session_state.get("authentication_status"):
 
                     st.subheader("🚨 Alarm Escalation Matrix")
 
-                    if priority == "CRITICAL":
+                    if priority == "critical":
 
                         st.error("""
                         LEVEL 3 ESCALATION:
@@ -12541,7 +12544,7 @@ if st.session_state.get("authentication_status"):
                         - Emergency maintenance activation
                         """)
 
-                    elif priority == "HIGH":
+                    elif priority == "high":
 
                         st.warning("""
                         LEVEL 2 ESCALATION:
@@ -12549,7 +12552,7 @@ if st.session_state.get("authentication_status"):
                         - Increase monitoring frequency
                         """)
 
-                    elif priority == "MEDIUM":
+                    elif priority == "medium":
 
                         st.info("""
                         LEVEL 1 ESCALATION:
@@ -12573,6 +12576,49 @@ if st.session_state.get("authentication_status"):
                     col3.metric("Minimum Energy", f"{min_energy:.2f} kWh")
                 
                 time.sleep(1)
+        
+
+
+        # -----------------------------------------
+        # 🚨 OMNITWIN FAULT ALERT DASHBOARD
+        # -----------------------------------------
+
+        st.markdown("---")
+        st.subheader("🚨 OmniTwin Fault Alert Dashboard")
+
+        latest_alerts = st.session_state.get(
+            "latest_fault_alerts", []
+        )
+
+        st.write("Selected Asset:", asset_name)
+
+        if latest_alerts:
+            st.error(
+                f"{len(latest_alerts)} fault alert(s) detected"
+            )
+
+            for alert_message, severity in latest_alerts:
+
+                if severity == "critical":
+                    st.error(f"🔴 CRITICAL: {alert_message}")
+
+                elif severity == "high":
+                    st.warning(f"🟠 HIGH: {alert_message}")
+
+                else:
+                    st.info(f"🔵 MEDIUM: {alert_message}")
+
+        else:
+            st.success(
+                "No fault alerts are currently stored for this simulation."
+            )
+
+        st.caption(
+            "Demonstration fault thresholds only. "
+            "Not a certified protection or safety system."
+        )
+
+
 
         # -------------------------------
         # 🤖 AI Chatbot - Ask Your Building (Advanced)
