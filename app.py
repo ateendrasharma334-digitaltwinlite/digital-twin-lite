@@ -936,33 +936,6 @@ def detect_faults(temp, vibration, energy, asset_type="Gas Turbine"):
 
 
 
-# -----------------------------------------
-# OMNITWIN FAULT ALERT DATABASE LOGGING
-# -----------------------------------------
-
-def save_fault_alert(asset_name, alert_message, severity):
-
-    conn = sqlite3.connect("omnitwin.db")
-
-    try:
-        conn.execute(
-            """
-            INSERT INTO alerts (
-                asset_name,
-                alert_message,
-                severity
-            )
-            VALUES (?, ?, ?)
-            """,
-            (asset_name, alert_message, severity)
-        )
-
-        conn.commit()
-
-    finally:
-        conn.close()
-
-
 
 # -------------------------------
 # KPI calculations (SAFE VERSION)
