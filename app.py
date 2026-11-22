@@ -498,6 +498,107 @@ def create_alert(
         #     f"{severity}: {alert_message}"
         # )
 
+
+
+# -------------------------------
+# Excel Sensor History Database
+# -------------------------------
+
+def save_excel_sensor_history(df_uploaded, df_results, upload_id):
+
+    with get_connection() as conn:
+
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS excel_sensor_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                upload_id TEXT NOT NULL,
+                test_id TEXT NOT NULL,
+                asset_name TEXT,
+                asset_type TEXT,
+                timestamp TEXT,
+                temperature REAL,
+                vibration REAL,
+                energy REAL,
+                fault_message TEXT,
+                severity TEXT,
+                recorded_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(upload_id, test_id)
+            )
+        """)
+
+        result_lookup = {}
+
+        for _, result in df_results.iterrows():
+
+            test_id = str(result["Test ID"])
+
+            if test_id not in result_lookup:
+                result_lookup[test_id] = []
+
+            result_lookup[test_id].append({
+                "fault": result["Fault"],
+                "severity": result["Severity"]
+            })
+
+        for index, row in df_uploaded.iterrows():
+
+            test_id = str(
+                row["Test ID"] if "Test ID" in df_uploaded.columns
+                else index + 1
+            )
+
+            record_results = result_lookup.get(test_id, [])
+
+            faults = [
+                item["fault"]
+                for item in record_results
+                if item["fault"] != "No fault detected"
+            ]
+
+            severities = list(dict.fromkeys([
+                item["severity"]
+                for item in record_results
+                if item["severity"] != "NORMAL"
+            ]))
+
+            fault_message = (
+                "; ".join(faults) if faults
+                else "No fault detected"
+            )
+
+            severity = (
+                " + ".join(severities) if severities
+                else "NORMAL"
+            )
+
+            timestamp = str(
+                row.get(
+                    "Timestamp (simulated)",
+                    row.get("Timestamp", "")
+                )
+            )
+
+            conn.execute("""
+                INSERT OR IGNORE INTO excel_sensor_history (
+                    upload_id, test_id, asset_name, asset_type,
+                    timestamp, temperature, vibration, energy,
+                    fault_message, severity
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                upload_id,
+                test_id,
+                str(row["Asset Name"]),
+                str(row["Asset Type"]),
+                timestamp,
+                float(row["Temperature (°C)"]),
+                float(row["Vibration (mm/s)"]),
+                float(row["Energy (kWh)"]),
+                fault_message,
+                severity
+            ))
+
+
 # -------------------------------
 # Enterprise Event Logger
 # -------------------------------
