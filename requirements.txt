@@ -13,3 +13,4 @@ paho-mqtt
 networkx
 folium
 streamlit-folium
+openpyxl
