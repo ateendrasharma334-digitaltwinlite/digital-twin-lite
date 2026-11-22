@@ -12,6 +12,7 @@ from sklearn.metrics import r2_score
 import streamlit_authenticator as stauth
 import time
 import io
+import hashlib
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
@@ -12861,6 +12862,26 @@ if st.session_state.get("authentication_status"):
                             df_results,
                             use_container_width=True
                         )
+
+
+                        # -----------------------------------------
+                        # SAVE EXCEL ANALYSIS TO SQLITE DATABASE
+                        # -----------------------------------------
+
+                        upload_id = hashlib.sha256(
+                            uploaded_excel.getvalue()
+                        ).hexdigest()[:16]
+
+                        save_excel_sensor_history(
+                            df_uploaded,
+                            df_results,
+                            upload_id
+                        )
+
+                        st.success(
+                            "Excel sensor history saved to database successfully."
+                        )
+
 
             except Exception as e:
                 st.error(f"Excel upload error: {e}")
