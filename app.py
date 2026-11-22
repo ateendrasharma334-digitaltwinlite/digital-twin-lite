@@ -11958,15 +11958,28 @@ if st.session_state.get("authentication_status"):
                 # Keep the latest alerts for the dashboard
                 st.session_state.latest_fault_alerts = alerts
 
-                # -------------------------------
-                # TEMPORARY FAULT TEST
-                # -------------------------------
-                test_alerts = detect_faults(
-                    120,
-                    10,
-                    600,
-                    "Gas Turbine"
-                )
+
+                # -----------------------------------------
+                # SAVE FAULT ALERTS TO DATABASE
+                # -----------------------------------------
+
+                if "saved_fault_alerts" not in st.session_state:
+                    st.session_state.saved_fault_alerts = set()
+
+                for alert_message, severity in alerts:
+
+                    alert_key = (asset_name, alert_message, severity)
+
+                    if alert_key not in st.session_state.saved_fault_alerts:
+
+                        create_alert(
+                            asset_name,
+                            alert_message,
+                            severity
+                        )
+
+                        st.session_state.saved_fault_alerts.add(alert_key)
+
 
                 # -------------------------------
                 # OMNITWIN FAULT ALERT DASHBOARD
