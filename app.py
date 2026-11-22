@@ -12701,6 +12701,66 @@ if st.session_state.get("authentication_status"):
                             use_container_width=True
                         )
 
+                        # -----------------------------------------
+                        # OMNITWIN EXCEL FAULT ANALYSIS
+                        # -----------------------------------------
+
+                        st.markdown("---")
+                        st.subheader("🚨 Excel Sensor Fault Analysis")
+
+                        analysis_results = []
+
+                        for index, row in df_uploaded.iterrows():
+
+                            row_alerts = detect_faults(
+                                row["Temperature (°C)"],
+                                row["Vibration (mm/s)"],
+                                row["Energy (kWh)"],
+                                row["Asset Type"]
+                            )
+
+                            if row_alerts:
+
+                                for alert_message, severity in row_alerts:
+
+                                    analysis_results.append({
+                                        "Test ID": row["Test ID"] if "Test ID" in df_uploaded.columns else index + 1,
+                                        "Asset Name": row["Asset Name"],
+                                        "Fault": alert_message,
+                                        "Severity": severity.upper()
+                                    })
+
+                            else:
+
+                                analysis_results.append({
+                                    "Test ID": row["Test ID"] if "Test ID" in df_uploaded.columns else index + 1,
+                                    "Asset Name": row["Asset Name"],
+                                    "Fault": "No fault detected",
+                                    "Severity": "NORMAL"
+                                })
+
+                        df_results = pd.DataFrame(analysis_results)
+
+                        total_records = len(df_uploaded)
+                        fault_records = df_results[
+                            df_results["Severity"] != "NORMAL"
+                        ]["Test ID"].nunique()
+
+                        healthy_records = total_records - fault_records
+
+                        col1, col2, col3 = st.columns(3)
+
+                        col1.metric("Total Records", total_records)
+                        col2.metric("Records with Faults", fault_records)
+                        col3.metric("Healthy Records", healthy_records)
+
+                        st.subheader("📋 Fault Detection Results")
+
+                        st.dataframe(
+                            df_results,
+                            use_container_width=True
+                        )
+
             except Exception as e:
                 st.error(f"Excel upload error: {e}")
 
