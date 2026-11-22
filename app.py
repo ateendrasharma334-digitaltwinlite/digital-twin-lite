@@ -12631,6 +12631,80 @@ if st.session_state.get("authentication_status"):
             "Not a certified protection or safety system."
         )
 
+        
+        
+        # -----------------------------------------
+        # EXCEL HISTORICAL SENSOR DATA UPLOAD
+        # -----------------------------------------
+
+        st.markdown("---")
+        st.subheader("📊 Excel Historical Sensor Data Upload")
+
+        uploaded_excel = st.file_uploader(
+            "Upload OmniTwin sensor data (.xlsx)",
+            type=["xlsx"],
+            key="omnitwin_excel_upload"
+        )
+
+        if uploaded_excel is not None:
+
+            try:
+                df_uploaded = pd.read_excel(
+                    uploaded_excel,
+                    sheet_name="Gas Turbine Test Data"
+                )
+
+                required_columns = [
+                    "Temperature (°C)",
+                    "Vibration (mm/s)",
+                    "Energy (kWh)",
+                    "Asset Type",
+                    "Asset Name"
+                ]
+
+                missing_columns = [
+                    col for col in required_columns
+                    if col not in df_uploaded.columns
+                ]
+
+                if missing_columns:
+                    st.error(
+                        f"Missing required columns: {missing_columns}"
+                    )
+
+                else:
+                    numeric_columns = [
+                        "Temperature (°C)",
+                        "Vibration (mm/s)",
+                        "Energy (kWh)"
+                    ]
+
+                    for col in numeric_columns:
+                        df_uploaded[col] = pd.to_numeric(
+                            df_uploaded[col],
+                            errors="coerce"
+                        )
+
+                    if df_uploaded[numeric_columns].isna().any().any():
+                        st.error(
+                            "Invalid or missing sensor readings found. "
+                            "Please check your Excel file."
+                        )
+
+                    else:
+                        st.success(
+                            f"Successfully loaded {len(df_uploaded)} sensor records."
+                        )
+
+                        st.dataframe(
+                            df_uploaded,
+                            use_container_width=True
+                        )
+
+            except Exception as e:
+                st.error(f"Excel upload error: {e}")
+
+
 
 
         # -------------------------------
