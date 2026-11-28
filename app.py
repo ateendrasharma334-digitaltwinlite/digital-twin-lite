@@ -600,6 +600,37 @@ def save_excel_sensor_history(df_uploaded, df_results, upload_id):
             ))
 
 
+
+# -------------------------------
+# Retrieve Excel Sensor History
+# -------------------------------
+
+def get_excel_sensor_history():
+
+    with get_connection() as conn:
+
+        df_history = pd.read_sql_query("""
+            SELECT
+                upload_id,
+                test_id,
+                asset_name,
+                asset_type,
+                timestamp,
+                temperature,
+                vibration,
+                energy,
+                fault_message,
+                severity,
+                recorded_at
+            FROM excel_sensor_history
+            ORDER BY recorded_at DESC
+        """, conn)
+
+    return df_history
+
+
+
+
 # -------------------------------
 # Enterprise Event Logger
 # -------------------------------
